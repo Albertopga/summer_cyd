@@ -2,11 +2,8 @@
   <div class="app">
     <Header />
     <AppInfoSection />
-
     <AppGallerySection />
-
     <AppActivitiesSection />
-    CTA Final
     <section class="cta-section">
       <div class="container">
         <div class="cta-content">
