@@ -1,29 +1,22 @@
 <template>
   <div class="bento-grid">
     <div class="bento-item bento-large">
-      <div class="image-placeholder">
-        <span class="placeholder-text">Aventura Principal</span>
-      </div>
+      <img src="@/assets/images/entorno.jpg" alt="Entorno" class="image-placeholder" />
     </div>
     <div class="bento-item bento-tall">
-      <div class="image-placeholder">
-        <span class="placeholder-text">Naturaleza</span>
-      </div>
+      <img src="@/assets/images/logo_C&D_2025.png" alt="Logo" class="image-placeholder" />
     </div>
-    <div class="bento-item">
-      <div class="image-placeholder">
-        <span class="placeholder-text">Camping</span>
-      </div>
-    </div>
-    <div class="bento-item">
-      <div class="image-placeholder">
-        <span class="placeholder-text">Diversión</span>
-      </div>
+    <div class="bento-item bento-tall">
+      <img src="@/assets/images/vistas.jpeg" alt="Entorno" class="image-placeholder" />
     </div>
     <div class="bento-item bento-wide">
-      <div class="image-placeholder">
-        <span class="placeholder-text">Comunidad</span>
-      </div>
+      <img src="@/assets/images/comedor.jpg" alt="Actividades" class="image-placeholder" />
+    </div>
+    <div class="bento-item">
+      <img src="@/assets/images/lagos.jpg" alt="Actividades" class="image-placeholder" />
+    </div>
+    <div class="bento-item">
+      <img src="@/assets/images/piscina.jpg" alt="Actividades" class="image-placeholder" />
     </div>
   </div>
 </template>
@@ -61,12 +54,13 @@
 
 .bento-wide {
   grid-column: span 2;
+  grid-row: span 1;
 }
 
 .image-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  background-color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;

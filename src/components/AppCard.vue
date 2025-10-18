@@ -1,5 +1,9 @@
 <template>
-  <div class="card" :class="[`card--${variant}`, { 'card--featured': isFeatured }]">
+  <div
+    class="card"
+    :class="[`card--${variant}`, { 'card--featured': isFeatured }]"
+    @click="handleClick"
+  >
     <div class="card-icon">{{ icon }}</div>
     <h3 class="card-title">{{ title }}</h3>
     <p class="card-text">{{ text }}</p>
@@ -7,7 +11,9 @@
 </template>
 
 <script setup>
-defineProps({
+import router from '@/router'
+
+const props = defineProps({
   title: {
     type: String,
     required: true,
@@ -29,7 +35,17 @@ defineProps({
     default: 'info',
     validator: (value) => ['info', 'featured', 'activities'].includes(value),
   },
+  link: {
+    type: String,
+    default: '#',
+  },
 })
+
+const handleClick = () => {
+  if (props.link) {
+    router.push(props.link)
+  }
+}
 </script>
 
 <style scoped>

@@ -1,6 +1,6 @@
 <template>
   <div class="app">
-    <Header />
+    <AppHeader />
     <AppInfoSection />
     <AppGallerySection />
     <AppActivitiesSection />
@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import Header from '../components/AppHeader.vue'
+import AppHeader from '../components/AppHeader.vue'
 import AppInfoSection from '../components/AppInfoSection.vue'
 import AppGallerySection from '../components/AppGallerySection.vue'
 import AppActivitiesSection from '../components/AppActivitiesSection.vue'

@@ -1,7 +1,7 @@
 <template>
   <section class="section section-alt">
     <div class="container">
-      <AppSectionHeader label="Galería" title="Momentos Memorables" />
+      <AppSectionHeader label="Naturcampa" title="Emplazamiento inmejorable" />
       <AppBentoGrid />
     </div>
   </section>
