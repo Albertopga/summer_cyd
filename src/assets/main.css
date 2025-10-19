@@ -180,34 +180,34 @@ body {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
 }
 
-/* Footer */
+/* Footer - Mobile-first */
 .footer {
   background-color: var(--color-primary-dark);
   color: var(--color-white);
-  padding: var(--spacing-xl) 0 var(--spacing-md);
+  padding: var(--spacing-lg) 0 var(--spacing-md);
 }
 
 .footer-content {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
 }
 
 .footer-section {
-  text-align: left;
+  text-align: center;
 }
 
 .footer-title {
   font-family: var(--font-heading);
-  font-size: 1.25rem;
-  margin-bottom: var(--spacing-sm);
+  font-size: 1rem;
+  margin-bottom: var(--spacing-xs);
   color: var(--color-accent-light);
 }
 
 .footer-description,
 .footer-link {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   opacity: 0.8;
   line-height: 1.6;
 }
@@ -216,10 +216,11 @@ body {
   display: flex;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-xs);
+  justify-content: center;
 }
 
 .social-icon {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   cursor: pointer;
   transition: transform 0.3s ease;
 }
@@ -230,12 +231,12 @@ body {
 
 .footer-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: var(--spacing-md);
+  padding-top: var(--spacing-sm);
   text-align: center;
 }
 
 .footer-text {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   opacity: 0.7;
 }
 
@@ -321,7 +322,7 @@ body {
     font-size: 1.125rem;
   }
 
-  
+
 
   .section-title {
     font-size: 3rem;
@@ -362,15 +363,43 @@ body {
     grid-row: span 1;
   }
 
+  .footer {
+    padding: var(--spacing-xl) 0 var(--spacing-md);
+  }
+
   .footer-content {
-    text-align: left;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
   }
 
   .footer-section {
     text-align: left;
   }
 
+  .footer-title {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .footer-description,
+  .footer-link {
+    font-size: 0.95rem;
+  }
+
   .footer-social {
     justify-content: flex-start;
+  }
+
+  .social-icon {
+    font-size: 1.5rem;
+  }
+
+  .footer-bottom {
+    padding-top: var(--spacing-md);
+  }
+
+  .footer-text {
+    font-size: 0.875rem;
   }
 } */

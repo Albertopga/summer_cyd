@@ -36,5 +36,5 @@ import { RouterView } from 'vue-router'
           </p>
         </div>
       </div>
-    </footer>
+  </footer>
 </template>

@@ -49,11 +49,8 @@ const handleClick = () => {
 </script>
 
 <style scoped>
+/* Mobile-first styles - estilos específicos del componente */
 .card {
-  background-color: var(--color-white);
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
   border: 2px solid transparent;
 }
@@ -64,33 +61,8 @@ const handleClick = () => {
   border-color: var(--color-accent-light);
 }
 
-.card-icon {
-  font-size: 3rem;
-  margin-bottom: var(--spacing-sm);
-}
-
-.card-title {
-  font-family: var(--font-heading);
-  font-size: 1.75rem;
-  color: var(--color-primary);
-  margin-bottom: var(--spacing-sm);
-  font-weight: 600;
-}
-
-.card-text {
-  font-size: 1rem;
-  color: var(--color-text-light);
-  line-height: 1.7;
-}
-/* Card Variants */
-.card--info {
-  background-color: var(--color-white);
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
+/* Los estilos base (.card, .card-icon, .card-title, .card-text) están en main.css */
+/* Card Variants - solo estilos específicos de variantes */
 
 .card--featured {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
@@ -104,11 +76,7 @@ const handleClick = () => {
 
 .card--activities {
   background-color: var(--color-cream);
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-lg);
   text-align: center;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
   position: relative;
   overflow: hidden;
 }
