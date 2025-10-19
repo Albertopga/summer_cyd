@@ -38,10 +38,29 @@ import AppCard from './AppCard.vue'
 </script>
 
 <style scoped>
+/* Mobile-first styles (por defecto) */
 .activities-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: 1fr;
   gap: var(--spacing-md);
   margin-top: var(--spacing-lg);
+}
+
+/* Media queries para pantallas más grandes usando sintaxis moderna */
+
+/* Tablet */
+@media (width >= 768px) {
+  .activities-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+  }
+}
+
+/* Desktop */
+@media (width >= 1024px) {
+  .activities-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-xl);
+  }
 }
 </style>

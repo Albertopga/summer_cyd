@@ -31,4 +31,7 @@ import AppSectionHeader from './AppSectionHeader.vue'
 import AppCard from './AppCard.vue'
 </script>
 
-<style scoped></style>
+<style scoped>
+/* Todos los estilos responsive están ahora centralizados en main.css */
+/* Este componente usa automáticamente el sistema mobile-first global */
+</style>
