@@ -50,6 +50,21 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Estilos globales para imágenes - Evitar deformación */
+img {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Para imágenes que deben mantener proporciones específicas */
+img[style*='width']:not([style*='height']),
+img[style*='height']:not([style*='width']) {
+  object-fit: cover;
+  object-position: center;
+}
+
 .app {
   width: 100%;
   overflow-x: hidden;
