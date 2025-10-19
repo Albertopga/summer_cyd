@@ -243,7 +243,7 @@ body {
 /* Responsive Design - Mobile-first with modern syntax */
 
 /* Tablet */
-/* @media (width >= 768px) {
+@media (width >= 768px) {
   .container {
     max-width: 1280px;
     padding: 0 var(--spacing-md);
@@ -263,8 +263,6 @@ body {
     padding: 0.875rem 2rem;
     font-size: 1rem;
   }
-
-
 
   .section-label {
     font-size: 0.875rem;
@@ -305,10 +303,10 @@ body {
   .bento-tall {
     grid-row: span 1;
   }
-} */
+}
 
 /* Desktop */
-/* @media (width >= 1024px) {
+@media (width >= 1024px) {
   .section {
     padding: var(--spacing-2xl) 0;
   }
@@ -321,8 +319,6 @@ body {
     padding: 1rem 2.5rem;
     font-size: 1.125rem;
   }
-
-
 
   .section-title {
     font-size: 3rem;
@@ -402,4 +398,4 @@ body {
   .footer-text {
     font-size: 0.875rem;
   }
-} */
+}

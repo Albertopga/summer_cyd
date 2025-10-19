@@ -93,7 +93,7 @@ const closeModal = () => {
 /* Media queries para pantallas más grandes usando sintaxis moderna */
 
 /* Tablet */
-/* @media (width >= 768px) {
+@media (width >= 768px) {
   .bento-grid {
     grid-template-columns: repeat(2, 1fr);
     grid-auto-rows: 180px;
@@ -117,10 +117,10 @@ const closeModal = () => {
     grid-column: span 2;
     grid-row: span 1;
   }
-} */
+}
 
 /* Desktop */
-/* @media (width >= 1024px) {
+@media (width >= 1024px) {
   .bento-grid {
     grid-template-columns: repeat(4, 1fr);
     grid-auto-rows: 200px;
@@ -144,5 +144,5 @@ const closeModal = () => {
     grid-column: span 2;
     grid-row: span 1;
   }
-} */
+}
 </style>

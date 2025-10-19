@@ -49,18 +49,18 @@ import AppCard from './AppCard.vue'
 /* Media queries para pantallas más grandes usando sintaxis moderna */
 
 /* Tablet */
-/* @media (width >= 768px) {
+@media (width >= 768px) {
   .activities-grid {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: var(--spacing-lg);
   }
-} */
+}
 
 /* Desktop */
-/* @media (width >= 1024px) {
+@media (width >= 1024px) {
   .activities-grid {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: var(--spacing-xl);
   }
-} */
+}
 </style>

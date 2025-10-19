@@ -116,7 +116,7 @@
 /* Media queries para pantallas más grandes usando sintaxis moderna */
 
 /* Tablet */
-/* @media (width >= 768px) {
+@media (width >= 768px) {
   .hero {
     min-height: 500px;
     padding: var(--spacing-lg) 0;
@@ -156,10 +156,10 @@
     padding: 0.875rem 2rem;
     font-size: 1rem;
   }
-} */
+}
 
 /* Desktop */
-/* @media (width >= 1024px) {
+@media (width >= 1024px) {
   .hero {
     min-height: 700px;
   }
@@ -189,5 +189,5 @@
   .hero-decoration {
     height: 100px;
   }
-} */
+}
 </style>
