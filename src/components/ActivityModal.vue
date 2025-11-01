@@ -230,7 +230,7 @@ const closeModal = () => {
   }
 
   .activity-modal-body {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg);
   }
 
   .activity-modal-icon {
