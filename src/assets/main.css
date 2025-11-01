@@ -325,7 +325,7 @@ body {
   }
 
   .card {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg);
   }
 
   .card-icon {

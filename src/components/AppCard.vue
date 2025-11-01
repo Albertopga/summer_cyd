@@ -37,13 +37,17 @@ const props = defineProps({
   },
   link: {
     type: String,
-    default: '#',
+    default: '',
   },
 })
 
+const emit = defineEmits(['click'])
+
 const handleClick = () => {
-  if (props.link) {
+  if (props.link && props.link !== '#') {
     router.push(props.link)
+  } else {
+    emit('click')
   }
 }
 </script>
@@ -53,6 +57,7 @@ const handleClick = () => {
 .card {
   transition: all 0.3s ease;
   border: 2px solid transparent;
+  cursor: pointer;
 }
 
 .card:hover {
