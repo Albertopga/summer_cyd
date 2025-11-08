@@ -1,0 +1,588 @@
+## Reglas Relativas a Cursor
+
+- Genera los commits en castellano.
+
+# Reglas de Desarrollo - Vue + HTML + CSS
+
+## Stack Tecnológico
+
+Este proyecto usa ÚNICAMENTE:
+
+- Vue 3 (Composition API)
+- HTML semántico
+- CSS puro (sin frameworks CSS)
+- JavaScript vanilla
+
+NO uses ni sugieras:
+
+- Librerías de UI (Vuetify, Element Plus, etc.)
+- Frameworks CSS (Tailwind, Bootstrap, etc.)
+- Librerías de terceros innecesarias
+
+## Accesibilidad Web (a11y) - WCAG 2.1 AA
+
+### HTML Semántico
+
+- Usa etiquetas semánticas: `<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, `<aside>`, `<footer>`
+- Evita `<div>` cuando existe una etiqueta semántica apropiada
+- Usa `<button>` para acciones (con @click) y `<a>` solo para navegación (con href)
+- Nunca uses `<div>` o `<span>` clickeables sin un buen motivo
+
+### Imágenes
+
+- Todas las `<img>` DEBEN tener atributo `alt` descriptivo
+- Si la imagen es decorativa, usa `alt=""`
+- Iconos decorativos: añade `aria-hidden="true"`
+
+Ejemplo:
+
+```html
+<img src="avatar.jpg" alt="Foto de perfil de María González" />
+<img src="bg-pattern.png" alt="" role="presentation" />
+```
+
+### Formularios Accesibles
+
+- Cada `<input>`, `<select>`, `<textarea>` DEBE tener un `<label>` asociado
+- Usa `for` e `id` para asociar labels:
+
+```html
+<label for="email">Correo electrónico:</label>
+<input id="email" v-model="email" type="email" required aria-required="true" />
+```
+
+- Agrupa campos relacionados con `<fieldset>` y `<legend>`
+- Mensajes de error con `aria-describedby` y `role="alert"`:
+
+```html
+<input
+  id="username"
+  v-model="username"
+  :aria-invalid="errors.username ? 'true' : 'false'"
+  aria-describedby="username-error"
+/>
+<span v-if="errors.username" id="username-error" role="alert" class="error">
+  {{ errors.username }}
+</span>
+```
+
+- Indica campos requeridos visualmente Y con `required` + `aria-required="true"`
+
+### Navegación por Teclado
+
+- TODOS los elementos interactivos deben ser accesibles con teclado
+- Orden de tabulación lógico (no uses `tabindex` mayor a 0)
+- Proporciona indicadores visuales CLAROS del foco con CSS
+- No elimines el `outline` sin proporcionar una alternativa visible
+
+Ejemplo CSS obligatorio:
+
+```css
+*:focus-visible {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* O personalizado por elemento */
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #0066cc;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.2);
+}
+```
+
+### Contraste de Colores
+
+- Texto normal: contraste mínimo **4.5:1**
+- Texto grande (18.5px+ o 14px+ en negrita): contraste mínimo **3:1**
+- NO uses solo color para transmitir información importante
+- Estados hover, focus y active deben ser claramente visibles
+- Verifica contrastes en: https://webaim.org/resources/contrastchecker/
+
+### Encabezados (Headings)
+
+- Usa jerarquía correcta `<h1>` a `<h6>` SIN saltarse niveles
+- Un ÚNICO `<h1>` por página (título principal)
+- Los encabezados estructuran el contenido, no son solo estilos
+
+Ejemplo:
+
+```html
+<h1>Mi Aplicación</h1>
+<h2>Sección de Perfil</h2>
+<h3>Información Personal</h3>
+<h3>Configuración de Cuenta</h3>
+<h2>Sección de Facturas</h2>
+<h3>Facturas Pendientes</h3>
+```
+
+### ARIA (solo cuando HTML semántico no sea suficiente)
+
+- Prefiere HTML semántico sobre ARIA
+- Roles útiles: `role="navigation"`, `role="search"`, `role="alert"`, `role="dialog"`
+- Estados comunes:
+  - `aria-expanded="true/false"` para elementos expandibles
+  - `aria-hidden="true"` para ocultar elementos decorativos
+  - `aria-current="page"` para enlaces de página actual
+  - `aria-pressed="true/false"` para botones toggle
+- Propiedades de etiquetado:
+  - `aria-label="Descripción"` cuando no hay texto visible
+  - `aria-labelledby="id-del-elemento"` para referenciar otro elemento
+  - `aria-describedby="id-descripcion"` para descripciones adicionales
+
+### Estructura de Página Obligatoria
+
+Cada página debe incluir landmarks:
+
+```html
+<template>
+  <div id="app">
+    <!-- Skip link (primer elemento) -->
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+    <header role="banner">
+      <nav role="navigation" aria-label="Menú principal">
+        <!-- navegación -->
+      </nav>
+    </header>
+
+    <main id="main-content" role="main">
+      <!-- contenido principal -->
+    </main>
+
+    <footer role="contentinfo">
+      <!-- pie de página -->
+    </footer>
+  </div>
+</template>
+```
+
+CSS para skip link:
+
+```css
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #000;
+  color: #fff;
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 9999;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+```
+
+### Botones e Iconos
+
+- Botones con solo iconos NECESITAN `aria-label`:
+
+```html
+<button type="button" @click="closeModal" aria-label="Cerrar modal">
+  <span aria-hidden="true">✕</span>
+</button>
+```
+
+- Si un botón no ejecuta JavaScript, probablemente debería ser un `<a>`
+- Tipo de botón por defecto: `type="button"` (no submit)
+
+### Modales y Diálogos
+
+```html
+<div
+  v-if="isModalOpen"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modal-title"
+  @keydown.esc="closeModal"
+>
+  <div class="modal-content">
+    <h2 id="modal-title">Título del Modal</h2>
+    <button @click="closeModal" aria-label="Cerrar modal" class="close-button">
+      <span aria-hidden="true">✕</span>
+    </button>
+    <!-- contenido -->
+  </div>
+</div>
+```
+
+Gestión de foco (en script):
+
+```javascript
+const openModal = () => {
+  isModalOpen.value = true
+  nextTick(() => {
+    // Guardar elemento con foco actual
+    previousFocus = document.activeElement
+    // Enfocar primer elemento del modal
+    modalRef.value.querySelector('button, [href], input, select, textarea').focus()
+  })
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+  // Restaurar foco al elemento anterior
+  previousFocus?.focus()
+}
+```
+
+### Contenido Dinámico (Vue)
+
+- Usa `aria-live` para anunciar cambios:
+  - `aria-live="polite"` - anuncia cuando el usuario termine su tarea actual
+  - `aria-live="assertive"` - anuncia inmediatamente (errores críticos)
+- `aria-atomic="true"` para leer todo el contenido al cambiar
+
+Ejemplos:
+
+```html
+<!-- Mensajes de estado -->
+<div aria-live="polite" aria-atomic="true">{{ statusMessage }}</div>
+
+<!-- Notificaciones de error -->
+<div v-if="error" role="alert" aria-live="assertive">{{ error }}</div>
+
+<!-- Durante carga -->
+<div v-if="loading" aria-live="polite" aria-busy="true">Cargando datos...</div>
+```
+
+### Enlaces
+
+- Texto descriptivo y significativo (evita "haz clic aquí", "más info")
+- Los enlaces deben explicar su destino sin contexto adicional
+
+```html
+<!-- ❌ MAL -->
+<a href="/docs">Haz clic aquí</a>
+<a href="/more">Más</a>
+
+<!-- ✅ BIEN -->
+<a href="/docs">Ver documentación completa</a>
+<a href="/profile">Ver mi perfil</a>
+```
+
+- Enlace de página actual: `aria-current="page"`
+
+```html
+<a href="/home" :aria-current="currentRoute === '/home' ? 'page' : undefined"> Inicio </a>
+```
+
+- Enlaces que abren en nueva ventana:
+
+```html
+<a href="https://example.com" target="_blank" rel="noopener noreferrer">
+  Visitar sitio externo
+  <span class="sr-only">(se abre en nueva ventana)</span>
+</a>
+```
+
+### Listas
+
+- Usa `<ul>`, `<ol>`, `<li>` para listas REALES
+- Las listas ayudan a lectores de pantalla a entender la estructura
+- Si es solo visual, considera si realmente necesitas `role="list"`
+
+```html
+<!-- Lista de navegación -->
+<nav>
+  <ul>
+    <li><a href="/home">Inicio</a></li>
+    <li><a href="/about">Acerca de</a></li>
+  </ul>
+</nav>
+
+<!-- Lista de artículos -->
+<ul>
+  <li v-for="item in items" :key="item.id">{{ item.name }}</li>
+</ul>
+```
+
+### Tablas
+
+- Usa `<table>` solo para datos tabulares (no para layout)
+- SIEMPRE incluye `<thead>`, `<tbody>`, `<th>` con `scope`
+- Proporciona `<caption>` o `aria-label`
+
+```html
+<table aria-label="Lista de facturas pendientes">
+  <caption>
+    Facturas del mes de noviembre
+  </caption>
+  <thead>
+    <tr>
+      <th scope="col">Fecha</th>
+      <th scope="col">Monto</th>
+      <th scope="col">Estado</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="bill in bills" :key="bill.id">
+      <td>{{ bill.date }}</td>
+      <td>{{ bill.amount }}</td>
+      <td>{{ bill.status }}</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+### CSS Utilities para Accesibilidad
+
+Incluye estas clases en tu CSS global:
+
+```css
+/* Ocultar visualmente pero mantener para lectores de pantalla */
+.sr-only,
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #000;
+  color: #fff;
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 9999;
+  font-weight: bold;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Focus visible para todos los elementos interactivos */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* Nunca elimines outline sin alternativa */
+/* ❌ PROHIBIDO: */
+/* *:focus { outline: none; } */
+```
+
+### Responsive y Zoom
+
+- El diseño debe funcionar correctamente con zoom hasta 200%
+- Usa unidades relativas (`rem`, `em`, `%`) en lugar de `px` cuando sea posible
+- Media queries para tamaños de fuente:
+
+```css
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Los tamaños en rem se ajustarán automáticamente */
+h1 {
+  font-size: 2rem; /* 32px en desktop, 28px en mobile */
+}
+```
+
+### Estados de Carga y Errores
+
+```html
+<!-- Loading state -->
+<div v-if="loading" role="status" aria-live="polite">
+  <span class="spinner" aria-hidden="true"></span>
+  <span>Cargando datos...</span>
+</div>
+
+<!-- Error state -->
+<div v-if="error" role="alert" class="error-message"><strong>Error:</strong> {{ error }}</div>
+
+<!-- Empty state -->
+<div v-if="!loading && items.length === 0" role="status">No hay elementos para mostrar</div>
+```
+
+### Menús Desplegables (Dropdowns)
+
+```html
+<div class="dropdown">
+  <button
+    @click="toggleMenu"
+    :aria-expanded="isMenuOpen"
+    aria-haspopup="true"
+    aria-controls="dropdown-menu"
+  >
+    Menú de usuario
+  </button>
+
+  <ul v-if="isMenuOpen" id="dropdown-menu" role="menu" @keydown.esc="closeMenu">
+    <li role="none">
+      <a href="/profile" role="menuitem">Mi perfil</a>
+    </li>
+    <li role="none">
+      <button @click="logout" role="menuitem">Cerrar sesión</button>
+    </li>
+  </ul>
+</div>
+```
+
+## Ejemplos Completos
+
+### Card Accesible
+
+```html
+<article class="card">
+  <img src="product.jpg" alt="Imagen del producto XYZ" />
+  <h3>
+    <a href="/product/123">Producto XYZ</a>
+  </h3>
+  <p>Descripción breve del producto...</p>
+  <p class="price">$99.99</p>
+  <a href="/product/123" class="btn" aria-label="Ver detalles de Producto XYZ"> Ver detalles </a>
+</article>
+```
+
+### Formulario de Login Completo
+
+```html
+<template>
+  <main id="main-content">
+    <form @submit.prevent="handleLogin" novalidate>
+      <h1>Iniciar Sesión</h1>
+
+      <div class="form-group">
+        <label for="email">Correo electrónico:</label>
+        <input
+          id="email"
+          v-model="email"
+          type="email"
+          required
+          aria-required="true"
+          :aria-invalid="errors.email ? 'true' : 'false'"
+          :aria-describedby="errors.email ? 'email-error' : undefined"
+          @blur="validateEmail"
+        />
+        <span v-if="errors.email" id="email-error" role="alert" class="error">
+          {{ errors.email }}
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña:</label>
+        <input
+          id="password"
+          v-model="password"
+          type="password"
+          required
+          aria-required="true"
+          :aria-invalid="errors.password ? 'true' : 'false'"
+          :aria-describedby="errors.password ? 'password-error' : undefined"
+        />
+        <span v-if="errors.password" id="password-error" role="alert" class="error">
+          {{ errors.password }}
+        </span>
+      </div>
+
+      <button type="submit" :disabled="loading">
+        <span v-if="!loading">Iniciar sesión</span>
+        <span v-else>
+          <span class="spinner" aria-hidden="true"></span>
+          Iniciando sesión...
+        </span>
+      </button>
+
+      <div v-if="submitError" role="alert" class="error-box">{{ submitError }}</div>
+    </form>
+  </main>
+</template>
+```
+
+### Tabs Accesibles
+
+```html
+<div class="tabs">
+  <div role="tablist" aria-label="Secciones de cuenta">
+    <button
+      v-for="tab in tabs"
+      :key="tab.id"
+      role="tab"
+      :aria-selected="activeTab === tab.id"
+      :aria-controls="`panel-${tab.id}`"
+      :tabindex="activeTab === tab.id ? 0 : -1"
+      @click="activeTab = tab.id"
+      @keydown.right="selectNextTab"
+      @keydown.left="selectPrevTab"
+    >
+      {{ tab.label }}
+    </button>
+  </div>
+
+  <div
+    v-for="tab in tabs"
+    :key="tab.id"
+    :id="`panel-${tab.id}`"
+    role="tabpanel"
+    :aria-labelledby="`tab-${tab.id}`"
+    :hidden="activeTab !== tab.id"
+  >
+    {{ tab.content }}
+  </div>
+</div>
+```
+
+## Testing de Accesibilidad
+
+Antes de considerar completada cualquier feature, DEBES:
+
+1. **Navegación con teclado:**
+   - Tab / Shift+Tab (orden lógico)
+   - Enter / Space (activar elementos)
+   - Flechas (en menús, tabs, etc.)
+   - Esc (cerrar modales/menús)
+
+2. **Zoom al 200%:**
+   - El contenido debe ser usable
+   - Sin scroll horizontal
+   - Texto legible
+
+3. **Herramientas automáticas:**
+   - Lighthouse (auditoría de accesibilidad)
+   - axe DevTools (extensión de navegador)
+   - WAVE (extensión de navegador)
+
+4. **Lectores de pantalla:**
+   - NVDA (Windows - gratis)
+   - JAWS (Windows)
+   - VoiceOver (Mac/iOS - integrado)
+   - TalkBack (Android - integrado)
+
+## Prioridad
+
+La accesibilidad NO es opcional. Es un requisito fundamental desde el inicio del desarrollo.
+
+**Orden de prioridades al escribir código:**
+
+1. Funcionalidad correcta
+2. Accesibilidad
+3. Rendimiento
+4. Estética
+
+Una interfaz bella pero inaccesible es una interfaz fallida.

@@ -2,10 +2,10 @@
   <header class="hero">
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <div class="hero-badge">24 a 26 de Julio 2026</div>
+      <div class="hero-badge">24, 25 y 26 de Julio</div>
       <h1 class="hero-title">
         Retiro lúdico <br />
-        C&D Summer Edition
+        C&D 2026
       </h1>
       <p class="hero-subtitle">Desconecta la rutina. Conecta con la diversión.</p>
       <div class="hero-actions">
