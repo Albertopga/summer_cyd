@@ -1,7 +1,11 @@
 <template>
   <section class="map-section">
     <div class="container">
-      <AppSectionHeader v-if="title || label" :label="label" :title="title" />
+      <AppSectionHeader
+        v-if="title || label"
+        :label="!title ? '' : label"
+        :title="title ? title : label"
+      />
       <div class="map-wrapper">
         <div class="map-container">
           <iframe
@@ -23,7 +27,7 @@
 <script setup>
 import AppSectionHeader from './AppSectionHeader.vue'
 
-const props = defineProps({
+defineProps({
   mapSrc: {
     type: String,
     required: true,

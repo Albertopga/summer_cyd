@@ -11,11 +11,27 @@
           variant="info"
         />
         <AppCard
+          ref="mapCardRef"
           title="Fecha y Lugar"
-          text="24, 25 y 26 de Julio de 2026, en Naturcampa, en la localidad de Matapozuelos, Valladolid"
-          icon="🗺️"
           variant="featured"
-        />
+          icon="🗺️"
+          modal-title="Mapa de ubicación"
+        >
+          <template #text>
+            24, 25 y 26 de Julio de 2026, en Naturcampa, en la localidad de
+            <button
+              type="button"
+              class="text-link"
+              @click="openMapModal"
+              aria-label="Ver mapa de ubicación de Naturcampa"
+            >
+              Matapozuelos, Valladolid
+            </button>
+          </template>
+          <template #modal>
+            <NaturcampaView />
+          </template>
+        </AppCard>
         <AppCard
           title="¿Para quién está pensado?"
           text="Pueden asistir todas las personas interesadas en disfrutar de un ambiente lúdico, compartir su afición por los juegos y formar parte de la comunidad que Castilla y Dragón ha construido durante más de una década. No hay límite de edad: solo se requiere entusiasmo y ganas de pasarlo bien. ¡Te esperamos en el Retiro Lúdico más destacado del año"
@@ -28,12 +44,41 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import AppSectionHeader from './AppSectionHeader.vue'
 import AppCard from './AppCard.vue'
+import NaturcampaView from '@/views/NaturcampaView.vue'
 import LogoAso from '@/assets/icons/logoAso.ico'
+
+const mapCardRef = ref(null)
+
+const openMapModal = () => {
+  if (mapCardRef.value) {
+    mapCardRef.value.openModal()
+  }
+}
 </script>
 
 <style scoped>
-/* Todos los estilos responsive están ahora centralizados en main.css */
-/* Este componente usa automáticamente el sistema mobile-first global */
+.text-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  transition: opacity 0.2s ease;
+}
+
+.text-link:hover {
+  opacity: 0.8;
+}
+
+.text-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
 </style>
