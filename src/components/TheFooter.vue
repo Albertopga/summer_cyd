@@ -1,5 +1,5 @@
 <template>
-  <footer class="footer">
+  <footer role="contentinfo" class="footer">
     <div class="container">
       <div class="footer-content">
         <div class="footer-section">
@@ -13,9 +13,9 @@
         <div class="footer-section">
           <h4 class="footer-title">Síguenos</h4>
           <div class="footer-social">
-            <span class="social-icon">📱</span>
-            <span class="social-icon">📧</span>
-            <span class="social-icon">🌐</span>
+            <span class="social-icon" aria-hidden="true">📱</span>
+            <span class="social-icon" aria-hidden="true">📧</span>
+            <span class="social-icon" aria-hidden="true">🌐</span>
           </div>
         </div>
       </div>

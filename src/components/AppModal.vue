@@ -1,15 +1,38 @@
 <template>
-  <div v-if="isOpen" class="modal-overlay" @click="closeModal">
-    <div class="modal-content" @click.stop>
-      <button class="modal-close" @click="closeModal">&times;</button>
+  <div v-if="isOpen" class="modal-overlay" role="presentation" @click="closeModal">
+    <div
+      class="modal-content"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="ariaLabelId"
+      :aria-describedby="ariaDescriptionId"
+      :aria-label="ariaFallbackLabel"
+      ref="modalContent"
+      tabindex="-1"
+      @click.stop
+      @keydown="handleKeydown"
+    >
+      <button
+        class="modal-close"
+        type="button"
+        @click="closeModal"
+        aria-label="Cerrar modal"
+        ref="closeButton"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
       <img :src="imageSrc" :alt="imageAlt" class="modal-image" />
-      <div class="modal-caption">{{ imageAlt }}</div>
+      <div v-if="imageAlt" :id="modalCaptionId" class="modal-caption">
+        {{ imageAlt }}
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+
+const props = defineProps({
   isOpen: {
     type: Boolean,
     default: false,
@@ -26,9 +49,103 @@ defineProps({
 
 const emit = defineEmits(['close'])
 
+const modalContent = ref(null)
+const closeButton = ref(null)
+let previouslyFocusedElement = null
+
+const modalId = `app-modal-${Math.random().toString(36).slice(2, 10)}`
+const modalCaptionId = `${modalId}-caption`
+
+const ariaLabelId = computed(() => (props.imageAlt ? modalCaptionId : undefined))
+const ariaDescriptionId = ariaLabelId
+const ariaFallbackLabel = computed(() =>
+  props.imageAlt ? undefined : 'Vista ampliada de la imagen seleccionada',
+)
+
 const closeModal = () => {
   emit('close')
 }
+
+const getFocusableElements = () => {
+  if (!modalContent.value) {
+    return []
+  }
+
+  return Array.from(
+    modalContent.value.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((element) => !element.hasAttribute('disabled'))
+}
+
+const focusFirstElement = () => {
+  if (closeButton.value) {
+    closeButton.value.focus()
+    return
+  }
+
+  const focusableElements = getFocusableElements()
+
+  if (focusableElements.length > 0) {
+    focusableElements[0].focus()
+    return
+  }
+
+  modalContent.value?.focus()
+}
+
+const handleKeydown = (event) => {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closeModal()
+    return
+  }
+
+  if (event.key !== 'Tab') {
+    return
+  }
+
+  const focusableElements = getFocusableElements()
+
+  if (focusableElements.length === 0) {
+    event.preventDefault()
+    modalContent.value?.focus()
+    return
+  }
+
+  const firstElement = focusableElements[0]
+  const lastElement = focusableElements[focusableElements.length - 1]
+
+  if (event.shiftKey && document.activeElement === firstElement) {
+    event.preventDefault()
+    lastElement.focus()
+  } else if (!event.shiftKey && document.activeElement === lastElement) {
+    event.preventDefault()
+    focusableElements[0].focus()
+  }
+}
+
+watch(
+  () => props.isOpen,
+  (isOpen) => {
+    if (isOpen) {
+      previouslyFocusedElement = document.activeElement
+
+      nextTick(() => {
+        focusFirstElement()
+      })
+    } else if (previouslyFocusedElement instanceof HTMLElement) {
+      previouslyFocusedElement.focus()
+      previouslyFocusedElement = null
+    }
+  },
+)
+
+onBeforeUnmount(() => {
+  if (previouslyFocusedElement instanceof HTMLElement) {
+    previouslyFocusedElement.focus()
+  }
+})
 </script>
 
 <style scoped>

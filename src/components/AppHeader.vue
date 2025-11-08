@@ -9,8 +9,8 @@
       </h1>
       <p class="hero-subtitle">Desconecta la rutina. Conecta con la diversión.</p>
       <div class="hero-actions">
-        <button class="cta-button cta-primary">Inscríbete Ahora</button>
-        <button class="cta-button cta-secondary">Más Información</button>
+        <button class="cta-button cta-primary" type="button">Inscríbete Ahora</button>
+        <button class="cta-button cta-secondary" type="button">Más Información</button>
       </div>
     </div>
     <div class="hero-decoration"></div>

@@ -1,15 +1,26 @@
 <script setup>
-import { RouterView } from 'vue-router'
+import { RouterLink, RouterView } from 'vue-router'
 import TheFooter from './components/TheFooter.vue'
 </script>
 
 <template>
-  <header>
-    <!-- <nav>
-      <RouterLink to="/home1">Home1</RouterLink>
-    </nav> -->
-  </header>
+  <div>
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
-  <RouterView />
-  <TheFooter />
+    <header role="banner">
+      <nav role="navigation" aria-label="Menú principal" class="sr-only">
+        <ul>
+          <li>
+            <RouterLink to="/">Inicio</RouterLink>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="main-content" role="main">
+      <RouterView />
+    </main>
+
+    <TheFooter />
+  </div>
 </template>
