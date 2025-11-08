@@ -4,13 +4,17 @@
     :class="[`card--${variant}`, { 'card--featured': isFeatured }]"
     @click="handleClick"
   >
-    <div class="card-icon">{{ icon }}</div>
+    <figure class="card-icon">
+      <img v-if="iconIsImage" :src="icon" :alt="iconAltText" loading="lazy" class="icon-max-lg" />
+      <span v-else aria-hidden="true" style="">{{ icon }}</span>
+    </figure>
     <h3 class="card-title">{{ title }}</h3>
     <p class="card-text">{{ text }}</p>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import router from '@/router'
 
 const props = defineProps({
@@ -25,6 +29,10 @@ const props = defineProps({
   icon: {
     type: String,
     required: true,
+  },
+  iconAlt: {
+    type: String,
+    default: '',
   },
   isFeatured: {
     type: Boolean,
@@ -42,6 +50,10 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['click'])
+
+const iconIsImage = computed(() => /\.(svg|png|jpe?g|webp|gif|ico)$/i.test(props.icon))
+
+const iconAltText = computed(() => props.iconAlt || `Icono de ${props.title}`)
 
 const handleClick = () => {
   if (props.link && props.link !== '#') {
@@ -64,6 +76,19 @@ const handleClick = () => {
   transform: translateY(-8px);
   box-shadow: var(--shadow-lg);
   border-color: var(--color-accent-light);
+}
+
+.card-icon {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-icon img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 /* Los estilos base (.card, .card-icon, .card-title, .card-text) están en main.css */
@@ -106,5 +131,15 @@ const handleClick = () => {
   background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
   transform: scaleX(0);
   transition: transform 0.3s ease;
+}
+.card-icon span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  max-width: 64px;
+  max-height: 64px;
+  padding: 1rem;
+  margin-bottom: 0.3rem;
 }
 </style>

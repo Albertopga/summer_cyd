@@ -89,6 +89,51 @@ body {
   outline-offset: 2px;
 }
 
+/* Utilidades de tamaño máximo para iconos e imágenes */
+.icon-max-xs {
+  max-width: 1.5rem;
+  max-height: 1.5rem;
+}
+
+.icon-max-sm {
+  max-width: 2rem;
+  max-height: 2rem;
+}
+
+.icon-max-md {
+  max-width: 3rem;
+  max-height: 3rem;
+}
+
+.icon-max-lg {
+  max-width: 4rem;
+  max-height: 4rem;
+}
+
+.image-max-xs {
+  max-width: 8rem;
+  width: 100%;
+  height: auto;
+}
+
+.image-max-sm {
+  max-width: 16rem;
+  width: 100%;
+  height: auto;
+}
+
+.image-max-md {
+  max-width: 24rem;
+  width: 100%;
+  height: auto;
+}
+
+.image-max-lg {
+  max-width: 32rem;
+  width: 100%;
+  height: auto;
+}
+
 /* Mobile-first base styles */
 .container {
   max-width: 100%;
