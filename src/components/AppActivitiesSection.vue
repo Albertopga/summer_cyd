@@ -52,7 +52,7 @@ const activities = [
     id: 4,
     title: 'Juegos',
     text: 'Catálogo de juegos de mesa.',
-    icon: '🎮',
+    icon: '🎲',
     description: 'Catálogo de juegos de mesa.',
   },
 ]

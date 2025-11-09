@@ -4,6 +4,13 @@
 
 # Reglas de Desarrollo - Vue + HTML + CSS
 
+## Enfoque Mobile First
+
+- Todo el proyecto se concibe mobile first: diseña, maqueta y prueba pensando que la mayoría de las personas usuarias accederán desde dispositivos móviles.
+- Asegúrate de que la experiencia en pantallas pequeñas sea completa antes de escalar a resoluciones mayores.
+- Prioriza performance y tamaño de recursos para conexiones móviles.
+- Define los estilos base pensando en pantallas móviles; añade media queries con `@media (min-width: …)` solo cuando necesites adaptar componentes a anchos mayores.
+
 ## Stack Tecnológico
 
 Este proyecto usa ÚNICAMENTE:

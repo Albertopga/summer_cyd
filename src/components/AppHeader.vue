@@ -9,7 +9,9 @@
       </h1>
       <p class="hero-subtitle">Desconecta la rutina. Conecta con la diversión.</p>
       <div class="hero-actions">
-        <button class="cta-button cta-primary" type="button">Inscríbete Ahora</button>
+        <RouterLink to="/registration" class="cta-button cta-primary">
+          Inscríbete Ahora
+        </RouterLink>
         <button class="cta-button cta-secondary" type="button">Más Información</button>
       </div>
     </div>
@@ -17,7 +19,9 @@
   </header>
 </template>
 
-<script setup></script>
+<script setup>
+import { RouterLink } from 'vue-router'
+</script>
 
 <style scoped>
 /* Mobile-first styles (por defecto) */
@@ -111,6 +115,14 @@
   max-width: 280px;
   padding: 0.75rem 1.5rem;
   font-size: 0.9rem;
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+}
+
+.cta-button:focus-visible {
+  outline: 3px solid #0066cc;
+  outline-offset: 2px;
 }
 
 /* Media queries para pantallas más grandes usando sintaxis moderna */
