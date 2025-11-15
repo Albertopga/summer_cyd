@@ -36,10 +36,51 @@
           </article>
         </aside>
 
-        <form class="registration-form" @submit.prevent="handleSubmit" novalidate>
+        <form
+          id="registration-form"
+          class="registration-form"
+          @submit.prevent="handleSubmit"
+          novalidate
+        >
+          <div v-if="isDev" class="dev-tools" aria-label="Herramientas de desarrollo">
+            <p class="dev-tools-label">🧪 Datos de prueba:</p>
+            <div class="dev-buttons">
+              <button
+                class="dev-button"
+                type="button"
+                @click="() => fillMockData('adult')"
+                :disabled="isSubmitting"
+              >
+                Adulto
+              </button>
+              <button
+                class="dev-button"
+                type="button"
+                @click="() => fillMockData('minor')"
+                :disabled="isSubmitting"
+              >
+                Menor
+              </button>
+              <button
+                class="dev-button"
+                type="button"
+                @click="() => fillMockData('special')"
+                :disabled="isSubmitting"
+              >
+                Especial
+              </button>
+              <button
+                class="dev-button"
+                type="button"
+                @click="() => fillMockData('minimal')"
+                :disabled="isSubmitting"
+              >
+                Mínimo
+              </button>
+            </div>
+          </div>
           <fieldset class="form-fieldset">
             <legend>Datos personales</legend>
-
             <div class="form-row">
               <label for="firstName">Nombre *</label>
               <input
@@ -153,7 +194,6 @@
                   name="emergencyContactName"
                   :required="isMinor"
                   :aria-required="isMinor"
-                  :disabled="isMinor"
                   :aria-invalid="errors.emergencyContactName ? 'true' : 'false'"
                   :aria-describedby="describedByFor('emergencyContactName')"
                   @blur="() => validateField('emergencyContactName')"
@@ -179,7 +219,7 @@
                   name="emergencyContactPhone"
                   inputmode="tel"
                   :required="isMinor"
-                  :aria-required="!isMinor"
+                  :aria-required="isMinor"
                   :aria-invalid="errors.emergencyContactPhone ? 'true' : 'false'"
                   :aria-describedby="describedByFor('emergencyContactPhone')"
                   @blur="() => validateField('emergencyContactPhone')"
@@ -438,6 +478,7 @@ const form = reactive({
   accommodation: '',
   diet: [],
   comments: '',
+  dietComments: '',
   emergencyContactName: '',
   emergencyContactPhone: '',
   terms: false,
@@ -464,6 +505,7 @@ const status = reactive({
 })
 
 const isSubmitting = ref(false)
+const isDev = import.meta.env.DEV
 
 const minDepartureDate = computed(() => form.arrivalDate || eventDates.start)
 
@@ -605,8 +647,8 @@ const validateField = (field) => {
 
     case 'departureDate': {
       if (!form.departureDate) {
-        errors.departureDate = 'Indica tu fecha de salida.'
-        return false
+        errors.departureDate = ''
+        return true
       }
       const departure = new Date(form.departureDate)
       const start = new Date(eventDates.start)
@@ -635,19 +677,22 @@ const validateField = (field) => {
       return true
 
     case 'emergencyContactName':
-      if (!form.emergencyContactName.trim()) {
-        errors.emergencyContactName = 'Necesitamos un contacto de emergencia.'
+      // Solo requerido si es menor
+      if (isMinor.value && !form.emergencyContactName.trim()) {
+        errors.emergencyContactName = 'Indica el nombre y apellidos del tutor o responsable.'
         return false
       }
+      // Para adultos es opcional, siempre válido
       errors.emergencyContactName = ''
       return true
 
     case 'emergencyContactPhone':
-      if (!form.emergencyContactPhone.trim()) {
+      if (isMinor.value && !form.emergencyContactPhone.trim()) {
         errors.emergencyContactPhone = 'Indica el teléfono de emergencia.'
         return false
       }
-      if (!phonePattern.test(form.emergencyContactPhone)) {
+      // Si es menor o si hay valor (opcional para adultos), validar formato
+      if (form.emergencyContactPhone.trim() && !phonePattern.test(form.emergencyContactPhone)) {
         errors.emergencyContactPhone = 'El teléfono de emergencia debe ser válido.'
         return false
       }
@@ -673,7 +718,6 @@ const fieldsToValidate = [
   'email',
   'phone',
   'birthDate',
-  'guardianFullName',
   'arrivalDate',
   'departureDate',
   'accommodation',
@@ -684,13 +728,21 @@ const fieldsToValidate = [
 
 const validateForm = () => {
   let isValid = true
+  const failedFields = []
 
   fieldsToValidate.forEach((field) => {
     const fieldValid = validateField(field)
     if (!fieldValid) {
       isValid = false
+      failedFields.push(field)
     }
   })
+
+  // En desarrollo, mostrar qué campos fallaron en consola
+  if (import.meta.env.DEV && failedFields.length > 0) {
+    console.log('Campos con errores:', failedFields)
+    console.log('Errores actuales:', { ...errors })
+  }
 
   return isValid
 }
@@ -706,6 +758,7 @@ const resetForm = () => {
   form.departureDate = ''
   form.accommodation = ''
   form.diet = []
+  form.comments = ''
   form.dietComments = ''
   form.emergencyContactName = ''
   form.emergencyContactPhone = ''
@@ -714,6 +767,60 @@ const resetForm = () => {
   Object.keys(errors).forEach((key) => {
     errors[key] = ''
   })
+}
+
+const saveToFile = (data, isMinorValue) => {
+  try {
+    // Crear objeto con los datos del formulario y metadatos
+    const submissionData = {
+      timestamp: new Date().toISOString(),
+      datos: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        birthDate: data.birthDate,
+        isMinor: isMinorValue,
+        guardianFullName: data.guardianFullName,
+        arrivalDate: data.arrivalDate,
+        departureDate: data.departureDate,
+        accommodation: data.accommodation,
+        diet: data.diet,
+        comments: data.comments,
+        dietComments: data.dietComments,
+        emergencyContactName: data.emergencyContactName,
+        emergencyContactPhone: data.emergencyContactPhone,
+        terms: data.terms,
+      },
+    }
+
+    // Convertir a JSON con formato legible
+    const jsonString = JSON.stringify(submissionData, null, 2)
+    const blob = new Blob([jsonString], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+
+    // Generar nombre de archivo único
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const emailPrefix = data.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '_')
+    const filename = `inscripcion_${emailPrefix}_${timestamp}.json`
+
+    // Crear enlace temporal y descargar
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    link.click()
+
+    // Limpiar
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    return true
+  } catch (error) {
+    console.error('Error al guardar el archivo:', error)
+    return false
+  }
 }
 
 const handleSubmit = async () => {
@@ -725,7 +832,39 @@ const handleSubmit = async () => {
 
   if (!isValid) {
     status.type = 'error'
-    status.message = 'Revisa los campos marcados para completar la inscripción.'
+    // Obtener nombres de campos con errores para mensaje más específico
+    const errorFields = Object.keys(errors).filter((key) => errors[key])
+    const fieldLabels = {
+      firstName: 'Nombre',
+      lastName: 'Apellidos',
+      email: 'Correo electrónico',
+      phone: 'Teléfono',
+      birthDate: 'Fecha de nacimiento',
+      arrivalDate: 'Fecha de llegada',
+      departureDate: 'Fecha de salida',
+      accommodation: 'Alojamiento',
+      emergencyContactName: 'Contacto de emergencia (nombre)',
+      emergencyContactPhone: 'Contacto de emergencia (teléfono)',
+      terms: 'Aceptación de términos',
+    }
+    const errorFieldNames = errorFields.map((field) => fieldLabels[field] || field).join(', ')
+
+    if (errorFieldNames) {
+      status.message = `Revisa los siguientes campos: ${errorFieldNames}.`
+    } else {
+      status.message = 'Revisa los campos marcados para completar la inscripción.'
+    }
+
+    // Scroll al primer campo con error
+    const firstErrorField = errorFields[0]
+    if (firstErrorField) {
+      const errorElement = document.getElementById(firstErrorField)
+      if (errorElement) {
+        errorElement.focus()
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
+
     return
   }
 
@@ -733,11 +872,22 @@ const handleSubmit = async () => {
   status.type = 'idle'
   status.message = ''
 
+  // Guardar datos en archivo local
+  const saved = saveToFile(form, isMinor.value)
+
   await new Promise((resolve) => setTimeout(resolve, 1200))
 
-  status.type = 'success'
-  status.message =
-    '¡Gracias por tu interés! Hemos recibido la solicitud y te contactaremos en las próximas horas.'
+  if (saved) {
+    status.type = 'success'
+    status.message =
+      '¡Gracias por tu interés! Hemos recibido la solicitud y se ha guardado tus datos. Te contactaremos en las próximas horas.'
+  } else {
+    status.type = 'error'
+    status.message =
+      'Se produjo un error al guardar los datos. Por favor, inténtalo de nuevo o contacta con nosotros.'
+    isSubmitting.value = false
+    return
+  }
 
   resetForm()
 
@@ -748,6 +898,107 @@ const handleReset = () => {
   resetForm()
   status.type = 'idle'
   status.message = ''
+
+  // Scroll al inicio del formulario
+  const formElement = document.getElementById('registration-form')
+  if (formElement) {
+    formElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // Enfocar el primer campo del formulario
+    const firstInput = formElement.querySelector('input, textarea, select')
+    if (firstInput) {
+      setTimeout(() => {
+        firstInput.focus()
+      }, 300)
+    }
+  }
+}
+
+const fillMockData = (scenario = 'adult') => {
+  clearStatus()
+
+  const mockScenarios = {
+    adult: {
+      firstName: 'María',
+      lastName: 'González Pérez',
+      email: 'maria.gonzalez@example.com',
+      phone: '+34 600 123 456',
+      birthDate: '1995-05-15',
+      arrivalDate: '2026-07-24',
+      departureDate: '2026-07-26',
+      accommodation: 'chozos',
+      diet: ['vegetariana'],
+      comments: '',
+      dietComments: 'Preferiría opciones sin lácteos si es posible.',
+      emergencyContactName: 'Juan González',
+      emergencyContactPhone: '+34 600 654 321',
+      terms: true,
+    },
+    minor: {
+      firstName: 'Ana',
+      lastName: 'Martínez López',
+      email: 'ana.martinez@example.com',
+      phone: '+34 611 222 333',
+      birthDate: '2010-08-20',
+      arrivalDate: '2026-07-24',
+      departureDate: '2026-07-26',
+      accommodation: 'albergue',
+      diet: ['sin-gluten', 'sin-lactosa'],
+      comments: '',
+      dietComments: 'Necesita dieta estricta sin gluten y sin lactosa.',
+      emergencyContactName: 'Carmen López Martínez',
+      emergencyContactPhone: '+34 622 333 444',
+      terms: true,
+    },
+    special: {
+      firstName: 'Carlos',
+      lastName: 'Ruiz Sánchez',
+      email: 'carlos.ruiz@example.com',
+      phone: '+34 633 444 555',
+      birthDate: '1988-12-10',
+      arrivalDate: '2026-07-24',
+      departureDate: '2026-07-25',
+      accommodation: 'especial',
+      diet: ['vegana'],
+      comments: 'Necesito acceso para silla de ruedas y alojamiento adaptado.',
+      dietComments: 'Dieta vegana estricta, sin excepciones.',
+      emergencyContactName: 'Laura Sánchez',
+      emergencyContactPhone: '+34 644 555 666',
+      terms: true,
+    },
+    minimal: {
+      firstName: 'Luis',
+      lastName: 'Fernández García',
+      email: 'luis.fernandez@example.com',
+      phone: '+34 655 666 777',
+      birthDate: '1992-03-25',
+      arrivalDate: '2026-07-24',
+      departureDate: '',
+      accommodation: 'albergue',
+      diet: [],
+      comments: '',
+      dietComments: '',
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+      terms: true,
+    },
+  }
+
+  const mockData = mockScenarios[scenario] || mockScenarios.adult
+
+  Object.assign(form, mockData)
+
+  // Limpiar errores después de rellenar
+  Object.keys(errors).forEach((key) => {
+    errors[key] = ''
+  })
+
+  status.type = 'idle'
+  status.message = ''
+}
+
+// Exponer función globalmente para uso desde consola (solo en desarrollo)
+if (import.meta.env.DEV) {
+  window.fillMockData = fillMockData
 }
 
 watch(
@@ -979,6 +1230,56 @@ watch(
 
 .form-reset:disabled {
   opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dev-tools {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: rgba(255, 193, 7, 0.1);
+  border: 2px dashed rgba(255, 193, 7, 0.5);
+  border-radius: var(--radius-lg);
+}
+
+.dev-tools-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+}
+
+.dev-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: var(--spacing-xs);
+}
+
+.dev-button {
+  background: rgba(255, 193, 7, 0.2);
+  color: var(--color-text);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.dev-button:hover:not(:disabled) {
+  background: rgba(255, 193, 7, 0.3);
+  border-color: rgba(255, 193, 7, 0.7);
+}
+
+.dev-button:focus-visible {
+  outline: 2px solid rgba(255, 193, 7, 0.8);
+  outline-offset: 2px;
+}
+
+.dev-button:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
