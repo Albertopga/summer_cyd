@@ -136,37 +136,67 @@
                 :aria-describedby="describedByFor('birthDate')"
                 @blur="() => validateField('birthDate')"
               />
-              <p v-if="isMinor" id="birthDate-help" class="form-help">
-                Si eres menor de edad, indícanos también los datos del tutor o responsable que
-                asistirá contigo.
-              </p>
               <span v-if="errors.birthDate" id="birthDate-error" class="form-error" role="alert">
                 {{ errors.birthDate }}
               </span>
             </div>
+            <fieldset class="form-fieldset">
+              <legend v-if="isMinor">Responsable del menor</legend>
+              <legend v-else>Contacto de emergencia (opcional)</legend>
 
-            <div v-if="isMinor" class="form-row">
-              <label for="guardianFullName">Tutor o responsable acompañante *</label>
-              <input
-                id="guardianFullName"
-                v-model.trim="form.guardianFullName"
-                type="text"
-                name="guardianFullName"
-                :aria-describedby="describedByFor('guardianFullName')"
-                placeholder="Nombre y apellidos completos"
-              />
-              <p id="guardianFullName-help" class="form-help">
-                Indica quién será la persona adulta responsable durante el retiro.
-              </p>
-              <span
-                v-if="errors.guardianFullName"
-                id="guardianFullName-error"
-                class="form-error"
-                role="alert"
-              >
-                {{ errors.guardianFullName }}
-              </span>
-            </div>
+              <div class="form-row">
+                <label for="emergencyContactName">Nombre completo {{ isMinor ? '*' : '' }}</label>
+                <input
+                  id="emergencyContactName"
+                  v-model.trim="form.emergencyContactName"
+                  type="text"
+                  name="emergencyContactName"
+                  :required="isMinor"
+                  :aria-required="isMinor"
+                  :disabled="isMinor"
+                  :aria-invalid="errors.emergencyContactName ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('emergencyContactName')"
+                  @blur="() => validateField('emergencyContactName')"
+                />
+                <span
+                  v-if="errors.emergencyContactName"
+                  id="emergencyContactName-error"
+                  class="form-error"
+                  role="alert"
+                >
+                  {{ errors.emergencyContactName }}
+                </span>
+              </div>
+
+              <div class="form-row">
+                <label for="emergencyContactPhone"
+                  >Teléfono de emergencia {{ isMinor ? '*' : '' }}</label
+                >
+                <input
+                  id="emergencyContactPhone"
+                  v-model.trim="form.emergencyContactPhone"
+                  type="tel"
+                  name="emergencyContactPhone"
+                  inputmode="tel"
+                  :required="isMinor"
+                  :aria-required="!isMinor"
+                  :aria-invalid="errors.emergencyContactPhone ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('emergencyContactPhone')"
+                  @blur="() => validateField('emergencyContactPhone')"
+                />
+                <p id="emergency-contact-phone-help" class="form-help">
+                  Este número solo se utilizará en caso de urgencia durante el evento.
+                </p>
+                <span
+                  v-if="errors.emergencyContactPhone"
+                  id="emergencyContactPhone-error"
+                  class="form-error"
+                  role="alert"
+                >
+                  {{ errors.emergencyContactPhone }}
+                </span>
+              </div>
+            </fieldset>
           </fieldset>
 
           <fieldset class="form-fieldset">
@@ -199,7 +229,7 @@
             </div>
 
             <div class="form-row">
-              <label for="departureDate">Salida estimada *</label>
+              <label for="departureDate">Salida estimada</label>
               <input
                 id="departureDate"
                 v-model="form.departureDate"
@@ -207,8 +237,7 @@
                 name="departureDate"
                 :min="minDepartureDate"
                 :max="eventDates.end"
-                required
-                aria-required="true"
+                aria-required="false"
                 :aria-invalid="errors.departureDate ? 'true' : 'false'"
                 :aria-describedby="describedByFor('departureDate')"
                 @blur="() => validateField('departureDate')"
@@ -245,6 +274,20 @@
                   <label :for="`accommodation-${option.value}`">{{ option.label }}</label>
                 </div>
               </div>
+              <div class="form-row" v-if="form.accommodation === 'especial'">
+                <label for="comments">Comentarios adicionales</label>
+                <textarea
+                  id="comments"
+                  v-model.trim="form.comments"
+                  name="comments"
+                  rows="4"
+                  :aria-describedby="describedByFor('comments')"
+                  maxlength="600"
+                ></textarea>
+                <p id="comments-help" class="form-help">
+                  Cuéntanos tu caso particular, o dudas que tengas para que podamos ayudarte mejor.
+                </p>
+              </div>
               <span
                 v-if="errors.accommodation"
                 id="accommodation-error"
@@ -252,35 +295,6 @@
                 role="alert"
               >
                 {{ errors.accommodation }}
-              </span>
-            </fieldset>
-
-            <fieldset
-              class="form-subfieldset"
-              :aria-describedby="describedByFor('experience')"
-              role="radiogroup"
-            >
-              <legend>Experiencia en juegos de mesa *</legend>
-              <p id="experience-help" class="form-help">
-                Nos permite formar mesas equilibradas y dinámicas adaptadas a cada nivel.
-              </p>
-              <div class="option-list option-list--radio">
-                <div v-for="option in experienceOptions" :key="option.value" class="option-item">
-                  <input
-                    :id="`experience-${option.value}`"
-                    v-model="form.experience"
-                    type="radio"
-                    name="experience"
-                    :value="option.value"
-                    required
-                    aria-required="true"
-                    @change="() => validateField('experience')"
-                  />
-                  <label :for="`experience-${option.value}`">{{ option.label }}</label>
-                </div>
-              </div>
-              <span v-if="errors.experience" id="experience-error" class="form-error" role="alert">
-                {{ errors.experience }}
               </span>
             </fieldset>
 
@@ -302,85 +316,25 @@
                   <label :for="`diet-${option.value}`">{{ option.label }}</label>
                 </div>
               </div>
+              <div class="form-row">
+                <label for="dietComments">Comentarios adicionales</label>
+                <textarea
+                  id="dietComments"
+                  v-model.trim="form.dietComments"
+                  name="dietComments"
+                  rows="4"
+                  :aria-describedby="describedByFor('dietComments')"
+                  maxlength="600"
+                ></textarea>
+                <p id="dietComments-help" class="form-help">
+                  Cuéntanos tus restricciones alimentarias para que podamos organizar la comida
+                  adecuadamente.
+                </p>
+              </div>
             </fieldset>
-
-            <div class="form-row">
-              <label for="comments">Comentarios adicionales</label>
-              <textarea
-                id="comments"
-                v-model.trim="form.comments"
-                name="comments"
-                rows="4"
-                :aria-describedby="describedByFor('comments')"
-                maxlength="600"
-              ></textarea>
-              <p id="comments-help" class="form-help">
-                Indícanos si viajas con menores, necesidades de accesibilidad o preferencias
-                específicas en las actividades.
-              </p>
-            </div>
-          </fieldset>
-
-          <fieldset class="form-fieldset">
-            <legend>Contacto de emergencia</legend>
-
-            <div class="form-row">
-              <label for="emergencyContactName">Nombre completo *</label>
-              <input
-                id="emergencyContactName"
-                v-model.trim="form.emergencyContactName"
-                type="text"
-                name="emergencyContactName"
-                required
-                aria-required="true"
-                :aria-invalid="errors.emergencyContactName ? 'true' : 'false'"
-                :aria-describedby="describedByFor('emergencyContactName')"
-                @blur="() => validateField('emergencyContactName')"
-              />
-              <span
-                v-if="errors.emergencyContactName"
-                id="emergencyContactName-error"
-                class="form-error"
-                role="alert"
-              >
-                {{ errors.emergencyContactName }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <label for="emergencyContactPhone">Teléfono de emergencia *</label>
-              <input
-                id="emergencyContactPhone"
-                v-model.trim="form.emergencyContactPhone"
-                type="tel"
-                name="emergencyContactPhone"
-                inputmode="tel"
-                required
-                aria-required="true"
-                :aria-invalid="errors.emergencyContactPhone ? 'true' : 'false'"
-                :aria-describedby="describedByFor('emergencyContactPhone')"
-                @blur="() => validateField('emergencyContactPhone')"
-              />
-              <p id="emergency-contact-phone-help" class="form-help">
-                Este número solo se utilizará en caso de urgencia durante el evento.
-              </p>
-              <span
-                v-if="errors.emergencyContactPhone"
-                id="emergencyContactPhone-error"
-                class="form-error"
-                role="alert"
-              >
-                {{ errors.emergencyContactPhone }}
-              </span>
-            </div>
           </fieldset>
 
           <div class="form-consent">
-            <label class="checkbox-consent">
-              <input id="newsletter" v-model="form.newsletter" type="checkbox" name="newsletter" />
-              <span>Quiero recibir novedades del club y actividades similares.</span>
-            </label>
-
             <label class="checkbox-consent">
               <input
                 id="terms"
@@ -394,8 +348,9 @@
                 @change="() => validateField('terms')"
               />
               <span>
-                Acepto la política de privacidad y autorizo el tratamiento de mis datos para la
-                gestión del evento.
+                Acepto la
+                <a href="/politica-privacidad" class="privacy-link">política de privacidad</a>
+                y autorizo el tratamiento de mis datos para la gestión de mi inscripción al evento.
               </span>
             </label>
             <span v-if="errors.terms" id="terms-error" class="form-error" role="alert">
@@ -463,21 +418,6 @@ const accommodationOptions = [
   },
 ]
 
-const experienceOptions = [
-  {
-    value: 'principiante',
-    label: 'Principiante: primeras partidas y juegos introductorios',
-  },
-  {
-    value: 'intermedio',
-    label: 'Intermedio: conozco varios juegos modernos y me adapto rápido',
-  },
-  {
-    value: 'experto',
-    label: 'Experta/o: me gustan los retos y los reglamentos complejos',
-  },
-]
-
 const dietOptions = [
   { value: 'vegetariana', label: 'Vegetariana' },
   { value: 'vegana', label: 'Vegana' },
@@ -496,12 +436,10 @@ const form = reactive({
   arrivalDate: '',
   departureDate: '',
   accommodation: '',
-  experience: '',
   diet: [],
   comments: '',
   emergencyContactName: '',
   emergencyContactPhone: '',
-  newsletter: false,
   terms: false,
 })
 
@@ -515,7 +453,6 @@ const errors = reactive({
   arrivalDate: '',
   departureDate: '',
   accommodation: '',
-  experience: '',
   emergencyContactName: '',
   emergencyContactPhone: '',
   terms: '',
@@ -568,7 +505,6 @@ const describedByFor = (field) => {
     phone: 'phone-help',
     birthDate: 'birthDate-help',
     guardianFullName: 'guardianFullName-help',
-    experience: 'experience-help',
     comments: 'comments-help',
     emergencyContactPhone: 'emergency-contact-phone-help',
   }
@@ -698,14 +634,6 @@ const validateField = (field) => {
       errors.accommodation = ''
       return true
 
-    case 'experience':
-      if (!form.experience) {
-        errors.experience = 'Selecciona tu nivel de experiencia.'
-        return false
-      }
-      errors.experience = ''
-      return true
-
     case 'emergencyContactName':
       if (!form.emergencyContactName.trim()) {
         errors.emergencyContactName = 'Necesitamos un contacto de emergencia.'
@@ -749,7 +677,6 @@ const fieldsToValidate = [
   'arrivalDate',
   'departureDate',
   'accommodation',
-  'experience',
   'emergencyContactName',
   'emergencyContactPhone',
   'terms',
@@ -778,12 +705,10 @@ const resetForm = () => {
   form.arrivalDate = ''
   form.departureDate = ''
   form.accommodation = ''
-  form.experience = ''
   form.diet = []
-  form.comments = ''
+  form.dietComments = ''
   form.emergencyContactName = ''
   form.emergencyContactPhone = ''
-  form.newsletter = false
   form.terms = false
 
   Object.keys(errors).forEach((key) => {
@@ -1010,6 +935,23 @@ watch(
 .checkbox-consent span {
   color: var(--color-text);
   font-size: 0.95rem;
+}
+
+.privacy-link {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s ease;
+}
+
+.privacy-link:hover {
+  color: var(--color-primary-dark);
+}
+
+.privacy-link:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .form-actions {
