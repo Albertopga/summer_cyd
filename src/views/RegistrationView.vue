@@ -1,6 +1,13 @@
 <template>
   <section class="section registration">
     <div class="container">
+      <nav class="registration-nav" aria-label="Navegación">
+        <RouterLink to="/" class="back-link">
+          <span aria-hidden="true">←</span>
+          Volver al inicio
+        </RouterLink>
+      </nav>
+
       <AppSectionHeader label="Inscripción" title="Reserva tu plaza" />
 
       <p class="registration-intro">
@@ -429,6 +436,7 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import AppSectionHeader from '@/components/AppSectionHeader.vue'
 import AppCard from '@/components/AppCard.vue'
 
@@ -1040,6 +1048,38 @@ watch(
 </script>
 
 <style scoped>
+.registration-nav {
+  margin-bottom: var(--spacing-md);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+  padding: var(--spacing-xs) 0;
+}
+
+.back-link:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.back-link:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.back-link span {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
 .registration-intro {
   margin-top: var(--spacing-sm);
   color: var(--color-text-light);
