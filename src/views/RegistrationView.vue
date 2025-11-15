@@ -20,7 +20,7 @@
         <aside class="registration-summary" aria-label="Información adicional para la inscripción">
           <AppCard
             title="Detalles clave"
-            text="El retiro se celebra del 24 al 26 de julio de 2026 en Naturcampa, Matapozuelos. El check-in comenzará el Viernes 24 a las 17:00 y finalizará a las 20:30. La salida y cierre del evento al público será el Domingo 26 a las 20:00."
+            text="El retiro Lúdico se celebra del 24 al 26 de julio de 2026 en Naturcampa, Matapozuelos. El check-in comenzará el Viernes 24 a las 17:00 y finalizará a las 20:30. La salida y cierre del evento al público será el Domingo 26 a las 20:00."
             icon="🗓️"
             variant="info"
           />
@@ -87,7 +87,10 @@
             </div>
           </div>
           <fieldset class="form-fieldset">
-            <legend>Datos personales</legend>
+            <legend>
+              Datos personales
+              <span class="legend-note">(nombre y apellidos, tal como aparecen en tu DNI)</span>
+            </legend>
             <div class="form-row">
               <label for="firstName">Nombre *</label>
               <input
@@ -123,6 +126,28 @@
               />
               <span v-if="errors.lastName" id="lastName-error" class="form-error" role="alert">
                 {{ errors.lastName }}
+              </span>
+            </div>
+            <div class="form-row">
+              <label for="lastName"
+                >Mote/Alias
+                <span class="legend-note"
+                  >(Este nombre será el que usaremos para identificarte en el evento)</span
+                ></label
+              >
+              <input
+                id="nickname"
+                v-model.trim="form.nickname"
+                type="text"
+                name="nickname"
+                autocomplete="family-name"
+                required
+                aria-required="true"
+                :aria-describedby="describedByFor('nickname')"
+                @blur="() => validateField('nickname')"
+              />
+              <span v-if="errors.nickname" id="nickname-error" class="form-error" role="alert">
+                {{ errors.nickname }}
               </span>
             </div>
 
@@ -458,7 +483,11 @@ const accommodationOptions = [
   },
   {
     value: 'chozos',
-    label: 'Chozos (150€)',
+    label: 'Chozo compartido (2 personas) (150€)',
+  },
+  {
+    value: 'chozo-individual',
+    label: 'Chozo individual (300€)',
   },
   {
     value: 'especial',
@@ -479,6 +508,7 @@ const dietOptions = [
 const form = reactive({
   firstName: '',
   lastName: '',
+  nickname: '',
   email: '',
   phone: '',
   birthDate: '',
@@ -497,6 +527,7 @@ const form = reactive({
 const errors = reactive({
   firstName: '',
   lastName: '',
+  nickname: '',
   email: '',
   phone: '',
   birthDate: '',
@@ -760,6 +791,7 @@ const validateForm = () => {
 const resetForm = () => {
   form.firstName = ''
   form.lastName = ''
+  form.nickname = ''
   form.email = ''
   form.phone = ''
   form.birthDate = ''
@@ -787,6 +819,7 @@ const saveToFile = (data, isMinorValue) => {
       datos: {
         firstName: data.firstName,
         lastName: data.lastName,
+        nickname: data.nickname,
         email: data.email,
         phone: data.phone,
         birthDate: data.birthDate,
@@ -847,6 +880,7 @@ const handleSubmit = async () => {
     const fieldLabels = {
       firstName: 'Nombre',
       lastName: 'Apellidos',
+      nickname: 'Mote/Alias',
       email: 'Correo electrónico',
       phone: 'Teléfono',
       birthDate: 'Fecha de nacimiento',
@@ -1123,6 +1157,13 @@ watch(
   font-size: 1.25rem;
   color: var(--color-primary);
   padding: 0 var(--spacing-xs);
+}
+
+.legend-note {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text-light);
+  margin-left: var(--spacing-xs);
 }
 
 .form-row {
