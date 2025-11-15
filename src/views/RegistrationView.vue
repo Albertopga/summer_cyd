@@ -20,7 +20,7 @@
         <aside class="registration-summary" aria-label="Información adicional para la inscripción">
           <AppCard
             title="Detalles clave"
-            text="El retiro se celebra del 24 al 26 de julio de 2026 en Naturcampa, Matapozuelos. El check-in comenzará el Viernes 24 a las 17:00 y finalizará a las 20:30. La salida y cierre del evento al público será el Domingo 26 a las 21:00."
+            text="El retiro se celebra del 24 al 26 de julio de 2026 en Naturcampa, Matapozuelos. El check-in comenzará el Viernes 24 a las 17:00 y finalizará a las 20:30. La salida y cierre del evento al público será el Domingo 26 a las 20:00."
             icon="🗓️"
             variant="info"
           />
@@ -396,7 +396,9 @@
               />
               <span>
                 Acepto la
-                <a href="/politica-privacidad" class="privacy-link">política de privacidad</a>
+                <RouterLink to="/politica-privacidad" class="privacy-link"
+                  >política de privacidad</RouterLink
+                >
                 y autorizo el tratamiento de mis datos para la gestión de mi inscripción al evento.
               </span>
             </label>
