@@ -105,8 +105,14 @@
                 :aria-describedby="describedByFor('firstName')"
                 @blur="() => validateField('firstName')"
               />
-              <span v-if="errors.firstName" id="firstName-error" class="form-error" role="alert">
-                {{ errors.firstName }}
+              <span
+                id="firstName-error"
+                class="form-error"
+                :class="{ 'form-error-hidden': !errors.firstName }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors.firstName || '&nbsp;' }}
               </span>
             </div>
 
@@ -124,8 +130,14 @@
                 :aria-describedby="describedByFor('lastName')"
                 @blur="() => validateField('lastName')"
               />
-              <span v-if="errors.lastName" id="lastName-error" class="form-error" role="alert">
-                {{ errors.lastName }}
+              <span
+                id="lastName-error"
+                class="form-error"
+                :class="{ 'form-error-hidden': !errors.lastName }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors.lastName || '&nbsp;' }}
               </span>
             </div>
             <div class="form-row">
@@ -146,8 +158,14 @@
                 :aria-describedby="describedByFor('nickname')"
                 @blur="() => validateField('nickname')"
               />
-              <span v-if="errors.nickname" id="nickname-error" class="form-error" role="alert">
-                {{ errors.nickname }}
+              <span
+                id="nickname-error"
+                class="form-error"
+                :class="{ 'form-error-hidden': !errors.nickname }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors.nickname || '&nbsp;' }}
               </span>
             </div>
 
@@ -166,8 +184,14 @@
                 :aria-describedby="describedByFor('email')"
                 @blur="() => validateField('email')"
               />
-              <span v-if="errors.email" id="email-error" class="form-error" role="alert">
-                {{ errors.email }}
+              <span
+                id="email-error"
+                class="form-error"
+                :class="{ 'form-error-hidden': !errors.email }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors.email || '&nbsp;' }}
               </span>
             </div>
 
@@ -190,8 +214,14 @@
                 Usa un teléfono activo durante los días del retiro. Te mantendremos informado vía
                 Telegram de actividades y horarios durante el evento.
               </p>
-              <span v-if="errors.phone" id="phone-error" class="form-error" role="alert">
-                {{ errors.phone }}
+              <span
+                id="phone-error"
+                class="form-error"
+                :class="{ 'form-error-hidden': !errors.phone }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors.phone || '&nbsp;' }}
               </span>
             </div>
 
@@ -209,8 +239,14 @@
                 :aria-describedby="describedByFor('birthDate')"
                 @blur="() => validateField('birthDate')"
               />
-              <span v-if="errors.birthDate" id="birthDate-error" class="form-error" role="alert">
-                {{ errors.birthDate }}
+              <span
+                id="birthDate-error"
+                class="form-error"
+                :class="{ 'form-error-hidden': !errors.birthDate }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors.birthDate || '&nbsp;' }}
               </span>
             </div>
             <fieldset class="form-fieldset">
@@ -231,12 +267,13 @@
                   @blur="() => validateField('emergencyContactName')"
                 />
                 <span
-                  v-if="errors.emergencyContactName"
                   id="emergencyContactName-error"
                   class="form-error"
+                  :class="{ 'form-error-hidden': !errors.emergencyContactName }"
                   role="alert"
+                  aria-live="polite"
                 >
-                  {{ errors.emergencyContactName }}
+                  {{ errors.emergencyContactName || '&nbsp;' }}
                 </span>
               </div>
 
@@ -260,12 +297,13 @@
                   Este número solo se utilizará en caso de urgencia durante el evento.
                 </p>
                 <span
-                  v-if="errors.emergencyContactPhone"
                   id="emergencyContactPhone-error"
                   class="form-error"
+                  :class="{ 'form-error-hidden': !errors.emergencyContactPhone }"
                   role="alert"
+                  aria-live="polite"
                 >
-                  {{ errors.emergencyContactPhone }}
+                  {{ errors.emergencyContactPhone || '&nbsp;' }}
                 </span>
               </div>
             </fieldset>
@@ -291,12 +329,13 @@
                 @change="() => validateField('arrivalDate')"
               />
               <span
-                v-if="errors.arrivalDate"
                 id="arrivalDate-error"
                 class="form-error"
+                :class="{ 'form-error-hidden': !errors.arrivalDate }"
                 role="alert"
+                aria-live="polite"
               >
-                {{ errors.arrivalDate }}
+                {{ errors.arrivalDate || '&nbsp;' }}
               </span>
             </div>
 
@@ -316,12 +355,13 @@
                 @change="() => validateField('departureDate')"
               />
               <span
-                v-if="errors.departureDate"
                 id="departureDate-error"
                 class="form-error"
+                :class="{ 'form-error-hidden': !errors.departureDate }"
                 role="alert"
+                aria-live="polite"
               >
-                {{ errors.departureDate }}
+                {{ errors.departureDate || '&nbsp;' }}
               </span>
             </div>
 
@@ -361,12 +401,13 @@
                 </p>
               </div>
               <span
-                v-if="errors.accommodation"
                 id="accommodation-error"
                 class="form-error"
+                :class="{ 'form-error-hidden': !errors.accommodation }"
                 role="alert"
+                aria-live="polite"
               >
-                {{ errors.accommodation }}
+                {{ errors.accommodation || '&nbsp;' }}
               </span>
             </fieldset>
 
@@ -427,8 +468,14 @@
                 y autorizo el tratamiento de mis datos para la gestión de mi inscripción al evento.
               </span>
             </label>
-            <span v-if="errors.terms" id="terms-error" class="form-error" role="alert">
-              {{ errors.terms }}
+            <span
+              id="terms-error"
+              class="form-error"
+              :class="{ 'form-error-hidden': !errors.terms }"
+              role="alert"
+              aria-live="polite"
+            >
+              {{ errors.terms || '&nbsp;' }}
             </span>
           </div>
 
@@ -1209,6 +1256,12 @@ watch(
 .form-error {
   font-size: 0.875rem;
   color: var(--color-accent);
+  min-height: 1.25rem;
+  display: block;
+}
+
+.form-error-hidden {
+  visibility: hidden;
 }
 
 .option-list {
