@@ -569,10 +569,27 @@ const status = reactive({
 const isSubmitting = ref(false)
 const isDev = import.meta.env.DEV
 
-const eventDetailsText = computed(
-  () =>
-    `El retiro Lúdico se celebra ${EVENT_DATES_LABEL_SHORT} de ${EVENT_YEAR} en Naturcampa, Matapozuelos. El check-in comenzará el Viernes 24 a las 17:00 y finalizará a las 20:30. La salida y cierre del evento al público será el Domingo 26 a las 20:00.`,
-)
+// Helper para obtener el día de la semana en español
+const getDayOfWeek = (dateString) => {
+  const date = new Date(dateString)
+  const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+  return days[date.getDay()]
+}
+
+// Helper para obtener el día del mes
+const getDayOfMonth = (dateString) => {
+  const date = new Date(dateString)
+  return date.getDate()
+}
+
+const eventDetailsText = computed(() => {
+  const startDayOfWeek = getDayOfWeek(EVENT_DATES.start)
+  const startDay = getDayOfMonth(EVENT_DATES.start)
+  const endDayOfWeek = getDayOfWeek(EVENT_DATES.end)
+  const endDay = getDayOfMonth(EVENT_DATES.end)
+
+  return `El retiro Lúdico se celebra ${EVENT_DATES_LABEL_SHORT} de ${EVENT_YEAR} en Naturcampa, Matapozuelos. El check-in comenzará el ${startDayOfWeek} ${startDay} a las 17:00 y finalizará a las 20:30. La salida y cierre del evento al público será el ${endDayOfWeek} ${endDay} a las 20:00.`
+})
 
 const minDepartureDate = computed(() => form.arrivalDate || EVENT_DATES.start)
 
