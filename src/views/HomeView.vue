@@ -9,7 +9,9 @@
         <div class="cta-content">
           <h2 class="cta-title">¿Listo para la Aventura?</h2>
           <p class="cta-text">No te pierdas esta experiencia única. Las plazas son limitadas.</p>
-          <button class="cta-button cta-large" type="button">Reserva tu Plaza Ahora</button>
+          <RouterLink to="/registration" class="cta-button cta-primary">
+            Reserva tu Plaza Ahora
+          </RouterLink>
         </div>
       </div>
     </section>

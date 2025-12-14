@@ -18,7 +18,7 @@
           modal-title="Mapa de ubicación"
         >
           <template #text>
-            24, 25 y 26 de Julio de 2026, en Naturcampa, en la localidad de
+            {{ EVENT_DATES_LABEL }} de {{ EVENT_YEAR }}, en Naturcampa, en la localidad de
             <button
               type="button"
               class="text-link"
@@ -49,6 +49,7 @@ import AppSectionHeader from './AppSectionHeader.vue'
 import AppCard from './AppCard.vue'
 import NaturcampaView from '@/views/NaturcampaView.vue'
 import LogoAso from '@/assets/icons/logoAso.ico'
+import { EVENT_DATES_LABEL, EVENT_YEAR } from '@/constants'
 
 const mapCardRef = ref(null)
 

@@ -178,6 +178,7 @@ body {
   background-color: var(--color-accent);
   color: var(--color-white);
   box-shadow: 0 4px 16px rgba(244, 162, 97, 0.4);
+  text-decoration: none;
 }
 
 .cta-primary:hover {

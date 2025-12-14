@@ -11,19 +11,14 @@
       <AppSectionHeader label="Inscripción" title="Reserva tu plaza" />
 
       <p class="registration-intro">
-        Completa el formulario para preinscribirte en el Retiro Lúdico de Castilla y Dragón de 2026.
-        La información nos ayuda a reservar tu alojamiento y a organizar las comidas y actividades
-        accesibles para todas las personas participantes.
+        Completa el formulario para preinscribirte en el Retiro Lúdico de Castilla y Dragón
+        {{ EVENT_YEAR }}. La información nos ayuda a reservar tu alojamiento y a organizar las
+        comidas y actividades accesibles para todas las personas participantes.
       </p>
 
       <div class="registration-layout">
         <aside class="registration-summary" aria-label="Información adicional para la inscripción">
-          <AppCard
-            title="Detalles clave"
-            text="El retiro Lúdico se celebra del 24 al 26 de julio de 2026 en Naturcampa, Matapozuelos. El check-in comenzará el Viernes 24 a las 17:00 y finalizará a las 20:30. La salida y cierre del evento al público será el Domingo 26 a las 20:00."
-            icon="🗓️"
-            variant="info"
-          />
+          <AppCard title="Detalles clave" :text="eventDetailsText" icon="🗓️" variant="info" />
 
           <AppCard title="Qué incluye la cuota" icon="🎒" variant="info">
             <template #text>
@@ -232,7 +227,7 @@
                 v-model="form.birthDate"
                 type="date"
                 name="birthDate"
-                :max="eventDates.start"
+                :max="EVENT_DATES.start"
                 required
                 aria-required="true"
                 :aria-invalid="errors.birthDate ? 'true' : 'false'"
@@ -319,8 +314,8 @@
                 v-model="form.arrivalDate"
                 type="date"
                 name="arrivalDate"
-                :min="eventDates.start"
-                :max="eventDates.end"
+                :min="EVENT_DATES.start"
+                :max="EVENT_DATES.end"
                 required
                 aria-required="true"
                 :aria-invalid="errors.arrivalDate ? 'true' : 'false'"
@@ -347,7 +342,7 @@
                 type="date"
                 name="departureDate"
                 :min="minDepartureDate"
-                :max="eventDates.end"
+                :max="EVENT_DATES.end"
                 aria-required="false"
                 :aria-invalid="errors.departureDate ? 'true' : 'false'"
                 :aria-describedby="describedByFor('departureDate')"
@@ -372,7 +367,11 @@
             >
               <legend>Alojamiento preferido *</legend>
               <div class="option-list option-list--radio">
-                <div v-for="option in accommodationOptions" :key="option.value" class="option-item">
+                <div
+                  v-for="option in ACCOMMODATION_OPTIONS"
+                  :key="option.value"
+                  class="option-item"
+                >
                   <input
                     :id="`accommodation-${option.value}`"
                     v-model="form.accommodation"
@@ -418,7 +417,7 @@
                 casillas sin marcar.
               </p>
               <div class="option-list option-list--checkbox">
-                <div v-for="option in dietOptions" :key="option.value" class="option-item">
+                <div v-for="option in DIET_OPTIONS" :key="option.value" class="option-item">
                   <input
                     :id="`diet-${option.value}`"
                     v-model="form.diet"
@@ -513,44 +512,19 @@ import { computed, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppSectionHeader from '@/components/AppSectionHeader.vue'
 import AppCard from '@/components/AppCard.vue'
+import {
+  EVENT_DATES,
+  EVENT_DATES_LABEL_SHORT,
+  EVENT_YEAR,
+  ACCOMMODATION_OPTIONS,
+  DIET_OPTIONS,
+  VALIDATION_PATTERNS,
+  FIELD_LABELS,
+} from '@/constants'
 
 defineOptions({
   name: 'RegistrationView',
 })
-
-const eventDates = {
-  start: '2026-07-24',
-  end: '2026-07-26',
-}
-
-const accommodationOptions = [
-  {
-    value: 'albergue',
-    label: 'Albergue compartido (130€)',
-  },
-  {
-    value: 'chozos',
-    label: 'Chozo compartido (2 personas) (150€)',
-  },
-  {
-    value: 'chozo-individual',
-    label: 'Chozo individual (300€)',
-  },
-  {
-    value: 'especial',
-    label: 'Antes necesito comentarlo con vosotros',
-    description:
-      'Si tienes algún caso particular, nos pondremos en contacto contigo para ayudarte.',
-  },
-]
-
-const dietOptions = [
-  { value: 'vegetariana', label: 'Vegetariana' },
-  { value: 'vegana', label: 'Vegana' },
-  { value: 'sin-gluten', label: 'Sin gluten' },
-  { value: 'sin-lactosa', label: 'Sin lactosa' },
-  { value: 'alergias', label: 'Tengo alergias (detállalo en comentarios)' },
-]
 
 const form = reactive({
   firstName: '',
@@ -595,7 +569,12 @@ const status = reactive({
 const isSubmitting = ref(false)
 const isDev = import.meta.env.DEV
 
-const minDepartureDate = computed(() => form.arrivalDate || eventDates.start)
+const eventDetailsText = computed(
+  () =>
+    `El retiro Lúdico se celebra ${EVENT_DATES_LABEL_SHORT} de ${EVENT_YEAR} en Naturcampa, Matapozuelos. El check-in comenzará el Viernes 24 a las 17:00 y finalizará a las 20:30. La salida y cierre del evento al público será el Domingo 26 a las 20:00.`,
+)
+
+const minDepartureDate = computed(() => form.arrivalDate || EVENT_DATES.start)
 
 const statusRole = computed(() => (status.type === 'error' ? 'alert' : 'status'))
 const statusAriaLive = computed(() => (status.type === 'error' ? 'assertive' : 'polite'))
@@ -611,15 +590,15 @@ const isMinor = computed(() => {
     return false
   }
 
-  const eventStart = new Date(eventDates.start)
+  const eventStart = new Date(EVENT_DATES.start)
   const eighteenthBirthday = new Date(birth)
   eighteenthBirthday.setFullYear(birth.getFullYear() + 18)
 
   return eighteenthBirthday > eventStart
 })
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-const phonePattern = /^[0-9+\s()-]{9,15}$/
+const emailPattern = VALIDATION_PATTERNS.email
+const phonePattern = VALIDATION_PATTERNS.phone
 
 const clearStatus = () => {
   if (status.type !== 'idle') {
@@ -700,7 +679,7 @@ const validateField = (field) => {
         return false
       }
       const birth = new Date(form.birthDate)
-      const eventStart = new Date(eventDates.start)
+      const eventStart = new Date(EVENT_DATES.start)
       if (Number.isNaN(birth.getTime()) || birth >= eventStart) {
         errors.birthDate = 'Introduce una fecha válida anterior al evento.'
         return false
@@ -723,8 +702,8 @@ const validateField = (field) => {
         return false
       }
       const arrival = new Date(form.arrivalDate)
-      const start = new Date(eventDates.start)
-      const end = new Date(eventDates.end)
+      const start = new Date(EVENT_DATES.start)
+      const end = new Date(EVENT_DATES.end)
       if (arrival < start || arrival > end) {
         errors.arrivalDate = 'La llegada debe ser entre el 24 y el 26 de julio.'
         return false
@@ -739,8 +718,8 @@ const validateField = (field) => {
         return true
       }
       const departure = new Date(form.departureDate)
-      const start = new Date(eventDates.start)
-      const end = new Date(eventDates.end)
+      const start = new Date(EVENT_DATES.start)
+      const end = new Date(EVENT_DATES.end)
       if (departure < start || departure > end) {
         errors.departureDate = 'La salida debe ser entre el 24 y el 26 de julio.'
         return false
@@ -924,21 +903,7 @@ const handleSubmit = async () => {
     status.type = 'error'
     // Obtener nombres de campos con errores para mensaje más específico
     const errorFields = Object.keys(errors).filter((key) => errors[key])
-    const fieldLabels = {
-      firstName: 'Nombre',
-      lastName: 'Apellidos',
-      nickname: 'Mote/Alias',
-      email: 'Correo electrónico',
-      phone: 'Teléfono',
-      birthDate: 'Fecha de nacimiento',
-      arrivalDate: 'Fecha de llegada',
-      departureDate: 'Fecha de salida',
-      accommodation: 'Alojamiento',
-      emergencyContactName: 'Contacto de emergencia (nombre)',
-      emergencyContactPhone: 'Contacto de emergencia (teléfono)',
-      terms: 'Aceptación de términos',
-    }
-    const errorFieldNames = errorFields.map((field) => fieldLabels[field] || field).join(', ')
+    const errorFieldNames = errorFields.map((field) => FIELD_LABELS[field] || field).join(', ')
 
     if (errorFieldNames) {
       status.message = `Revisa los siguientes campos: ${errorFieldNames}.`
@@ -1014,8 +979,8 @@ const fillMockData = (scenario = 'adult') => {
       email: 'maria.gonzalez@example.com',
       phone: '+34 600 123 456',
       birthDate: '1995-05-15',
-      arrivalDate: '2026-07-24',
-      departureDate: '2026-07-26',
+      arrivalDate: EVENT_DATES.start,
+      departureDate: EVENT_DATES.end,
       accommodation: 'chozos',
       diet: ['vegetariana'],
       comments: '',
@@ -1030,8 +995,8 @@ const fillMockData = (scenario = 'adult') => {
       email: 'ana.martinez@example.com',
       phone: '+34 611 222 333',
       birthDate: '2010-08-20',
-      arrivalDate: '2026-07-24',
-      departureDate: '2026-07-26',
+      arrivalDate: EVENT_DATES.start,
+      departureDate: EVENT_DATES.end,
       accommodation: 'albergue',
       diet: ['sin-gluten', 'sin-lactosa'],
       comments: '',
@@ -1046,7 +1011,7 @@ const fillMockData = (scenario = 'adult') => {
       email: 'carlos.ruiz@example.com',
       phone: '+34 633 444 555',
       birthDate: '1988-12-10',
-      arrivalDate: '2026-07-24',
+      arrivalDate: EVENT_DATES.start,
       departureDate: '2026-07-25',
       accommodation: 'especial',
       diet: ['vegana'],
@@ -1062,7 +1027,7 @@ const fillMockData = (scenario = 'adult') => {
       email: 'luis.fernandez@example.com',
       phone: '+34 655 666 777',
       birthDate: '1992-03-25',
-      arrivalDate: '2026-07-24',
+      arrivalDate: EVENT_DATES.start,
       departureDate: '',
       accommodation: 'albergue',
       diet: [],

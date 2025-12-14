@@ -2,10 +2,10 @@
   <header class="hero">
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <div class="hero-badge">24, 25 y 26 de Julio</div>
+      <div class="hero-badge">{{ EVENT_DATES_LABEL }}</div>
       <h1 class="hero-title">
         Retiro lúdico <br />
-        C&D 2026
+        C&D {{ EVENT_YEAR }}
       </h1>
       <p class="hero-subtitle">Desconecta la rutina. Conecta con la diversión.</p>
       <div class="hero-actions">
@@ -21,6 +21,7 @@
 
 <script setup>
 import { RouterLink } from 'vue-router'
+import { EVENT_DATES_LABEL, EVENT_YEAR } from '@/constants'
 </script>
 
 <style scoped>
