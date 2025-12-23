@@ -17,7 +17,8 @@
             <strong>Responsable:</strong> Asociación culturalCastilla y Dragón<br />
             <strong>CIF/NIF:</strong> G47720610<br />
             <strong>Correo electrónico:</strong>
-            <a href="mailto:castillaydragon@gmail.com">castillaydragon@gmail.com</a><br />
+            <a :href="`mailto:${CONTACT_INFO.email}`">{{ CONTACT_INFO.email }}</a
+            ><br />
           </p>
         </article>
 
@@ -160,7 +161,7 @@
           <ul>
             <li>
               <strong>Correo electrónico:</strong>
-              <a href="mailto:castillaydragon@gmail.com">castillaydragon@gmail.com</a>
+              <a :href="`mailto:${CONTACT_INFO.email}`">{{ CONTACT_INFO.email }}</a>
             </li>
           </ul>
           <p>
@@ -242,6 +243,7 @@
 
 <script setup>
 import AppSectionHeader from '@/components/AppSectionHeader.vue'
+import { CONTACT_INFO } from '@/constants'
 
 defineOptions({
   name: 'PrivacyPolicyView',

@@ -144,3 +144,11 @@ export const ACTIVITIES = [
     description: 'Catálogo de juegos de mesa.',
   },
 ]
+
+export const CONTACT_INFO = {
+  email: 'castillaydragon@gmail.com',
+  phone: '+34600123456',
+  telegram: 'https://t.me/castillaydragon',
+  instagram: 'https://www.instagram.com/castillaydragon/',
+  facebook: 'https://www.facebook.com/castillaydragon/',
+}

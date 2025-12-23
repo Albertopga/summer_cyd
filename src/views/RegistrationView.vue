@@ -31,8 +31,8 @@
             <h3>¿Tienes dudas?</h3>
             <p>
               Escríbenos a
-              <a href="mailto:castillaydragon@gmail.com">castillaydragon@gmail.com</a>
-              o contacta en nuestro Telegram al <a href="tel:+34600123456">600 123 456</a>.
+              <a :href="`mailto:${CONTACT_INFO.email}`">{{ CONTACT_INFO.email }}</a>
+              o contacta en nuestro Telegram al <a :href="`tel:${CONTACT_INFO.phone}`">{{ CONTACT_INFO.phone }}</a>.
               Estaremos encantadas de ayudarte.
             </p>
           </article>
