@@ -44,43 +44,6 @@
           @submit.prevent="handleSubmit"
           novalidate
         >
-          <div v-if="isDev" class="dev-tools" aria-label="Herramientas de desarrollo">
-            <p class="dev-tools-label">🧪 Datos de prueba:</p>
-            <div class="dev-buttons">
-              <button
-                class="dev-button"
-                type="button"
-                @click="() => fillMockData('adult')"
-                :disabled="isSubmitting"
-              >
-                Adulto
-              </button>
-              <button
-                class="dev-button"
-                type="button"
-                @click="() => fillMockData('minor')"
-                :disabled="isSubmitting"
-              >
-                Menor
-              </button>
-              <button
-                class="dev-button"
-                type="button"
-                @click="() => fillMockData('special')"
-                :disabled="isSubmitting"
-              >
-                Especial
-              </button>
-              <button
-                class="dev-button"
-                type="button"
-                @click="() => fillMockData('minimal')"
-                :disabled="isSubmitting"
-              >
-                Mínimo
-              </button>
-            </div>
-          </div>
           <fieldset class="form-fieldset">
             <legend>
               Datos personales
@@ -567,7 +530,6 @@ const status = reactive({
 })
 
 const isSubmitting = ref(false)
-const isDev = import.meta.env.DEV
 
 // Helper para obtener el día de la semana en español
 const getDayOfWeek = (dateString) => {
@@ -994,94 +956,6 @@ const handleReset = () => {
   }
 }
 
-const fillMockData = (scenario = 'adult') => {
-  clearStatus()
-
-  const mockScenarios = {
-    adult: {
-      firstName: 'María',
-      lastName: 'González Pérez',
-      email: 'maria.gonzalez@example.com',
-      phone: '+34 600 123 456',
-      birthDate: '1995-05-15',
-      arrivalDate: EVENT_DATES.start,
-      departureDate: EVENT_DATES.end,
-      accommodation: 'chozos',
-      diet: ['vegetariana'],
-      comments: '',
-      dietComments: 'Preferiría opciones sin lácteos si es posible.',
-      emergencyContactName: 'Juan González',
-      emergencyContactPhone: '+34 600 654 321',
-      terms: true,
-    },
-    minor: {
-      firstName: 'Ana',
-      lastName: 'Martínez López',
-      email: 'ana.martinez@example.com',
-      phone: '+34 611 222 333',
-      birthDate: '2010-08-20',
-      arrivalDate: EVENT_DATES.start,
-      departureDate: EVENT_DATES.end,
-      accommodation: 'albergue',
-      diet: ['sin-gluten', 'sin-lactosa'],
-      comments: '',
-      dietComments: 'Necesita dieta estricta sin gluten y sin lactosa.',
-      emergencyContactName: 'Carmen López Martínez',
-      emergencyContactPhone: '+34 622 333 444',
-      terms: true,
-    },
-    special: {
-      firstName: 'Carlos',
-      lastName: 'Ruiz Sánchez',
-      email: 'carlos.ruiz@example.com',
-      phone: '+34 633 444 555',
-      birthDate: '1988-12-10',
-      arrivalDate: EVENT_DATES.start,
-      departureDate: '2026-07-25',
-      accommodation: 'especial',
-      diet: ['vegana'],
-      comments: 'Necesito acceso para silla de ruedas y alojamiento adaptado.',
-      dietComments: 'Dieta vegana estricta, sin excepciones.',
-      emergencyContactName: 'Laura Sánchez',
-      emergencyContactPhone: '+34 644 555 666',
-      terms: true,
-    },
-    minimal: {
-      firstName: 'Luis',
-      lastName: 'Fernández García',
-      email: 'luis.fernandez@example.com',
-      phone: '+34 655 666 777',
-      birthDate: '1992-03-25',
-      arrivalDate: EVENT_DATES.start,
-      departureDate: '',
-      accommodation: 'albergue',
-      diet: [],
-      comments: '',
-      dietComments: '',
-      emergencyContactName: '',
-      emergencyContactPhone: '',
-      terms: true,
-    },
-  }
-
-  const mockData = mockScenarios[scenario] || mockScenarios.adult
-
-  Object.assign(form, mockData)
-
-  // Limpiar errores después de rellenar
-  Object.keys(errors).forEach((key) => {
-    errors[key] = ''
-  })
-
-  status.type = 'idle'
-  status.message = ''
-}
-
-// Exponer función globalmente para uso desde consola (solo en desarrollo)
-if (import.meta.env.DEV) {
-  window.fillMockData = fillMockData
-}
-
 watch(
   () => form.arrivalDate,
   () => {
@@ -1356,56 +1230,6 @@ watch(
 
 .form-reset:disabled {
   opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.dev-tools {
-  margin-top: var(--spacing-md);
-  padding: var(--spacing-md);
-  background-color: rgba(255, 193, 7, 0.1);
-  border: 2px dashed rgba(255, 193, 7, 0.5);
-  border-radius: var(--radius-lg);
-}
-
-.dev-tools-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: var(--spacing-xs);
-}
-
-.dev-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: var(--spacing-xs);
-}
-
-.dev-button {
-  background: rgba(255, 193, 7, 0.2);
-  color: var(--color-text);
-  border: 1px solid rgba(255, 193, 7, 0.5);
-  border-radius: var(--radius-md);
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.dev-button:hover:not(:disabled) {
-  background: rgba(255, 193, 7, 0.3);
-  border-color: rgba(255, 193, 7, 0.7);
-}
-
-.dev-button:focus-visible {
-  outline: 2px solid rgba(255, 193, 7, 0.8);
-  outline-offset: 2px;
-}
-
-.dev-button:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
 }
 

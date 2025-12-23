@@ -3,6 +3,44 @@
  * Valores literales y programáticos reutilizables en toda la aplicación
  */
 
+// Importar todas las imágenes usando import.meta.glob (forma segura para archivos con espacios)
+const imageModules = import.meta.glob('@/assets/images/*.{jpg,jpeg,png}', {
+  eager: true,
+  as: 'url',
+})
+
+// Función helper para obtener la URL de una imagen por nombre
+const getImageUrl = (filename) => {
+  // Buscar la imagen que coincida con el nombre del archivo
+  // Comparar el nombre del archivo al final de la ruta
+  const match = Object.keys(imageModules).find((path) => {
+    const pathFilename = decodeURIComponent(path.split('/').pop())
+    return pathFilename === filename
+  })
+  return match ? imageModules[match] : null
+}
+
+// Rutas de imágenes de alojamiento
+const albergueImages = [
+  getImageUrl('Albergue grande des.jpg'),
+  getImageUrl('Albergue  desPequeño.jpg'),
+  getImageUrl('albergue grande.jpg'),
+  getImageUrl('Albergue grande camas.jpeg'),
+  getImageUrl('Albergue grande camas 2.0.jpeg'),
+  getImageUrl('ALBERGUE-PEQUENO-NATUR.jpg'),
+  getImageUrl('Albergue pequeño camas.jpeg'),
+  getImageUrl('Albergues.jpeg'),
+].filter(Boolean) // Eliminar valores null si alguna imagen no se encuentra
+
+const chozosImages = [
+  getImageUrl('Chozos des.jpg'),
+  getImageUrl('chozo.jpg'),
+  getImageUrl('chozos 3.jpg'),
+  getImageUrl('Chozos lejos.jpeg'),
+  getImageUrl('Chozos lejos 2.0.jpeg'),
+  getImageUrl('Chozos media distancia.jpeg'),
+].filter(Boolean) // Eliminar valores null si alguna imagen no se encuentra
+
 // Fechas del evento
 export const EVENT_YEAR = '2026'
 
@@ -19,14 +57,21 @@ export const ACCOMMODATION_OPTIONS = [
   {
     value: 'albergue',
     label: 'Albergue compartido (130€)',
+    images: albergueImages,
+    description:
+      'Alojamiento en el albergue compartido. Se comparten las habitaciones y los baños.',
   },
   {
     value: 'chozos',
     label: 'Chozo compartido (2 personas) (150€)',
+    images: chozosImages,
+    description: 'Alojamiento en chozo compartido con otra persona. El precio es por persona.',
   },
   {
     value: 'chozo-individual',
     label: 'Chozo individual (300€)',
+    images: chozosImages,
+    description: 'Alojamiento en chozo individual s. El precio es por persona.',
   },
   {
     value: 'especial',
@@ -82,6 +127,7 @@ export const ACTIVITIES = [
     text: 'Opciones de alojamiento.',
     icon: '🏕️',
     description: 'Opciones de alojamiento.',
+    accommodations: ACCOMMODATION_OPTIONS,
   },
   {
     id: 3,

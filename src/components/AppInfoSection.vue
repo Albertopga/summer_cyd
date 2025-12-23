@@ -5,7 +5,7 @@
       <div class="content-grid">
         <AppCard
           title="¿Quién organiza este retiro?"
-          text="La Asociación Castilla y Dragón, una organización sin ánimo de lucro que se dedica a la promoción y difusión de la cultura y la tradición de Castilla y León."
+          text="La Asociación Castilla y Dragón, una organización sin ánimo de lucro que se dedica a la promoción y difusión del ocio alternativo."
           :icon="LogoAso"
           icon-alt="Logo de la Asociación Castilla y dragón"
           variant="info"
