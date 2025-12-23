@@ -18,14 +18,17 @@
           modal-title="Mapa de ubicación"
         >
           <template #text>
-            {{ EVENT_DATES_LABEL }} de {{ EVENT_YEAR }}, en Naturcampa, en la localidad de
+            <strong>{{ EVENT_DATES_LABEL }} de {{ EVENT_YEAR }}</strong
+            >. Desde la apertura de puertas el viernes a las 17:00, hasta las 20:00 del domingo que
+            cierra el evento. <br /><strong>¿Dónde?</strong> en <strong>Naturcampa</strong>, en la
+            localidad de <strong>Matapozuelos, Valladolid</strong>.
             <button
               type="button"
               class="text-link"
               @click="openMapModal"
               aria-label="Ver mapa de ubicación de Naturcampa"
             >
-              Matapozuelos, Valladolid
+              Ver mapa de ubicación de Naturcampa
             </button>
           </template>
           <template #modal>
@@ -34,7 +37,7 @@
         </AppCard>
         <AppCard
           title="¿Para quién está pensado?"
-          text="Pueden asistir todas las personas interesadas en disfrutar de un ambiente lúdico, compartir su afición por los juegos y formar parte de la comunidad que Castilla y Dragón ha construido durante más de una década. No hay límite de edad: solo se requiere entusiasmo y ganas de pasarlo bien. ¡Te esperamos en el Retiro Lúdico más destacado del año"
+          text="Pueden asistir todas las personas interesadas en disfrutar de un ambiente lúdico, compartir su afición por los juegos y formar parte de la comunidad que Castilla y Dragón ha construido durante más de una década. No hay límite de edad: solo se requiere entusiasmo y ganas de pasarlo bien. ¡Te esperamos en el Retiro Lúdico más destacado del año!"
           icon="👥"
           variant="info"
         />
