@@ -56,22 +56,22 @@ export const EVENT_DATES_LABEL_SHORT = '21 al 23 de Agosto'
 export const ACCOMMODATION_OPTIONS = [
   {
     value: 'albergue',
-    label: 'Albergue compartido (130€)',
+    label: 'Albergue compartido (130€ por persona)',
     images: albergueImages,
     description:
       'Alojamiento en el albergue compartido. Se comparten las habitaciones y los baños.',
   },
   {
     value: 'chozos',
-    label: 'Chozo compartido (2 personas) (150€)',
+    label: 'Chozo compartido (2 personas) (150€ por persona)',
     images: chozosImages,
-    description: 'Alojamiento en chozo compartido con otra persona. El precio es por persona.',
+    description: 'Alojamiento en chozo compartido con otra persona.',
   },
   {
     value: 'chozo-individual',
     label: 'Chozo individual (300€)',
     images: chozosImages,
-    description: 'Alojamiento en chozo individual s. El precio es por persona.',
+    description: 'Si quieres intimidad, alojamiento individual en un chozo solo para ti.',
   },
   {
     value: 'especial',
@@ -117,9 +117,9 @@ export const ACTIVITIES = [
   {
     id: 1,
     title: 'Actividades',
-    text: 'Actividades disponibles.',
+    text: 'Iremos añadiendo actividades a medida que se vayan concretando.',
     icon: '🎯',
-    description: 'Actividades disponibles.',
+    description: '',
   },
   {
     id: 2,
@@ -127,14 +127,14 @@ export const ACTIVITIES = [
     text: 'Opciones de alojamiento.',
     icon: '🏕️',
     description: 'Opciones de alojamiento.',
-    accommodations: ACCOMMODATION_OPTIONS,
+    accommodations: ACCOMMODATION_OPTIONS.filter((option) => option.value !== 'especial'),
   },
   {
     id: 3,
     title: 'Comida',
-    text: 'Menú de comidas.',
+    text: 'Menú de comidas. Iremos añadiendo menús a medida que se vayan concretando.',
     icon: '🍖',
-    description: 'Menú de comidas.',
+    description: '',
   },
   {
     id: 4,
