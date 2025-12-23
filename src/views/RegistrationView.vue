@@ -335,14 +335,14 @@
             </div>
 
             <div class="form-row">
-              <label for="departureDate">Salida estimada</label>
+              <label for="departureDate">Salida estimada (fecha y hora)</label>
               <input
                 id="departureDate"
                 v-model="form.departureDate"
-                type="date"
+                type="datetime-local"
                 name="departureDate"
-                :min="minDepartureDate"
-                :max="EVENT_DATES.end"
+                :min="minDepartureDateTime"
+                :max="maxDepartureDateTime"
                 aria-required="false"
                 :aria-invalid="errors.departureDate ? 'true' : 'false'"
                 :aria-describedby="describedByFor('departureDate')"
@@ -591,7 +591,14 @@ const eventDetailsText = computed(() => {
   return `El retiro Lúdico se celebra ${EVENT_DATES_LABEL_SHORT} de ${EVENT_YEAR} en Naturcampa, Matapozuelos. El check-in comenzará el ${startDayOfWeek} ${startDay} a las 17:00 y finalizará a las 20:30. La salida y cierre del evento al público será el ${endDayOfWeek} ${endDay} a las 20:00.`
 })
 
-const minDepartureDate = computed(() => form.arrivalDate || EVENT_DATES.start)
+const minDepartureDateTime = computed(() => {
+  const date = form.arrivalDate || EVENT_DATES.start
+  return date ? `${date}T00:00` : ''
+})
+
+const maxDepartureDateTime = computed(() => {
+  return EVENT_DATES.end ? `${EVENT_DATES.end}T21:00` : ''
+})
 
 const statusRole = computed(() => (status.type === 'error' ? 'alert' : 'status'))
 const statusAriaLive = computed(() => (status.type === 'error' ? 'assertive' : 'polite'))
@@ -735,16 +742,17 @@ const validateField = (field) => {
         return true
       }
       const departure = new Date(form.departureDate)
-      const start = new Date(EVENT_DATES.start)
-      const end = new Date(EVENT_DATES.end)
+      const start = new Date(EVENT_DATES.start + 'T00:00')
+      const end = new Date(EVENT_DATES.end + 'T21:00')
       if (departure < start || departure > end) {
-        errors.departureDate = 'La salida debe ser entre el 24 y el 26 de julio.'
+        errors.departureDate =
+          'La salida debe ser entre el 21 y el 23 de agosto, hasta las 21:00 del día 23.'
         return false
       }
       if (form.arrivalDate) {
-        const arrival = new Date(form.arrivalDate)
+        const arrival = new Date(form.arrivalDate + 'T00:00')
         if (departure < arrival) {
-          errors.departureDate = 'La fecha de salida no puede ser anterior a la de llegada.'
+          errors.departureDate = 'La fecha y hora de salida no puede ser anterior a la de llegada.'
           return false
         }
       }
