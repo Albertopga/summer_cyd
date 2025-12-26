@@ -117,31 +117,34 @@ export const ACTIVITIES = [
   {
     id: 1,
     title: 'Actividades',
-    text: 'Iremos añadiendo actividades a medida que se vayan concretando.',
+    text: 'Listado de actividades disponibles',
     icon: '🎯',
-    description: '',
+    description: 'Iremos añadiendo actividades a medida que se vayan concretando.',
   },
   {
     id: 2,
     title: 'Alojamiento',
     text: 'Opciones de alojamiento.',
     icon: '🏕️',
-    description: 'Opciones de alojamiento.',
+    description:
+      'Estas son las opciones de alojamiento disponibles, que podrás seleccionar para pernoctar durante el retiro.',
     accommodations: ACCOMMODATION_OPTIONS.filter((option) => option.value !== 'especial'),
   },
   {
     id: 3,
     title: 'Comida',
-    text: 'Menú de comidas. Iremos añadiendo menús a medida que se vayan concretando.',
+    text: 'Menú de comidas durante el evento.',
     icon: '🍖',
-    description: '',
+    description: 'Iremos añadiendo menús a medida que se vayan concretando.',
   },
   {
     id: 4,
     title: 'Juegos',
-    text: 'Catálogo de juegos de mesa.',
+    text: 'Listado de juegos de mesa disponibles',
     icon: '🎲',
-    description: 'Catálogo de juegos de mesa.',
+    description: 'Puedes ver los juegos de mesa disponibles, pinchando en el botón',
+    link: 'https://user.myboardgamecollection.com/?user_name=Castillaydragon&catalog_sort_category=game_name&catalog_sort_direction=ASC&cover_sort_category=game_rating&cover_sort_direction=DESC&include_expansions=false&display_qr=true&games_per_page=two&font_size=55&accent_color=a0aaa3&image_display=zoom',
+    linkText: 'Ver catálogo de juegos de mesa',
   },
 ]
 

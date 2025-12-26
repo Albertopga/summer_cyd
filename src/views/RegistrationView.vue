@@ -32,8 +32,9 @@
             <p>
               Escríbenos a
               <a :href="`mailto:${CONTACT_INFO.email}`">{{ CONTACT_INFO.email }}</a>
-              o contacta en nuestro Telegram al <a :href="`tel:${CONTACT_INFO.phone}`">{{ CONTACT_INFO.phone }}</a>.
-              Estaremos encantadas de ayudarte.
+              o contacta en nuestro Telegram al
+              <a :href="`tel:${CONTACT_INFO.phone}`">{{ CONTACT_INFO.phone }}</a
+              >. Estaremos encantadas de ayudarte.
             </p>
           </article>
         </aside>
@@ -275,10 +276,10 @@
               <input
                 id="arrivalDate"
                 v-model="form.arrivalDate"
-                type="date"
+                type="datetime-local"
                 name="arrivalDate"
-                :min="EVENT_DATES.start"
-                :max="EVENT_DATES.end"
+                :min="minArrivalDateTime"
+                :max="maxArrivalDateTime"
                 required
                 aria-required="true"
                 :aria-invalid="errors.arrivalDate ? 'true' : 'false'"
@@ -476,13 +477,14 @@ import { RouterLink } from 'vue-router'
 import AppSectionHeader from '@/components/AppSectionHeader.vue'
 import AppCard from '@/components/AppCard.vue'
 import {
-  EVENT_DATES,
-  EVENT_DATES_LABEL_SHORT,
-  EVENT_YEAR,
   ACCOMMODATION_OPTIONS,
+  CONTACT_INFO,
   DIET_OPTIONS,
-  VALIDATION_PATTERNS,
+  EVENT_DATES_LABEL_SHORT,
+  EVENT_DATES,
+  EVENT_YEAR,
   FIELD_LABELS,
+  VALIDATION_PATTERNS,
 } from '@/constants'
 
 defineOptions({
@@ -553,9 +555,15 @@ const eventDetailsText = computed(() => {
   return `El retiro Lúdico se celebra ${EVENT_DATES_LABEL_SHORT} de ${EVENT_YEAR} en Naturcampa, Matapozuelos. El check-in comenzará el ${startDayOfWeek} ${startDay} a las 17:00 y finalizará a las 20:30. La salida y cierre del evento al público será el ${endDayOfWeek} ${endDay} a las 20:00.`
 })
 
+const minArrivalDateTime = computed(() => {
+  return EVENT_DATES.start ? `${EVENT_DATES.start}T17:00` : ''
+})
+
+const maxArrivalDateTime = computed(() => {
+  return EVENT_DATES.start ? `${EVENT_DATES.start}T20:00` : ''
+})
 const minDepartureDateTime = computed(() => {
-  const date = form.arrivalDate || EVENT_DATES.start
-  return date ? `${date}T00:00` : ''
+  return EVENT_DATES.start ? `${EVENT_DATES.start}T00:00` : ''
 })
 
 const maxDepartureDateTime = computed(() => {

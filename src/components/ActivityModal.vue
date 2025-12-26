@@ -26,7 +26,26 @@
           >
             <div class="activity-modal-icon">{{ activity.icon }}</div>
             <h2 class="activity-modal-title">{{ activity.title }}</h2>
-            <p class="activity-modal-text">{{ activity.text }}</p>
+            <p class="activity-modal-text">
+              {{
+                activity.description && activity.description.trim() !== ''
+                  ? activity.description
+                  : activity.text
+              }}
+            </p>
+
+            <!-- Enlace externo -->
+            <div v-if="activity.link" class="activity-modal-link">
+              <a
+                :href="activity.link"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="activity-link-button"
+              >
+                {{ activity.linkText || 'Ver enlace' }}
+                <span class="sr-only">(se abre en nueva ventana)</span>
+              </a>
+            </div>
 
             <!-- Contenido de alojamiento -->
             <div v-if="activity.accommodations" class="accommodations-section">
@@ -386,6 +405,36 @@ onUnmounted(() => {
 
 .activity-modal-extra {
   margin-top: var(--spacing-xl);
+}
+
+/* Estilos para el enlace en el modal */
+.activity-modal-link {
+  margin-top: var(--spacing-lg);
+  text-align: center;
+}
+
+.activity-link-button {
+  display: inline-block;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--color-accent);
+  color: var(--color-white);
+  text-decoration: none;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 1.125rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.activity-link-button:hover {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.activity-link-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* Estilos para sección de alojamiento */

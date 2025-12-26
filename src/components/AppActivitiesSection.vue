@@ -8,6 +8,7 @@
           :key="activity.id"
           :title="activity.title"
           :icon="activity.icon"
+          :text="activity.text"
           variant="activities"
           @click="openModal(activity)"
         />
