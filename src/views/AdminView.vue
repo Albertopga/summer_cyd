@@ -95,6 +95,32 @@
         <div v-else class="registrations-list">
           <div class="list-header">
             <h2>Registros de asistentes ({{ totalRegistrations }})</h2>
+            <div class="sort-controls">
+              <label for="sort-field" class="sr-only">Ordenar por</label>
+              <select
+                id="sort-field"
+                v-model="sortField"
+                @change="handleSortChange"
+                class="sort-select"
+              >
+                <option value="accommodation_paid,created_at">Estado pago → Fecha registro</option>
+                <option value="created_at">Fecha registro</option>
+                <option value="accommodation_paid">Estado pago</option>
+                <option value="first_name">Nombre</option>
+                <option value="email">Email</option>
+                <option value="accommodation">Alojamiento</option>
+              </select>
+              <label for="sort-direction" class="sr-only">Dirección del orden</label>
+              <select
+                id="sort-direction"
+                v-model="sortDirection"
+                @change="handleSortChange"
+                class="sort-select"
+              >
+                <option value="asc">Ascendente</option>
+                <option value="desc">Descendente</option>
+              </select>
+            </div>
           </div>
 
           <div v-if="registrations.length === 0" class="empty-state" role="status">
@@ -185,6 +211,10 @@ const registrations = ref([])
 const totalRegistrations = ref(0)
 const selectedRegistration = ref(null)
 
+// Controles de ordenamiento
+const sortField = ref('accommodation_paid,created_at')
+const sortDirection = ref('asc')
+
 const loginForm = reactive({
   email: '',
   password: '',
@@ -273,10 +303,22 @@ const loadRegistrations = async () => {
   loading.value = true
   error.value = ''
 
+  // Preparar ordenamiento según selección
+  let orderBy = sortField.value
+  let ascending = sortDirection.value === 'asc'
+
+  // Si es ordenamiento múltiple (accommodation_paid,created_at)
+  if (orderBy === 'accommodation_paid,created_at') {
+    // Para este caso especial, accommodation_paid ascendente (false primero)
+    // y created_at descendente (más recientes primero)
+    orderBy = 'accommodation_paid,created_at'
+    ascending = 'true,false'
+  }
+
   const result = await getAllRegistrations({
     limit: 1000,
-    orderBy: 'created_at',
-    ascending: false,
+    orderBy,
+    ascending,
   })
 
   if (result.success) {
@@ -299,6 +341,10 @@ const closeEditModal = () => {
 
 const handleRegistrationUpdated = () => {
   closeEditModal()
+  loadRegistrations()
+}
+
+const handleSortChange = () => {
   loadRegistrations()
 }
 
@@ -472,11 +518,46 @@ const formatDate = (dateString) => {
   border-radius: var(--radius-lg);
 }
 
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
 .list-header h2 {
   font-family: var(--font-heading);
   font-size: 1.5rem;
   color: var(--color-primary);
   margin: 0;
+}
+
+.sort-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.sort-select {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-cream-dark);
+  background-color: var(--color-white);
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.sort-select:hover {
+  border-color: var(--color-primary);
+}
+
+.sort-select:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-color: var(--color-primary);
 }
 
 .empty-state {
@@ -559,6 +640,20 @@ const formatDate = (dateString) => {
   .admin-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sort-controls {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .sort-select {
+    width: 100%;
   }
 
   .registrations-table {

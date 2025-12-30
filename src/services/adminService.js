@@ -28,11 +28,27 @@ export async function getAllRegistrations(options = {}) {
     }
 
     // Obtener los registros
-    let query = supabase
-      .from('registrations')
-      .select('*')
-      .order(orderBy, { ascending })
-      .range(offset, offset + limit - 1)
+    let query = supabase.from('registrations').select('*')
+
+    // Manejar ordenamiento múltiple o simple
+    if (typeof orderBy === 'string' && orderBy.includes(',')) {
+      // Ordenamiento múltiple: "campo1,campo2" con "true,false"
+      const orderFields = orderBy.split(',').map((f) => f.trim())
+      const ascendingValues =
+        typeof ascending === 'string' && ascending.includes(',')
+          ? ascending.split(',').map((a) => a.trim() === 'true')
+          : [ascending]
+
+      orderFields.forEach((field, index) => {
+        const isAscending = ascendingValues[index] !== undefined ? ascendingValues[index] : false
+        query = query.order(field, { ascending: isAscending })
+      })
+    } else {
+      // Ordenamiento simple
+      query = query.order(orderBy, { ascending })
+    }
+
+    query = query.range(offset, offset + limit - 1)
 
     const { data, error } = await query
 
