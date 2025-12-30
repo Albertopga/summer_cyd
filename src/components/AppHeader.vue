@@ -12,7 +12,7 @@
         <RouterLink to="/registration" class="cta-button cta-primary">
           Inscríbete Ahora
         </RouterLink>
-        <button class="cta-button cta-secondary" type="button">Más Información</button>
+        <!-- <button class="cta-button cta-secondary" type="button">Más Información</button> -->
       </div>
     </div>
     <div class="hero-decoration"></div>
