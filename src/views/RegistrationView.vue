@@ -486,6 +486,7 @@ import {
   FIELD_LABELS,
   VALIDATION_PATTERNS,
 } from '@/constants'
+import { saveRegistration } from '@/services/registrationService'
 
 defineOptions({
   name: 'RegistrationView',
@@ -832,61 +833,6 @@ const resetForm = () => {
   })
 }
 
-const saveToFile = (data, isMinorValue) => {
-  try {
-    // Crear objeto con los datos del formulario y metadatos
-    const submissionData = {
-      timestamp: new Date().toISOString(),
-      datos: {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        nickname: data.nickname,
-        email: data.email,
-        phone: data.phone,
-        birthDate: data.birthDate,
-        isMinor: isMinorValue,
-        guardianFullName: data.guardianFullName,
-        arrivalDate: data.arrivalDate,
-        departureDate: data.departureDate,
-        accommodation: data.accommodation,
-        diet: data.diet,
-        comments: data.comments,
-        dietComments: data.dietComments,
-        emergencyContactName: data.emergencyContactName,
-        emergencyContactPhone: data.emergencyContactPhone,
-        terms: data.terms,
-      },
-    }
-
-    // Convertir a JSON con formato legible
-    const jsonString = JSON.stringify(submissionData, null, 2)
-    const blob = new Blob([jsonString], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-
-    // Generar nombre de archivo único
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
-    const emailPrefix = data.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '_')
-    const filename = `inscripcion_${emailPrefix}_${timestamp}.json`
-
-    // Crear enlace temporal y descargar
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    link.style.display = 'none'
-    document.body.appendChild(link)
-    link.click()
-
-    // Limpiar
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-
-    return true
-  } catch (error) {
-    console.error('Error al guardar el archivo:', error)
-    return false
-  }
-}
-
 const handleSubmit = async () => {
   if (isSubmitting.value) {
     return
@@ -923,26 +869,38 @@ const handleSubmit = async () => {
   status.type = 'idle'
   status.message = ''
 
-  // Guardar datos en archivo local
-  const saved = saveToFile(form, isMinor.value)
+  try {
+    // Guardar datos en Supabase
+    const result = await saveRegistration(form, isMinor.value)
 
-  await new Promise((resolve) => setTimeout(resolve, 1200))
-
-  if (saved) {
-    status.type = 'success'
-    status.message =
-      '¡Gracias por tu interés! Hemos recibido la solicitud y se ha guardado tus datos. Te contactaremos en las próximas horas.'
-  } else {
+    if (result.success) {
+      status.type = 'success'
+      status.message =
+        '¡Gracias por tu interés! Hemos recibido tu solicitud correctamente. Te contactaremos en las próximas horas.'
+      resetForm()
+    } else {
+      status.type = 'error'
+      // Mensajes de error más específicos según el tipo de error
+      if (result.error?.includes('duplicate') || result.error?.includes('unique')) {
+        status.message =
+          'Ya existe un registro con esta combinación de correo electrónico, nombre y fecha de nacimiento. Si crees que es un error, contacta con nosotros.'
+      } else if (result.error?.includes('network') || result.error?.includes('fetch')) {
+        status.message =
+          'Error de conexión. Por favor, verifica tu conexión a internet e inténtalo de nuevo.'
+      } else {
+        status.message =
+          'Se produjo un error al guardar los datos. Por favor, inténtalo de nuevo o contacta con nosotros.'
+      }
+      console.error('Error al guardar el registro:', result.error)
+    }
+  } catch (error) {
     status.type = 'error'
     status.message =
-      'Se produjo un error al guardar los datos. Por favor, inténtalo de nuevo o contacta con nosotros.'
+      'Se produjo un error inesperado. Por favor, inténtalo de nuevo o contacta con nosotros.'
+    console.error('Error inesperado:', error)
+  } finally {
     isSubmitting.value = false
-    return
   }
-
-  resetForm()
-
-  isSubmitting.value = false
 }
 
 const handleReset = () => {
