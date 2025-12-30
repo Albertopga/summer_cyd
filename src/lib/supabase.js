@@ -5,12 +5,23 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Obtener las variables de entorno y limpiar espacios
+// Obtener las variables de entorno y limpiar espacios y comillas
 const supabaseUrlRaw = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKeyRaw = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-const supabaseUrl = supabaseUrlRaw?.trim() || ''
-const supabaseAnonKey = supabaseAnonKeyRaw?.trim() || ''
+// Limpiar espacios y comillas simples/dobles que puedan estar al inicio o final
+// Usamos múltiples pasos para asegurar que se limpien correctamente
+const cleanValue = (value) => {
+  if (!value) return ''
+  return value
+    .trim()
+    .replace(/^['"]+/, '')
+    .replace(/['"]+$/, '')
+    .trim()
+}
+
+const supabaseUrl = cleanValue(supabaseUrlRaw)
+const supabaseAnonKey = cleanValue(supabaseAnonKeyRaw)
 
 // Debug: Log de variables (también en producción para debugging)
 console.log('🔍 Variables de entorno Supabase:', {
@@ -41,15 +52,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(errorMessage)
 }
 
-// Validar formato de URL
+// Validar formato de URL (después de limpiar comillas)
 if (!supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith('https://')) {
   console.error('❌ URL de Supabase inválida:', {
     url: supabaseUrl,
+    urlRaw: supabaseUrlRaw,
     urlLength: supabaseUrl.length,
     firstChars: supabaseUrl.substring(0, 20),
+    cleaned: supabaseUrl,
   })
   throw new Error(
-    `URL de Supabase inválida: "${supabaseUrl}". Debe comenzar con http:// o https://`,
+    `URL de Supabase inválida: "${supabaseUrl}". Debe comenzar con http:// o https://. Valor original: "${supabaseUrlRaw}"`,
   )
 }
 

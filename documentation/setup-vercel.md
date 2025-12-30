@@ -18,11 +18,13 @@ Añade las siguientes variables de entorno:
    - **Value**: Tu URL de proyecto de Supabase
    - **Ejemplo**: `https://wirsdcclxydciogimwqg.supabase.co`
    - **Environment**: Selecciona todas las opciones (Production, Preview, Development)
+   - ⚠️ **IMPORTANTE**: No incluyas comillas simples (`'`) o dobles (`"`) en los valores. Pega el valor directamente sin comillas.
 
 2. **`VITE_SUPABASE_ANON_KEY`**
    - **Value**: Tu clave anónima (anon public key) de Supabase
    - **Ejemplo**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
    - **Environment**: Selecciona todas las opciones (Production, Preview, Development)
+   - ⚠️ **IMPORTANTE**: No incluyas comillas simples (`'`) o dobles (`"`) en los valores. Pega el valor directamente sin comillas.
 
 ### Cómo Obtener los Valores
 
