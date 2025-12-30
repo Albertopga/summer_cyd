@@ -29,6 +29,9 @@ CREATE TABLE IF NOT EXISTS public.registrations (
   -- Consentimiento
   terms_accepted BOOLEAN NOT NULL DEFAULT false,
   
+  -- Estado de pago
+  accommodation_paid BOOLEAN NOT NULL DEFAULT false,
+  
   -- Metadatos
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -42,6 +45,9 @@ CREATE INDEX IF NOT EXISTS registrations_created_at_idx ON public.registrations(
 
 -- Crear índice en accommodation para filtros
 CREATE INDEX IF NOT EXISTS registrations_accommodation_idx ON public.registrations(accommodation);
+
+-- Crear índice en accommodation_paid para consultas rápidas por estado de pago
+CREATE INDEX IF NOT EXISTS registrations_accommodation_paid_idx ON public.registrations(accommodation_paid);
 
 -- Función para actualizar updated_at automáticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -119,6 +125,7 @@ COMMENT ON COLUMN public.registrations.diet IS 'Array de restricciones alimentar
 COMMENT ON COLUMN public.registrations.comments IS 'Comentarios adicionales sobre alojamiento';
 COMMENT ON COLUMN public.registrations.diet_comments IS 'Comentarios adicionales sobre restricciones alimentarias';
 COMMENT ON COLUMN public.registrations.terms_accepted IS 'Indica si se aceptaron los términos y condiciones';
+COMMENT ON COLUMN public.registrations.accommodation_paid IS 'Indica si el alojamiento está pagado';
 COMMENT ON COLUMN public.registrations.created_at IS 'Fecha y hora de creación del registro';
 COMMENT ON COLUMN public.registrations.updated_at IS 'Fecha y hora de última actualización';
 

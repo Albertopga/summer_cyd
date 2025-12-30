@@ -109,6 +109,7 @@
                   <th scope="col">Email</th>
                   <th scope="col">Teléfono</th>
                   <th scope="col">Alojamiento</th>
+                  <th scope="col">Pagado</th>
                   <th scope="col">Fecha registro</th>
                   <th scope="col">Acciones</th>
                 </tr>
@@ -119,6 +120,23 @@
                   <td>{{ registration.email }}</td>
                   <td>{{ registration.phone }}</td>
                   <td>{{ getAccommodationLabel(registration.accommodation) }}</td>
+                  <td>
+                    <span
+                      class="payment-status"
+                      :class="
+                        registration.accommodation_paid
+                          ? 'payment-status--paid'
+                          : 'payment-status--unpaid'
+                      "
+                      :aria-label="
+                        registration.accommodation_paid
+                          ? 'Alojamiento pagado'
+                          : 'Alojamiento no pagado'
+                      "
+                    >
+                      {{ registration.accommodation_paid ? 'Sí' : 'No' }}
+                    </span>
+                  </td>
                   <td>{{ formatDate(registration.created_at) }}</td>
                   <td>
                     <button
@@ -141,7 +159,6 @@
       <AdminEditModal
         v-if="selectedRegistration"
         :registration="selectedRegistration"
-        :allowed-fields="editableFields"
         @close="closeEditModal"
         @saved="handleRegistrationUpdated"
       />
@@ -167,19 +184,6 @@ const error = ref('')
 const registrations = ref([])
 const totalRegistrations = ref(0)
 const selectedRegistration = ref(null)
-
-// Campos editables (parametrizable)
-const editableFields = ref([
-  'phone',
-  'emergency_contact_name',
-  'emergency_contact_phone',
-  'arrival_date',
-  'departure_date',
-  'accommodation',
-  'diet',
-  'comments',
-  'diet_comments',
-])
 
 const loginForm = reactive({
   email: '',
@@ -531,6 +535,24 @@ const formatDate = (dateString) => {
 .edit-button:focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.payment-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.payment-status--paid {
+  background-color: #e6f4ea;
+  color: var(--color-primary);
+}
+
+.payment-status--unpaid {
+  background-color: #fce8e6;
+  color: var(--color-accent);
 }
 
 @media (max-width: 768px) {

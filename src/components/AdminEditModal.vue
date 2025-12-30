@@ -31,6 +31,17 @@
               :aria-invalid="errors[field.key] ? 'true' : 'false'"
             />
 
+            <!-- Campo de email -->
+            <input
+              v-else-if="field.type === 'email'"
+              :id="`field-${field.key}`"
+              v-model="formData[field.key]"
+              type="email"
+              autocomplete="email"
+              :aria-describedby="errors[field.key] ? `${field.key}-error` : undefined"
+              :aria-invalid="errors[field.key] ? 'true' : 'false'"
+            />
+
             <!-- Campo de teléfono -->
             <input
               v-else-if="field.type === 'tel'"
@@ -38,6 +49,16 @@
               v-model="formData[field.key]"
               type="tel"
               inputmode="tel"
+              :aria-describedby="errors[field.key] ? `${field.key}-error` : undefined"
+              :aria-invalid="errors[field.key] ? 'true' : 'false'"
+            />
+
+            <!-- Campo de fecha -->
+            <input
+              v-else-if="field.type === 'date'"
+              :id="`field-${field.key}`"
+              v-model="formData[field.key]"
+              type="date"
               :aria-describedby="errors[field.key] ? `${field.key}-error` : undefined"
               :aria-invalid="errors[field.key] ? 'true' : 'false'"
             />
@@ -51,6 +72,20 @@
               :aria-describedby="errors[field.key] ? `${field.key}-error` : undefined"
               :aria-invalid="errors[field.key] ? 'true' : 'false'"
             />
+
+            <!-- Campo checkbox simple -->
+            <div v-else-if="field.type === 'checkbox'" class="checkbox-single">
+              <input
+                :id="`field-${field.key}`"
+                v-model="formData[field.key]"
+                type="checkbox"
+                :aria-describedby="errors[field.key] ? `${field.key}-error` : undefined"
+                :aria-invalid="errors[field.key] ? 'true' : 'false'"
+              />
+              <label :for="`field-${field.key}`" class="checkbox-label">
+                {{ field.label }}
+              </label>
+            </div>
 
             <!-- Campo de texto largo -->
             <textarea
@@ -129,10 +164,6 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  allowedFields: {
-    type: Array,
-    default: () => [],
-  },
 })
 
 const emit = defineEmits(['close', 'saved'])
@@ -150,38 +181,80 @@ const status = reactive({
   type: 'idle',
 })
 
-// Configuración de campos editables con sus tipos y opciones
+// Configuración de campos con sus tipos, opciones y si son editables
 const editableFieldsConfig = computed(() => {
   const config = {
+    first_name: {
+      key: 'first_name',
+      label: 'Nombre',
+      type: 'text',
+      isEditable: true,
+    },
+    last_name: {
+      key: 'last_name',
+      label: 'Apellidos',
+      type: 'text',
+      isEditable: true,
+    },
+    nickname: {
+      key: 'nickname',
+      label: 'Mote/Alias',
+      type: 'text',
+      isEditable: true,
+    },
+    email: {
+      key: 'email',
+      label: 'Correo electrónico',
+      type: 'email',
+      isEditable: true,
+    },
     phone: {
       key: 'phone',
       label: 'Teléfono',
       type: 'tel',
+      isEditable: true,
+    },
+    birth_date: {
+      key: 'birth_date',
+      label: 'Fecha de nacimiento',
+      type: 'date',
+      isEditable: true,
+    },
+    is_minor: {
+      key: 'is_minor',
+      label: 'Es menor de edad',
+      type: 'checkbox',
+      isEditable: true,
     },
     emergency_contact_name: {
       key: 'emergency_contact_name',
       label: 'Contacto de emergencia (nombre)',
       type: 'text',
+      isEditable: true,
     },
     emergency_contact_phone: {
       key: 'emergency_contact_phone',
       label: 'Contacto de emergencia (teléfono)',
       type: 'tel',
+      isEditable: true,
     },
     arrival_date: {
       key: 'arrival_date',
       label: 'Fecha de llegada',
       type: 'datetime-local',
+      isEditable: true,
     },
     departure_date: {
       key: 'departure_date',
       label: 'Fecha de salida',
       type: 'datetime-local',
+      isEditable: true,
     },
     accommodation: {
       key: 'accommodation',
       label: 'Alojamiento',
       type: 'select',
+      isEditable: true,
       options: ACCOMMODATION_OPTIONS.map((opt) => ({
         value: opt.value,
         label: opt.label,
@@ -191,35 +264,94 @@ const editableFieldsConfig = computed(() => {
       key: 'diet',
       label: 'Restricciones alimentarias',
       type: 'checkbox-group',
+      isEditable: true,
       options: DIET_OPTIONS,
     },
     comments: {
       key: 'comments',
       label: 'Comentarios adicionales',
       type: 'textarea',
+      isEditable: true,
     },
     diet_comments: {
       key: 'diet_comments',
       label: 'Comentarios sobre dieta',
       type: 'textarea',
+      isEditable: true,
+    },
+    terms_accepted: {
+      key: 'terms_accepted',
+      label: 'Términos aceptados',
+      type: 'checkbox',
+      isEditable: true,
+    },
+    accommodation_paid: {
+      key: 'accommodation_paid',
+      label: 'Alojamiento pagado',
+      type: 'checkbox',
+      isEditable: true,
     },
   }
 
-  // Filtrar solo los campos permitidos
-  return props.allowedFields.map((fieldKey) => config[fieldKey]).filter(Boolean)
+  // Filtrar solo los campos editables
+  return Object.values(config).filter((field) => field.isEditable)
 })
+
+// Función helper para convertir fecha a formato datetime-local
+const formatDateTimeLocal = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return ''
+  // Formato: YYYY-MM-DDTHH:mm
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+// Función helper para convertir fecha a formato date
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return ''
+  // Formato: YYYY-MM-DD
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 // Inicializar formData cuando se abre el modal
 watch(
   () => props.registration,
   (newRegistration) => {
     if (newRegistration) {
-      // Inicializar solo los campos permitidos
-      props.allowedFields.forEach((fieldKey) => {
-        if (fieldKey === 'diet' && Array.isArray(newRegistration[fieldKey])) {
-          formData[fieldKey] = [...newRegistration[fieldKey]]
-        } else {
-          formData[fieldKey] = newRegistration[fieldKey] || ''
+      // Inicializar solo los campos editables con conversión de tipos
+      editableFieldsConfig.value.forEach((field) => {
+        const fieldKey = field.key
+        const value = newRegistration[fieldKey]
+
+        // Manejar arrays (diet)
+        if (fieldKey === 'diet' && Array.isArray(value)) {
+          formData[fieldKey] = [...value]
+        }
+        // Manejar booleanos (is_minor, terms_accepted)
+        else if (fieldKey === 'is_minor' || fieldKey === 'terms_accepted') {
+          formData[fieldKey] = Boolean(value)
+        }
+        // Manejar fechas datetime-local (arrival_date, departure_date)
+        else if (fieldKey === 'arrival_date' || fieldKey === 'departure_date') {
+          formData[fieldKey] = formatDateTimeLocal(value) || ''
+        }
+        // Manejar fecha date (birth_date)
+        else if (fieldKey === 'birth_date') {
+          formData[fieldKey] = formatDate(value) || ''
+        }
+        // Resto de campos (text, email, tel, textarea, select)
+        else {
+          formData[fieldKey] = value || ''
         }
       })
       isOpen.value = true
@@ -305,9 +437,33 @@ const handleSave = async () => {
 
   // Preparar datos para actualizar (solo campos que han cambiado)
   const updates = {}
-  props.allowedFields.forEach((fieldKey) => {
+  editableFieldsConfig.value.forEach((field) => {
+    const fieldKey = field.key
     const originalValue = props.registration[fieldKey]
-    const newValue = formData[fieldKey]
+    let newValue = formData[fieldKey]
+
+    // Convertir valores según el tipo de campo antes de comparar
+    if (fieldKey === 'birth_date' && newValue) {
+      // Convertir de formato date (YYYY-MM-DD) a DATE
+      newValue = newValue // Ya está en formato correcto para PostgreSQL
+    } else if ((fieldKey === 'arrival_date' || fieldKey === 'departure_date') && newValue) {
+      // Convertir de datetime-local a ISO string para TIMESTAMPTZ
+      const date = new Date(newValue)
+      if (!isNaN(date.getTime())) {
+        newValue = date.toISOString()
+      } else {
+        newValue = null
+      }
+    } else if (fieldKey === 'is_minor' || fieldKey === 'terms_accepted') {
+      // Asegurar que sea boolean
+      newValue = Boolean(newValue)
+    } else if (fieldKey === 'diet') {
+      // Asegurar que sea array
+      newValue = Array.isArray(newValue) ? newValue : []
+    } else if (newValue === '') {
+      // Convertir strings vacíos a null para campos opcionales
+      newValue = null
+    }
 
     // Comparar valores (manejar arrays para diet)
     if (fieldKey === 'diet') {
@@ -316,8 +472,13 @@ const handleSave = async () => {
       if (JSON.stringify(originalArray) !== JSON.stringify(newArray)) {
         updates[fieldKey] = newValue
       }
+    } else if (fieldKey === 'is_minor' || fieldKey === 'terms_accepted') {
+      // Comparar booleanos
+      if (Boolean(originalValue) !== Boolean(newValue)) {
+        updates[fieldKey] = newValue
+      }
     } else if (originalValue !== newValue) {
-      updates[fieldKey] = newValue || null
+      updates[fieldKey] = newValue
     }
   })
 
@@ -328,7 +489,9 @@ const handleSave = async () => {
     return
   }
 
-  const result = await updateRegistration(props.registration.id, updates, props.allowedFields)
+  // Obtener lista de campos editables para pasar al servicio
+  const editableFieldKeys = editableFieldsConfig.value.map((field) => field.key)
+  const result = await updateRegistration(props.registration.id, updates, editableFieldKeys)
 
   if (result.success) {
     status.type = 'success'
@@ -470,6 +633,22 @@ const handleSave = async () => {
 
 .checkbox-item input[type='checkbox'] {
   width: auto;
+}
+
+.checkbox-single {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.checkbox-single input[type='checkbox'] {
+  width: auto;
+}
+
+.checkbox-label {
+  font-weight: normal;
+  margin: 0;
+  cursor: pointer;
 }
 
 .form-error {
