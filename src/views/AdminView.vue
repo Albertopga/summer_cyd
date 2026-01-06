@@ -877,13 +877,53 @@ const handleDownloadExcel = async () => {
   width: 1.25rem;
   height: 1.25rem;
   cursor: pointer;
-  accent-color: var(--color-primary);
+  accent-color: var(--color-accent);
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid var(--color-accent);
+  border-radius: 3px;
+  background-color: var(--color-white);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.checkbox-column input[type='checkbox']:checked {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.checkbox-column input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.4rem;
+  height: 0.7rem;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -60%) rotate(45deg);
+}
+
+.checkbox-column input[type='checkbox']:indeterminate {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.checkbox-column input[type='checkbox']:indeterminate::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.6rem;
+  height: 2px;
+  background-color: white;
+  transform: translate(-50%, -50%);
 }
 
 .checkbox-column input[type='checkbox']:focus-visible {
-  outline: 3px solid var(--color-primary);
+  outline: 3px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 .registrations-table td {

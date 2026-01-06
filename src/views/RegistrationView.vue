@@ -1206,7 +1206,7 @@ watch(
 }
 
 .form-status--success {
-  background-color: #e6f4ea;
+  background-color: var(--color-accent-bg);
   color: var(--color-primary);
 }
 
