@@ -156,6 +156,58 @@ export const CONTACT_INFO = {
   facebook: 'https://www.facebook.com/castillaydragon/',
 }
 
+// Patrocinadores y colaboradores
+export const SPONSORS_AND_COLLABORATORS = [
+  {
+    id: 1,
+    name: 'Maldito Games',
+    logo: 'https://www.malditogames.com/wp-content/uploads/2017/09/cropped-malditologoblanco.png',
+    url: 'https://www.malditogames.com/',
+  },
+  {
+    id: 2,
+    name: '2 Tomatoes Games',
+    logo: 'https://2tomatoesgames.com/img/cms/2-tomatoes-games-logo-15423026522-jpg.png',
+    url: 'https://2tomatoesgames.com/es/',
+  },
+  {
+    id: 3,
+    name: 'HT Publishers',
+    logo: 'https://cf.geekdo-images.com/46whN5qtqVnsHYztNP_CMg__imagepage/img/8AB-d_ajbAeegoNaefDJOIBpkRw=/fit-in/900x600/filters:no_upscale():strip_icc()/pic6367713.png',
+    url: 'https://htpublishers.es/',
+  },
+  {
+    id: 4,
+    name: 'suseya ediciones',
+    logo: 'https://suseyaediciones.com/wp-content/uploads/2014/01/suseya-mas-oscuro-arreglado.jpg',
+    url: 'https://suseyaediciones.com/',
+  },
+  {
+    id: 5,
+    name: 'Tranjis Games',
+    logo: 'https://donmeeple.com/wp-content/uploads/2019/11/tranjis-games-editorial-juegos-mesa.jpg',
+    url: 'https://tranjisgames.com/',
+  },
+  {
+    id: 6,
+    name: 'Haba',
+    logo: 'https://cf.geekdo-images.com/B4J83FsN8OXJd3vfj0UxjA__imagepagezoom/img/rLKzBWI0PsrYA6C6wHBdTklh5pI=/fit-in/1200x900/filters:no_upscale():strip_icc()/pic8366956.jpg',
+    url: '',
+  },
+  {
+    id: 7,
+    name: 'Devir',
+    logo: 'https://dragonesylosetas.com/wp-content/uploads/2021/12/logo-devir-caja-azul-300x118.png',
+    url: 'https://devir.es/',
+  },
+  {
+    id: 8,
+    name: 'Zacatrus',
+    logo: 'https://static.zacatrus.com/version1764822447/frontend/zaca/z2025/es_ES/images/logo.svg',
+    url: 'https://zacatrus.es/',
+  },
+]
+
 export const TELEGRAM_TOOLTIP = `Para mantenerte informado antes y durante el evento, hemos creado un canal oficial de difusión en Telegram
 donde compartiremos anuncios importantes, avisos de partidas, horarios de actividades y cambios de agenda en tiempo real.
 
