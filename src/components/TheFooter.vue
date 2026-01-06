@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { EVENT_YEAR, CONTACT_INFO } from '@/constants'
+import { Icon } from '@iconify/vue'
 </script>
 
 <template>
@@ -17,12 +18,33 @@ import { EVENT_YEAR, CONTACT_INFO } from '@/constants'
         <div class="footer-section">
           <h4 class="footer-title">Síguenos</h4>
           <div class="footer-social">
-            <!-- logo deTelegram -->
-            <a :href="`${CONTACT_INFO.telegram}`" class="social-icon" aria-hidden="true">📧</a>
-            <!-- logo de Instagram -->
-            <a :href="`${CONTACT_INFO.instagram}`" class="social-icon" aria-hidden="true">📸</a>
-            <!-- logo de Facebook -->
-            <a :href="`${CONTACT_INFO.facebook}`" class="social-icon" aria-hidden="true">👥</a>
+            <a
+              :href="CONTACT_INFO.telegram"
+              class="social-icon"
+              aria-label="Visitar nuestro canal de Telegram"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon icon="mdi:telegram" />
+            </a>
+            <a
+              :href="CONTACT_INFO.instagram"
+              class="social-icon"
+              aria-label="Visitar nuestro perfil de Instagram"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon icon="mdi:instagram" />
+            </a>
+            <a
+              :href="CONTACT_INFO.facebook"
+              class="social-icon"
+              aria-label="Visitar nuestra página de Facebook"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon icon="mdi:facebook" />
+            </a>
           </div>
         </div>
       </div>

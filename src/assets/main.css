@@ -328,13 +328,24 @@ body {
 }
 
 .social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-white);
+  text-decoration: none;
   font-size: 1.25rem;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, color 0.2s ease;
 }
 
 .social-icon:hover {
   transform: scale(1.2);
+  color: var(--color-accent-light);
+}
+
+.social-icon :deep(svg) {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .footer-bottom {
