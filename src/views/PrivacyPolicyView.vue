@@ -14,7 +14,7 @@
         <article class="privacy-section">
           <h2>1. Responsable del tratamiento</h2>
           <p>
-            <strong>Responsable:</strong> Asociación culturalCastilla y Dragón<br />
+            <strong>Responsable:</strong> Asociación cultural Castilla y Dragón<br />
             <strong>CIF/NIF:</strong> G47720610<br />
             <strong>Correo electrónico:</strong>
             <a :href="`mailto:${CONTACT_INFO.email}`">{{ CONTACT_INFO.email }}</a
