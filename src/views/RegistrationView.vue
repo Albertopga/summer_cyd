@@ -11,7 +11,7 @@
       <AppSectionHeader label="Inscripción" title="Reserva tu plaza" />
 
       <p class="registration-intro">
-        Completa el formulario para preinscribirte en el Retiro Lúdico de la Asociación cultural
+        Completa el formulario para preinscribirte en el Retiro Lúdico de la asociación cultural
         <strong>Castilla y Dragón</strong>
         {{ EVENT_YEAR }}. La información nos ayuda a reservar tu alojamiento y a organizar las
         comidas y actividades accesibles para todas las personas participantes.
