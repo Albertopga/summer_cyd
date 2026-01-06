@@ -171,7 +171,50 @@
               />
               <p id="phone-help" class="form-help">
                 Usa un teléfono activo durante los días del retiro. Te mantendremos informado vía
-                Telegram de actividades y horarios durante el evento.
+                <button
+                  type="button"
+                  class="tooltip-trigger"
+                  :aria-expanded="showTelegramTooltip"
+                  :aria-controls="'telegram-tooltip'"
+                  @click="toggleTelegramTooltip"
+                  @mouseenter="showTelegramTooltip = true"
+                  @mouseleave="handleTooltipMouseLeave"
+                  aria-label="Más información sobre Telegram"
+                >
+                  Telegram
+                </button>
+                de actividades y horarios durante el evento.
+                <span
+                  v-if="showTelegramTooltip"
+                  id="telegram-tooltip"
+                  class="tooltip"
+                  role="tooltip"
+                  aria-live="polite"
+                  @mouseenter="
+                    () => {
+                      if (tooltipTimeout) clearTimeout(tooltipTimeout)
+                      showTelegramTooltip = true
+                    }
+                  "
+                  @mouseleave="
+                    () => {
+                      if (tooltipTimeout) clearTimeout(tooltipTimeout)
+                      showTelegramTooltip = false
+                    }
+                  "
+                >
+                  <span class="tooltip-content">
+                    {{ TELEGRAM_TOOLTIP }}
+                  </span>
+                  <button
+                    type="button"
+                    class="tooltip-close"
+                    @click="showTelegramTooltip = false"
+                    aria-label="Cerrar información sobre Telegram"
+                  >
+                    <span aria-hidden="true">×</span>
+                  </button>
+                </span>
               </p>
               <span
                 id="phone-error"
@@ -472,7 +515,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppSectionHeader from '@/components/AppSectionHeader.vue'
 import AppCard from '@/components/AppCard.vue'
@@ -484,6 +527,7 @@ import {
   EVENT_DATES,
   EVENT_YEAR,
   FIELD_LABELS,
+  TELEGRAM_TOOLTIP,
   VALIDATION_PATTERNS,
 } from '@/constants'
 import { saveRegistration } from '@/services/registrationService'
@@ -533,6 +577,68 @@ const status = reactive({
 })
 
 const isSubmitting = ref(false)
+const showTelegramTooltip = ref(false)
+
+const toggleTelegramTooltip = () => {
+  showTelegramTooltip.value = !showTelegramTooltip.value
+}
+
+// Manejar cuando el ratón sale del botón (con delay para permitir mover el ratón al tooltip)
+let tooltipTimeout = null
+const handleTooltipMouseLeave = () => {
+  // Limpiar timeout anterior si existe
+  if (tooltipTimeout) {
+    clearTimeout(tooltipTimeout)
+  }
+  // Pequeño delay para permitir mover el ratón al tooltip
+  tooltipTimeout = setTimeout(() => {
+    // Solo cerrar si el ratón no está sobre el tooltip ni el botón
+    const tooltipElement = document.getElementById('telegram-tooltip')
+    const triggerElement = document.querySelector('.tooltip-trigger')
+    if (
+      tooltipElement &&
+      !tooltipElement.matches(':hover') &&
+      triggerElement &&
+      !triggerElement.matches(':hover')
+    ) {
+      showTelegramTooltip.value = false
+    }
+  }, 150)
+}
+
+// Cerrar tooltip al presionar Escape
+const handleEscape = (event) => {
+  if (event.key === 'Escape' && showTelegramTooltip.value) {
+    showTelegramTooltip.value = false
+    if (tooltipTimeout) {
+      clearTimeout(tooltipTimeout)
+    }
+  }
+}
+
+// Cerrar tooltip al hacer clic fuera
+const handleClickOutside = (event) => {
+  if (
+    showTelegramTooltip.value &&
+    !event.target.closest('.tooltip') &&
+    !event.target.closest('.tooltip-trigger')
+  ) {
+    showTelegramTooltip.value = false
+    if (tooltipTimeout) {
+      clearTimeout(tooltipTimeout)
+    }
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleEscape)
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscape)
+  document.removeEventListener('click', handleClickOutside)
+})
 
 // Helper para obtener el día de la semana en español
 const getDayOfWeek = (dateString) => {
@@ -1081,6 +1187,105 @@ watch(
 .form-help {
   font-size: 0.875rem;
   color: var(--color-text-light);
+  position: relative;
+}
+
+.tooltip-trigger {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  transition: color 0.2s ease;
+}
+
+.tooltip-trigger:hover {
+  color: var(--color-primary-dark);
+}
+
+.tooltip-trigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.5rem;
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  z-index: 1000;
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: flex-start;
+}
+
+.tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 1rem;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid var(--color-primary);
+}
+
+.tooltip-content {
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.tooltip-close {
+  background: none;
+  border: none;
+  color: var(--color-white);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.tooltip-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.tooltip-close:focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .tooltip {
+    left: 0;
+    right: 0;
+  }
+
+  .tooltip::before {
+    left: 1rem;
+  }
 }
 
 .form-error {

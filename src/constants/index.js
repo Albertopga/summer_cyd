@@ -155,3 +155,13 @@ export const CONTACT_INFO = {
   instagram: 'https://www.instagram.com/castillaydragon/',
   facebook: 'https://www.facebook.com/castillaydragon/',
 }
+
+export const TELEGRAM_TOOLTIP = `Para mantenerte informado antes y durante el evento, hemos creado un canal oficial de difusión en Telegram
+donde compartiremos anuncios importantes, avisos de partidas, horarios de actividades y cambios de agenda en tiempo real.
+
+Solo la organización publica mensajes y las personas suscritas reciben las notificaciones.
+- No genera conversaciones ni mensajes innecesarios.
+- Las personas suscritas no pueden ver a otras personas usuarias del canal.
+
+Te recomendamos unirte al canal antes del evento para no perderte ninguna información importante durante el Retiro Lúdico 2026.
+`
