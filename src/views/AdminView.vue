@@ -743,7 +743,7 @@ const handleDownloadExcel = async () => {
 }
 
 .logout-button:hover {
-  background-color: var(--color-accent-dark);
+  background-color: var(--color-accent-hover);
 }
 
 .logout-button:focus-visible {
