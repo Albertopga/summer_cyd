@@ -135,6 +135,60 @@
         </article>
 
         <article class="faq-section">
+          <h2>¿Hay un canal de Telegram para estar informado?</h2>
+          <p>
+            Sí, hemos creado un canal oficial de difusión en Telegram para mantenerte informado
+            antes y durante el Retiro Lúdico 2026.
+          </p>
+          <p><strong>A través de este canal compartiremos:</strong></p>
+          <ul class="faq-list">
+            <li>Noticias y novedades previas al evento</li>
+            <li>Anuncios importantes de última hora</li>
+            <li>Avisos de partidas y actividades</li>
+            <li>Horarios de comienzo de cada actividad</li>
+            <li>Cambios de agenda o información relevante durante el retiro</li>
+          </ul>
+          <p>
+            El objetivo es que tengas toda la información importante en tiempo real y en un solo
+            lugar, de forma cómoda y accesible desde tu móvil.
+          </p>
+          <p><strong>¿Qué es un canal de difusión de Telegram?</strong></p>
+          <p>
+            Un canal de difusión en Telegram es una herramienta pensada para enviar información de
+            manera unidireccional:
+          </p>
+          <ul class="faq-list">
+            <li>Solo la organización publica mensajes</li>
+            <li>
+              Los suscriptores reciben las notificaciones, pero no pueden escribir en el canal
+            </li>
+            <li>No genera conversaciones ni mensajes innecesarios</li>
+            <li>Puedes silenciarlo o abandonar el canal en cualquier momento</li>
+          </ul>
+          <p><strong>Además, tu privacidad está garantizada:</strong></p>
+          <ul class="faq-list">
+            <li>Los suscriptores no pueden ver a otros usuarios del canal</li>
+            <li>No se muestra tu número de teléfono ni tus datos personales</li>
+            <li>Solo la organización ve el número total de personas suscritas</li>
+          </ul>
+          <p>
+            Esto garantiza que los avisos sean claros, ordenados y fáciles de consultar cuando los
+            necesites.
+          </p>
+          <p>
+            Te recomendamos unirte al canal antes del evento para no perderte ninguna información
+            importante durante el Retiro Lúdico 2026. Puedes acceder al canal desde
+            <a
+              :href="CONTACT_INFO.telegram"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="faq-link"
+              >nuestro enlace de Telegram<span class="sr-only"> (se abre en nueva ventana)</span></a
+            >.
+          </p>
+        </article>
+
+        <article class="faq-section">
           <h2>¿Qué ocurre si tengo alguna duda que este FAQ no pueda contestar?</h2>
           <p>
             Se puede escribir un email desde el apartado Contacta de la Web:
@@ -226,6 +280,18 @@ defineOptions({
 
 .faq-section p:last-child {
   margin-bottom: 0;
+}
+
+.faq-list {
+  margin-left: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.8;
+}
+
+.faq-list li {
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text);
 }
 
 .faq-link {

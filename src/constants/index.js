@@ -280,12 +280,46 @@ export const SPONSORS_AND_COLLABORATORS = [
   },
 ]
 
-export const TELEGRAM_TOOLTIP = `Para mantenerte informado antes y durante el evento, hemos creado un canal oficial de difusión en Telegram
-donde compartiremos anuncios importantes, avisos de partidas, horarios de actividades y cambios de agenda en tiempo real.
+export const TELEGRAM_TOOLTIP = `Para mantenerte informado antes y durante el evento, hemos creado un canal oficial de difusión en Telegram donde compartiremos anuncios importantes, avisos de partidas, horarios de actividades y cambios de agenda en tiempo real.
 
 Solo la organización publica mensajes y las personas suscritas reciben las notificaciones.
 - No genera conversaciones ni mensajes innecesarios.
 - Las personas suscritas no pueden ver a otras personas usuarias del canal.
+- Tu privacidad está garantizada: no se muestra tu número de teléfono ni tus datos personales.
 
 Te recomendamos unirte al canal antes del evento para no perderte ninguna información importante durante el Retiro Lúdico 2026.
 `
+
+export const TELEGRAM_INFO = {
+  title: 'Canal de difusión en Telegram',
+  description: `Para mantenerte informado antes y durante el Retiro Lúdico 2026, hemos creado un canal oficial de difusión en Telegram.
+
+A través de este canal compartiremos:
+
+• Noticias y novedades previas al evento
+• Anuncios importantes de última hora
+• Avisos de partidas y actividades
+• Horarios de comienzo de cada actividad
+• Cambios de agenda o información relevante durante el retiro
+
+El objetivo es que tengas toda la información importante en tiempo real y en un solo lugar, de forma cómoda y accesible desde tu móvil.
+
+¿Qué es un canal de difusión de Telegram?
+
+Un canal de difusión en Telegram es una herramienta pensada para enviar información de manera unidireccional:
+
+• Solo la organización publica mensajes
+• Los suscriptores reciben las notificaciones, pero no pueden escribir en el canal
+• No genera conversaciones ni mensajes innecesarios
+• Puedes silenciarlo o abandonar el canal en cualquier momento
+
+Además, tu privacidad está garantizada:
+
+• Los suscriptores no pueden ver a otros usuarios del canal
+• No se muestra tu número de teléfono ni tus datos personales
+• Solo la organización ve el número total de personas suscritas
+
+Esto garantiza que los avisos sean claros, ordenados y fáciles de consultar cuando los necesites.
+
+Te recomendamos unirte al canal antes del evento para no perderte ninguna información importante durante el Retiro Lúdico 2026.`,
+}

@@ -20,6 +20,26 @@
       <div class="registration-layout">
         <aside class="registration-summary" aria-label="Información adicional para la inscripción">
           <AppCard title="Detalles clave" :text="eventDetailsText" icon="🗓️" variant="info" />
+          <AppCard title="Canal de Telegram" icon="📢" variant="info">
+            <template #text>
+              <p>
+                Mantente informado durante el evento a través de nuestro canal oficial de Telegram.
+                Recibirás anuncios importantes, avisos de partidas, horarios y cambios de agenda en
+                tiempo real.
+              </p>
+              <p style="margin-top: 0.75rem">
+                <a
+                  :href="CONTACT_INFO.telegram"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="telegram-link-small"
+                >
+                  Únete al canal
+                  <span class="sr-only"> (se abre en nueva ventana)</span>
+                </a>
+              </p>
+            </template>
+          </AppCard>
 
           <AppCard title="Qué incluye la cuota" icon="🎒" variant="info">
             <template #text>
@@ -1525,6 +1545,28 @@ watch(
   outline: 2px solid var(--color-accent-light);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+.telegram-link-small {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.telegram-link-small:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+}
+
+.telegram-link-small:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 @keyframes spinner {
