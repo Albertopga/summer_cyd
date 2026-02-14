@@ -20,8 +20,8 @@
         <article class="faq-section">
           <h2>¿Dónde se realizan?</h2>
           <p>
-            En Naturcampa. Podréis encontrar más información en la
-            <RouterLink to="/" class="faq-link">página principal del evento</RouterLink>.
+            En Naturcampa. Podréis encontrar más información
+            <RouterLink to="/" class="faq-link">pinchando aquí</RouterLink>.
           </p>
         </article>
 

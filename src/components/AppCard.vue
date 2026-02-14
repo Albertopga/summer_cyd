@@ -10,7 +10,9 @@
     </figure>
     <h3 class="card-title">{{ title }}</h3>
     <p class="card-text">
-      <slot name="text">{{ text }}</slot>
+      <slot name="text">
+        <span v-html="text"></span>
+      </slot>
     </p>
   </div>
 
