@@ -1,12 +1,14 @@
 <template>
   <div class="section-header">
     <span class="section-label">{{ label }}</span>
-    <h2 class="section-title">{{ title }}</h2>
+    <component :is="headingLevel" class="section-title">{{ title }}</component>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   label: {
     type: String,
     required: true,
@@ -15,6 +17,14 @@ defineProps({
     type: String,
     required: true,
   },
+  useH1: {
+    type: Boolean,
+    default: false,
+  },
+})
+
+const headingLevel = computed(() => {
+  return props.useH1 ? 'h1' : 'h2'
 })
 </script>
 

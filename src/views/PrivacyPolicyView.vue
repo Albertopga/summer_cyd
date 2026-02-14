@@ -1,7 +1,7 @@
 <template>
   <section class="section privacy-policy">
     <div class="container">
-      <AppSectionHeader label="Información Legal" title="Política de Privacidad" />
+      <AppSectionHeader label="Información Legal" title="Política de Privacidad" :use-h1="true" />
 
       <div class="privacy-content">
         <p class="privacy-intro">
@@ -232,6 +232,10 @@
         </article>
 
         <nav class="privacy-nav" aria-label="Navegación de la política de privacidad">
+          <div class="privacy-nav-links">
+            <RouterLink to="/faqs" class="privacy-nav-link">Preguntas Frecuentes</RouterLink>
+            <RouterLink to="/normas" class="privacy-nav-link">Normas del Evento</RouterLink>
+          </div>
           <a href="/registration" class="privacy-link-back"
             >← Volver al formulario de inscripción</a
           >
@@ -242,6 +246,7 @@
 </template>
 
 <script setup>
+import { RouterLink } from 'vue-router'
 import AppSectionHeader from '@/components/AppSectionHeader.vue'
 import { CONTACT_INFO } from '@/constants'
 
@@ -328,6 +333,32 @@ defineOptions({
   padding-top: var(--spacing-lg);
   border-top: 1px solid var(--color-cream-dark);
   text-align: center;
+}
+
+.privacy-nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.privacy-nav-link {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.privacy-nav-link:hover {
+  color: var(--color-primary-dark);
+}
+
+.privacy-nav-link:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .privacy-link-back {

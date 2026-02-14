@@ -31,10 +31,16 @@
           <article class="summary-note">
             <h3>¿Tienes dudas?</h3>
             <p>
-              Escríbenos a
-              <a :href="`mailto:${CONTACT_INFO.email}`">{{ CONTACT_INFO.email }}</a>
+              Consulta nuestras
+              <RouterLink to="/faqs" class="summary-link">preguntas frecuentes</RouterLink>
+              o escríbenos a
+              <a :href="`mailto:${CONTACT_INFO.email}`" class="summary-link">{{
+                CONTACT_INFO.email
+              }}</a>
               o contacta en nuestro Telegram al
-              <a :href="`tel:${CONTACT_INFO.phone}`">{{ CONTACT_INFO.phone }}</a
+              <a :href="`tel:${CONTACT_INFO.phone}`" class="summary-link">{{
+                CONTACT_INFO.phone
+              }}</a
               >. Estaremos encantadas de ayudarte.
             </p>
           </article>
@@ -484,6 +490,35 @@
             >
               {{ errors.terms || '&nbsp;' }}
             </span>
+
+            <label class="checkbox-consent">
+              <input
+                id="norms"
+                v-model="form.norms"
+                type="checkbox"
+                name="norms"
+                required
+                aria-required="true"
+                :aria-invalid="errors.norms ? 'true' : 'false'"
+                :aria-describedby="describedByFor('norms')"
+                @change="() => validateField('norms')"
+              />
+              <span>
+                Declaro haber leído y aceptado las
+                <RouterLink to="/normas" class="privacy-link">normas</RouterLink>
+                del evento.
+              </span>
+            </label>
+
+            <span
+              id="norms-error"
+              class="form-error"
+              :class="{ 'form-error-hidden': !errors.norms }"
+              role="alert"
+              aria-live="polite"
+            >
+              {{ errors.norms || '&nbsp;' }}
+            </span>
           </div>
 
           <div class="form-actions">
@@ -554,6 +589,7 @@ const form = reactive({
   emergencyContactName: '',
   emergencyContactPhone: '',
   terms: false,
+  norms: false,
 })
 
 const errors = reactive({
@@ -570,6 +606,7 @@ const errors = reactive({
   emergencyContactName: '',
   emergencyContactPhone: '',
   terms: '',
+  norms: '',
 })
 
 const status = reactive({
@@ -877,6 +914,14 @@ const validateField = (field) => {
       errors.terms = ''
       return true
 
+    case 'norms':
+      if (!form.norms) {
+        errors.norms = 'Debes aceptar las normas del evento.'
+        return false
+      }
+      errors.norms = ''
+      return true
+
     default:
       return true
   }
@@ -894,6 +939,7 @@ const fieldsToValidate = [
   'emergencyContactName',
   'emergencyContactPhone',
   'terms',
+  'norms',
 ]
 
 const validateForm = () => {
@@ -934,6 +980,7 @@ const resetForm = () => {
   form.emergencyContactName = ''
   form.emergencyContactPhone = ''
   form.terms = false
+  form.norms = false
 
   Object.keys(errors).forEach((key) => {
     errors[key] = ''
@@ -1062,6 +1109,15 @@ watch(
   () => {
     if (errors.terms) {
       validateField('terms')
+    }
+  },
+)
+
+watch(
+  () => form.norms,
+  () => {
+    if (errors.norms) {
+      validateField('norms')
     }
   },
 )
@@ -1452,9 +1508,23 @@ watch(
   margin-bottom: var(--spacing-xs);
 }
 
-.summary-note a {
+.summary-note a,
+.summary-link {
   color: var(--color-accent-light);
   text-decoration: underline;
+  transition: opacity 0.2s ease;
+}
+
+.summary-note a:hover,
+.summary-link:hover {
+  opacity: 0.8;
+}
+
+.summary-note a:focus-visible,
+.summary-link:focus-visible {
+  outline: 2px solid var(--color-accent-light);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 @keyframes spinner {

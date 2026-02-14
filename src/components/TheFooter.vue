@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import { EVENT_YEAR, CONTACT_INFO } from '@/constants'
 import { Icon } from '@iconify/vue'
 </script>
@@ -10,6 +11,24 @@ import { Icon } from '@iconify/vue'
         <div class="footer-section">
           <h4 class="footer-title">C&D: Retiro Lúdico</h4>
           <p class="footer-description">Una aventura inolvidable en Naturcampa</p>
+        </div>
+        <div class="footer-section">
+          <h4 class="footer-title">Información</h4>
+          <nav aria-label="Enlaces de información">
+            <ul class="footer-links">
+              <li>
+                <RouterLink to="/faqs" class="footer-link">Preguntas Frecuentes</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/normas" class="footer-link">Normas del Evento</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/politica-privacidad" class="footer-link"
+                  >Política de Privacidad</RouterLink
+                >
+              </li>
+            </ul>
+          </nav>
         </div>
         <div class="footer-section">
           <h4 class="footer-title">Contacto</h4>
