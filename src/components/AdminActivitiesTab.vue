@@ -13,6 +13,15 @@
       <div class="list-header">
         <h2>Actividades propuestas ({{ totalActivities }})</h2>
         <div class="controls-group">
+          <button
+            type="button"
+            @click="handleDownloadExcel"
+            class="download-button"
+            :disabled="loading"
+            aria-label="Descargar actividades en Excel"
+          >
+            Descargar Excel
+          </button>
           <div class="filter-controls">
             <label for="status-filter" class="sr-only">Filtrar por estado</label>
             <select
@@ -122,8 +131,9 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { getAllActivities } from '@/services/adminService'
-import { ACTIVITY_TYPES, TIME_SLOTS } from '@/constants'
+import { ACTIVITY_TYPES, TIME_SLOTS, SPACE_NEEDS } from '@/constants'
 import AdminActivityEditModal from '@/components/AdminActivityEditModal.vue'
+import ExcelJS from 'exceljs'
 
 defineOptions({
   name: 'AdminActivitiesTab',
@@ -144,22 +154,31 @@ const loadActivities = async () => {
   loading.value = true
   error.value = ''
 
-  const result = await getAllActivities({
-    limit: 1000,
-    orderBy: sortField.value,
-    ascending: sortDirection.value === 'asc',
-    status: statusFilter.value || null,
-  })
+  try {
+    const result = await getAllActivities({
+      limit: 1000,
+      orderBy: sortField.value,
+      ascending: sortDirection.value === 'asc',
+      status: statusFilter.value || null,
+    })
 
-  if (result.success) {
-    activities.value = result.data || []
-    totalActivities.value = result.count || 0
-    emit('update-count', result.count || 0)
-  } else {
-    error.value = result.error || 'Error al cargar las actividades'
+    if (result.success) {
+      activities.value = result.data || []
+      totalActivities.value = result.count || 0
+      emit('update-count', result.count || 0)
+    } else {
+      error.value = result.error || 'Error al cargar las actividades'
+      activities.value = []
+      totalActivities.value = 0
+    }
+  } catch (err) {
+    console.error('Error inesperado al cargar actividades:', err)
+    error.value = err.message || 'Error inesperado al cargar las actividades'
+    activities.value = []
+    totalActivities.value = 0
+  } finally {
+    loading.value = false
   }
-
-  loading.value = false
 }
 
 const openEditModal = (activity) => {
@@ -213,6 +232,149 @@ const formatDate = (dateString) => {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+const getSpaceNeedLabel = (value) => {
+  if (!value) return '-'
+  const option = SPACE_NEEDS.find((opt) => opt.value === value)
+  return option ? option.label : value
+}
+
+const handleDownloadExcel = async () => {
+  try {
+    // Usar las actividades ya cargadas si están disponibles, sino cargar todas
+    let dataToExport = []
+
+    if (activities.value.length > 0 && activities.value.length === totalActivities.value) {
+      // Si ya tenemos todas las actividades cargadas, usarlas
+      dataToExport = activities.value
+    } else {
+      // Cargar todas las actividades (sin límite) sin afectar el estado de loading de la lista
+      const result = await getAllActivities({
+        limit: 10000,
+        orderBy: sortField.value,
+        ascending: sortDirection.value === 'asc',
+        status: statusFilter.value || null,
+      })
+
+      if (!result.success) {
+        // Mostrar error temporal sin afectar el estado principal
+        const tempError = result.error || 'Error al cargar las actividades para exportar'
+        alert(tempError)
+        return
+      }
+
+      dataToExport = result.data || []
+    }
+
+    if (dataToExport.length === 0) {
+      alert('No hay actividades para exportar')
+      return
+    }
+
+    // Crear el libro de trabajo
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet('Actividades')
+
+    // Definir las columnas con sus anchos
+    worksheet.columns = [
+      { header: 'Organizador', key: 'organizador', width: 20 },
+      { header: 'Email', key: 'email', width: 25 },
+      { header: 'Tipo', key: 'tipo', width: 15 },
+      { header: 'Nombre', key: 'nombre', width: 25 },
+      { header: 'Descripción', key: 'descripcion', width: 40 },
+      { header: 'Mín. participantes', key: 'minParticipantes', width: 15 },
+      { header: 'Máx. participantes', key: 'maxParticipantes', width: 15 },
+      { header: 'Franja horaria', key: 'franjaHoraria', width: 25 },
+      { header: 'Duración', key: 'duracion', width: 15 },
+      { header: 'Necesidades participantes', key: 'necesidadesParticipantes', width: 30 },
+      { header: 'Necesidades organización', key: 'necesidadesOrganizacion', width: 30 },
+      { header: 'Necesidad espacio', key: 'necesidadEspacio', width: 20 },
+      { header: 'Puesta en marcha', key: 'puestaEnMarcha', width: 30 },
+      { header: 'Observaciones', key: 'observaciones', width: 30 },
+      { header: 'Estado', key: 'estado', width: 15 },
+      { header: 'Aprobado por', key: 'aprobadoPor', width: 20 },
+      { header: 'Notas aprobación', key: 'notasAprobacion', width: 30 },
+      { header: 'Documentos', key: 'documentos', width: 20 },
+      { header: 'Fecha registro', key: 'fechaRegistro', width: 20 },
+      { header: 'Última actualización', key: 'ultimaActualizacion', width: 20 },
+    ]
+
+    // Estilizar el header
+    const headerRow = worksheet.getRow(1)
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1A4D2E' },
+    }
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+
+    // Añadir los datos
+    dataToExport.forEach((activity) => {
+      worksheet.addRow({
+        organizador: activity.organizer_name || '',
+        email: activity.organizer_email || '',
+        tipo: getActivityTypeLabel(activity.type),
+        nombre: activity.name || '',
+        descripcion: activity.description || '',
+        minParticipantes: activity.min_participants || '',
+        maxParticipantes: activity.max_participants || '',
+        franjaHoraria: getTimeSlotLabel(activity.preferred_time_slot),
+        duracion: activity.duration || '',
+        necesidadesParticipantes: activity.participant_needs || '',
+        necesidadesOrganizacion: activity.organization_needs || '',
+        necesidadEspacio: getSpaceNeedLabel(activity.space_need),
+        puestaEnMarcha: activity.setup || '',
+        observaciones: activity.observations || '',
+        estado: getStatusLabel(activity.status),
+        aprobadoPor: activity.approved_by || '',
+        notasAprobacion: activity.approval_notes || '',
+        documentos:
+          Array.isArray(activity.documents) && activity.documents.length > 0
+            ? `${activity.documents.length} archivo(s)`
+            : 'Sin documentos',
+        fechaRegistro: activity.created_at
+          ? new Date(activity.created_at).toLocaleDateString('es-ES', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : '',
+        ultimaActualizacion: activity.updated_at
+          ? new Date(activity.updated_at).toLocaleDateString('es-ES', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : '',
+      })
+    })
+
+    // Generar el nombre del archivo con fecha
+    const now = new Date()
+    const dateStr = now.toISOString().split('T')[0]
+    const filename = `actividades_${dateStr}.xlsx`
+
+    // Generar el buffer y descargar el archivo
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Error al exportar a Excel:', err)
+    error.value = 'Error al exportar las actividades a Excel'
+  }
 }
 
 onMounted(() => {
@@ -271,6 +433,32 @@ defineExpose({
   display: flex;
   gap: var(--spacing-sm);
   align-items: center;
+}
+
+.download-button {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.download-button:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.download-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.download-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .filter-select,
@@ -413,6 +601,10 @@ defineExpose({
     width: 100%;
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .download-button {
+    width: 100%;
   }
 
   .filter-controls,

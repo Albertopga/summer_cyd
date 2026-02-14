@@ -17,6 +17,9 @@ import { Icon } from '@iconify/vue'
           <nav aria-label="Enlaces de información">
             <ul class="footer-links">
               <li>
+                <RouterLink to="/" class="footer-link">Inicio</RouterLink>
+              </li>
+              <li>
                 <RouterLink to="/faqs" class="footer-link">Preguntas Frecuentes</RouterLink>
               </li>
               <li>
