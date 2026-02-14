@@ -22,7 +22,10 @@
 
           <div
             class="activity-modal-body"
-            :class="{ 'has-accommodations': activity.accommodations }"
+            :class="{
+              'has-accommodations': activity.accommodations,
+              'has-menu': activity.menu,
+            }"
           >
             <div class="activity-modal-icon">{{ activity.icon }}</div>
             <h2 class="activity-modal-title">{{ activity.title }}</h2>
@@ -75,6 +78,28 @@
                     @keydown.enter="openImageModal(image, accommodation.images, index)"
                     @keydown.space.prevent="openImageModal(image, accommodation.images, index)"
                   />
+                </div>
+              </div>
+            </div>
+
+            <!-- Contenido del menú -->
+            <div v-if="activity.menu" class="menu-section">
+              <div v-for="dayMenu in activity.menu" :key="dayMenu.date" class="menu-day">
+                <h3 class="menu-day-title">{{ dayMenu.day }}</h3>
+                <div
+                  v-for="meal in dayMenu.meals"
+                  :key="`${dayMenu.date}-${meal.type}`"
+                  class="menu-meal"
+                >
+                  <div class="menu-meal-header">
+                    <h4 class="menu-meal-type">{{ meal.type }}</h4>
+                    <span v-if="meal.time" class="menu-meal-time">{{ meal.time }}</span>
+                  </div>
+                  <ul v-if="meal.dishes && meal.dishes.length > 0" class="menu-dishes">
+                    <li v-for="(dish, index) in meal.dishes" :key="index" class="menu-dish">
+                      {{ dish }}
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -344,7 +369,10 @@ onUnmounted(() => {
 
 .activity-modal-body.has-accommodations .activity-modal-icon,
 .activity-modal-body.has-accommodations .activity-modal-title,
-.activity-modal-body.has-accommodations .activity-modal-text {
+.activity-modal-body.has-accommodations .activity-modal-text,
+.activity-modal-body.has-menu .activity-modal-icon,
+.activity-modal-body.has-menu .activity-modal-title,
+.activity-modal-body.has-menu .activity-modal-text {
   text-align: center;
 }
 
@@ -522,6 +550,129 @@ onUnmounted(() => {
 
   .accommodation-images {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Estilos para sección de menú */
+.menu-section {
+  margin-top: var(--spacing-xl);
+  text-align: left;
+}
+
+.menu-day {
+  margin-bottom: var(--spacing-2xl);
+  padding-bottom: var(--spacing-xl);
+  border-bottom: 2px solid var(--color-cream-dark);
+}
+
+.menu-day:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.menu-day-title {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.menu-meal {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: var(--color-cream);
+  border-radius: var(--radius-md);
+}
+
+.menu-meal:last-child {
+  margin-bottom: 0;
+}
+
+.menu-meal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.menu-meal-type {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.menu-meal-time {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  font-weight: 500;
+  background-color: var(--color-white);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+}
+
+.menu-dishes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-dish {
+  font-size: 1rem;
+  color: var(--color-text);
+  line-height: 1.8;
+  padding-left: var(--spacing-md);
+  position: relative;
+}
+
+.menu-dish::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--color-accent);
+  font-weight: bold;
+}
+
+/* Responsive para menú */
+@media (max-width: 768px) {
+  .menu-day-title {
+    font-size: 1.5rem;
+  }
+
+  .menu-meal-type {
+    font-size: 1.125rem;
+  }
+
+  .menu-dish {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-day-title {
+    font-size: 1.25rem;
+  }
+
+  .menu-meal {
+    padding: var(--spacing-sm);
+  }
+
+  .menu-meal-type {
+    font-size: 1rem;
+  }
+
+  .menu-meal-time {
+    font-size: 0.8125rem;
+  }
+
+  .menu-dish {
+    font-size: 0.875rem;
+    line-height: 1.6;
   }
 }
 

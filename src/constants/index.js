@@ -90,6 +90,76 @@ export const DIET_OPTIONS = [
   { value: 'alergias', label: 'Tengo alergias (detállalo en comentarios)' },
 ]
 
+// Menú del evento
+export const EVENT_MENU = [
+  {
+    day: 'Viernes',
+    date: '2026-08-21',
+    meals: [
+      {
+        type: 'Merienda',
+        time: '17:00-19:00',
+        dishes: ['Pide tu fruta en el Rincón del mercader'],
+      },
+      {
+        type: 'Cena',
+        time: '21:30-22:15',
+        dishes: ['Crema de verduras', 'Pizza variada con ensalada', 'Pan, Yogurt, Fruta y Agua'],
+      },
+    ],
+  },
+  {
+    day: 'Sábado',
+    date: '2026-08-22',
+    meals: [
+      {
+        type: 'Desayuno',
+        time: '09:00-09:45',
+        dishes: [
+          'Leche, Zumos, Nesquik, Café',
+          'Biscotes con tomate y AOVE, Magdalenas ,Croissant, Cereales, Galletas',
+          'Huevo, Embutido, Fruta, Yogurt',
+        ],
+      },
+      {
+        type: 'Comida',
+        time: '14:00-14:45',
+        dishes: ['Macarrones boloñesa', 'Pollo asado con patatas', 'Pan, Yogurt, Fruta y Agua'],
+      },
+      {
+        type: 'Merienda',
+        time: '17:00-19:00',
+        dishes: ['Pide tu fruta en el Rincón del mercader'],
+      },
+      {
+        type: 'Cena',
+        time: '21:30-22:15',
+        dishes: ['Gazpacho', 'Hamburgesa completa con patatas', 'Pan, Yogurt, Fruta y Agua'],
+      },
+    ],
+  },
+  {
+    day: 'Domingo',
+    date: '2026-08-23',
+    meals: [
+      {
+        type: 'Desayuno',
+        time: '09:00-09:45',
+        dishes: [
+          'Leche, Zumos, Nesquik, Café',
+          'Biscotes con tomate y AOVE, Magdalenas ,Croissant, Cereales, Galletas',
+          'Huevo, Embutido, Fruta, Yogurt',
+        ],
+      },
+      {
+        type: 'Comida',
+        time: '14:00-14:45',
+        dishes: ['Paella mixta', 'Ensalada variada', 'Pan, Yogurt, Fruta y Agua'],
+      },
+    ],
+  },
+]
+
 // Patrones de validación
 export const VALIDATION_PATTERNS = {
   email: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
@@ -135,7 +205,9 @@ export const ACTIVITIES = [
     title: 'Comida',
     text: 'Menú de comidas durante el evento.',
     icon: '🍖',
-    description: 'Iremos añadiendo menús a medida que se vayan concretando.',
+    description:
+      'Recuerda comentarnos en tu inscripción si tienes alguna alergia o restricción alimentaria, ocualquier otra necesidad que tengas.',
+    menu: EVENT_MENU,
   },
   {
     id: 4,
