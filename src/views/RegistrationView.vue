@@ -480,6 +480,18 @@
             </fieldset>
           </fieldset>
 
+          <div class="form-info-card">
+            <h3>¿Quieres organizar alguna actividad?</h3>
+            <p>
+              Si quieres proponer y dirigir actividades durante el evento, puedes registrarlas en un
+              formulario separado. Por motivos organizativos, limitamos a 2 el número de actividades
+              a dirigir por cada participante.
+            </p>
+            <RouterLink to="/actividades" class="activity-link">
+              Ir al formulario de actividades
+            </RouterLink>
+          </div>
+
           <div class="form-consent">
             <label class="checkbox-consent">
               <input
@@ -1236,8 +1248,15 @@ watch(
   color: var(--color-primary);
 }
 
+.form-row-group {
+  display: grid;
+  gap: var(--spacing-md);
+  grid-template-columns: 1fr;
+}
+
 .form-row input,
-.form-row textarea {
+.form-row textarea,
+.form-row select {
   width: 100%;
   padding: 0.75rem;
   border-radius: var(--radius-md);
@@ -1250,15 +1269,60 @@ watch(
 }
 
 .form-row input:focus-visible,
-.form-row textarea:focus-visible {
+.form-row textarea:focus-visible,
+.form-row select:focus-visible {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px rgba(26, 77, 46, 0.12);
 }
 
 .form-row input[aria-invalid='true'],
-.form-row textarea[aria-invalid='true'] {
+.form-row textarea[aria-invalid='true'],
+.form-row select[aria-invalid='true'] {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 4px rgba(231, 111, 81, 0.15);
+}
+
+.form-info-card {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-cream-dark);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.form-info-card h3 {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.form-info-card p {
+  margin: 0;
+  color: var(--color-text-light);
+}
+
+.activity-link {
+  display: inline-block;
+  margin-top: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  text-align: center;
+}
+
+.activity-link:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.activity-link:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .form-help {
@@ -1591,6 +1655,10 @@ watch(
   .form-fieldset,
   .form-subfieldset {
     padding: var(--spacing-lg);
+  }
+
+  .form-row-group {
+    grid-template-columns: 1fr 1fr;
   }
 
   .form-actions {

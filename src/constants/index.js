@@ -90,6 +90,38 @@ export const DIET_OPTIONS = [
   { value: 'alergias', label: 'Tengo alergias (detállalo en comentarios)' },
 ]
 
+// Tipos de actividades
+export const ACTIVITY_TYPES = [
+  { value: 'rol-vivo', label: 'Rol en Vivo' },
+  { value: 'rol-mesa', label: 'Rol de Mesa' },
+  { value: 'juego-mesa', label: 'Juego de Mesa' },
+  { value: 'torneo', label: 'Torneo' },
+  { value: 'taller', label: 'Taller' },
+  { value: 'demo', label: 'Demo' },
+  { value: 'otra', label: 'Otra' },
+]
+
+// Franjas horarias preferidas
+export const TIME_SLOTS = [
+  { value: 'viernes-tarde', label: 'Viernes tarde (17:00-20:00)' },
+  { value: 'viernes-noche', label: 'Viernes noche (20:00-24:00)' },
+  { value: 'sabado-manana', label: 'Sábado mañana (09:00-14:00)' },
+  { value: 'sabado-tarde', label: 'Sábado tarde (14:00-20:00)' },
+  { value: 'sabado-noche', label: 'Sábado noche (20:00-24:00)' },
+  { value: 'domingo-manana', label: 'Domingo mañana (09:00-14:00)' },
+  { value: 'domingo-tarde', label: 'Domingo tarde (14:00-20:00)' },
+]
+
+// Necesidades de espacio
+export const SPACE_NEEDS = [
+  { value: 'sala-interior', label: 'Sala interior' },
+  { value: 'sala-exterior', label: 'Sala exterior' },
+  { value: 'espacio-abierto', label: 'Espacio abierto' },
+  { value: 'aula', label: 'Aula' },
+  { value: 'comedor', label: 'Comedor' },
+  { value: 'sin-requisitos', label: 'Sin requisitos específicos' },
+]
+
 // Menú del evento
 export const EVENT_MENU = [
   {

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import RegistrationView from '../views/RegistrationView.vue'
+import ActivityRegistrationView from '../views/ActivityRegistrationView.vue'
 import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
 import RulesView from '../views/RulesView.vue'
 import FAQView from '../views/FAQView.vue'
@@ -18,6 +19,11 @@ const router = createRouter({
       path: '/registration',
       name: 'registration',
       component: RegistrationView,
+    },
+    {
+      path: '/actividades',
+      name: 'activity-registration',
+      component: ActivityRegistrationView,
     },
     {
       path: '/politica-privacidad',
