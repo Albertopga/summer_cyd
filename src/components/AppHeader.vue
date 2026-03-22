@@ -7,7 +7,7 @@
         Retiro lúdico <br />
         C&D {{ EVENT_YEAR }}
       </h1>
-      <p class="hero-subtitle">Desconecta la rutina. Conecta con la diversión.</p>
+      <p class="hero-subtitle">Desconecta de la rutina. Conecta con la diversión.</p>
       <div class="hero-actions">
         <RouterLink to="/registration" class="cta-button cta-primary">
           Inscríbete Ahora

@@ -166,7 +166,7 @@ export const EVENT_MENU = [
       {
         type: 'Cena',
         time: '21:30-22:15',
-        dishes: ['Gazpacho', 'Hamburgesa completa con patatas', 'Pan, Yogurt, Fruta y Agua'],
+        dishes: ['Gazpacho', 'Hamburguesa completa con patatas', 'Pan, Yogurt, Fruta y Agua'],
       },
     ],
   },

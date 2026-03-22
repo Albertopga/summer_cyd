@@ -7,7 +7,7 @@
           title="¿Quién organiza este retiro?"
           text="La asociación cultural <strong>Castilla y Dragón</strong>, una organización sin ánimo de lucro que se dedica a la promoción y difusión del ocio alternativo."
           :icon="LogoAso"
-          icon-alt="Logo de la asociación cultural <strong>Castilla y Dragón</strong>"
+          icon-alt="Logo de la asociación cultural Castilla y Dragón"
           variant="info"
         />
         <AppCard

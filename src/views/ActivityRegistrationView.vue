@@ -417,8 +417,7 @@
                 :aria-describedby="`activityObservations-${index}-help`"
               ></textarea>
               <p :id="`activityObservations-${index}-help`" class="form-help">
-                Cualquier información adicional que consideres relevante. Código "TORRIJAS" en
-                observaciones para descuento de Asociación.
+                Cualquier información adicional que consideres relevante.
               </p>
             </div>
 
