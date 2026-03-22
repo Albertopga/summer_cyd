@@ -215,7 +215,8 @@ const handleSortChange = () => {
 
 const getAccommodationLabel = (value) => {
   const option = ACCOMMODATION_OPTIONS.find((opt) => opt.value === value)
-  return option ? option.label : value
+  if (!option) return value
+  return option.fullLabel ?? option.label
 }
 
 const formatDate = (dateString) => {

@@ -37,6 +37,10 @@
               }}
             </p>
 
+            <p v-if="activity.accommodations" class="accommodation-outlets-note">
+              {{ ACCOMMODATION_OUTLETS_NOTE }}
+            </p>
+
             <!-- Enlace externo -->
             <div v-if="activity.link" class="activity-modal-link">
               <a
@@ -52,34 +56,67 @@
 
             <!-- Contenido de alojamiento -->
             <div v-if="activity.accommodations" class="accommodations-section">
-              <div
-                v-for="accommodation in activity.accommodations"
-                :key="accommodation.value"
-                class="accommodation-item"
-              >
-                <h3 class="accommodation-title">{{ accommodation.label }}</h3>
-                <p v-if="accommodation.description" class="accommodation-description">
-                  {{ accommodation.description }}
-                </p>
+              <template v-for="(block, blockIndex) in groupedAccommodations" :key="blockKey(block, blockIndex)">
                 <div
-                  v-if="accommodation.images && accommodation.images.length > 0"
-                  class="accommodation-images"
+                  v-if="block.type === 'single'"
+                  class="accommodation-item"
                 >
-                  <img
-                    v-for="(image, index) in accommodation.images"
-                    :key="index"
-                    :src="image"
-                    :alt="`${accommodation.label} - Imagen ${index + 1}`"
-                    class="accommodation-image"
-                    loading="lazy"
-                    @click="openImageModal(image, accommodation.images, index)"
-                    role="button"
-                    tabindex="0"
-                    @keydown.enter="openImageModal(image, accommodation.images, index)"
-                    @keydown.space.prevent="openImageModal(image, accommodation.images, index)"
-                  />
+                  <h3 class="accommodation-title">{{ block.option.label }}</h3>
+                  <p v-if="block.option.description" class="accommodation-description">
+                    {{ block.option.description }}
+                  </p>
+                  <div
+                    v-if="block.option.images && block.option.images.length > 0"
+                    class="accommodation-images"
+                  >
+                    <img
+                      v-for="(image, index) in block.option.images"
+                      :key="index"
+                      :src="image"
+                      :alt="`${block.option.label} - Imagen ${index + 1}`"
+                      class="accommodation-image"
+                      loading="lazy"
+                      @click="openImageModal(image, block.option.images, index)"
+                      role="button"
+                      tabindex="0"
+                      @keydown.enter="openImageModal(image, block.option.images, index)"
+                      @keydown.space.prevent="openImageModal(image, block.option.images, index)"
+                    />
+                  </div>
                 </div>
-              </div>
+                <div v-else class="accommodation-item accommodation-item--group">
+                  <h3 class="accommodation-title">{{ block.title }}</h3>
+                  <ul class="accommodation-variants">
+                    <li v-for="variant in block.options" :key="variant.value">
+                      {{ variant.label }}
+                    </li>
+                  </ul>
+                  <div
+                    v-if="block.options[0]?.images?.length > 0"
+                    class="accommodation-images"
+                  >
+                    <img
+                      v-for="(image, index) in block.options[0].images"
+                      :key="index"
+                      :src="image"
+                      :alt="`${block.title} - Imagen ${index + 1}`"
+                      class="accommodation-image"
+                      loading="lazy"
+                      @click="
+                        openImageModal(image, block.options[0].images, index)
+                      "
+                      role="button"
+                      tabindex="0"
+                      @keydown.enter="
+                        openImageModal(image, block.options[0].images, index)
+                      "
+                      @keydown.space.prevent="
+                        openImageModal(image, block.options[0].images, index)
+                      "
+                    />
+                  </div>
+                </div>
+              </template>
             </div>
 
             <!-- Contenido del menú -->
@@ -203,6 +240,10 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import {
+  ACCOMMODATION_OUTLETS_NOTE,
+  groupAccommodationOptions,
+} from '@/constants'
 
 const props = defineProps({
   isOpen: {
@@ -222,6 +263,16 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close'])
+
+const groupedAccommodations = computed(() => {
+  if (!props.activity.accommodations?.length) return []
+  return groupAccommodationOptions(props.activity.accommodations)
+})
+
+const blockKey = (block, index) => {
+  if (block.type === 'single') return block.option.value
+  return `${block.groupKey}-${index}`
+}
 
 const closeModal = () => {
   emit('close')
@@ -431,6 +482,17 @@ onUnmounted(() => {
   margin-bottom: var(--spacing-lg);
 }
 
+.accommodation-outlets-note {
+  font-size: 1rem;
+  color: var(--color-text-light);
+  line-height: 1.65;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-accent);
+}
+
 .activity-modal-extra {
   margin-top: var(--spacing-xl);
 }
@@ -496,6 +558,22 @@ onUnmounted(() => {
   color: var(--color-text-light);
   line-height: 1.6;
   margin-bottom: var(--spacing-md);
+}
+
+.accommodation-variants {
+  margin: 0 0 var(--spacing-md);
+  padding-left: 1.35rem;
+  font-size: 1rem;
+  color: var(--color-text-light);
+  line-height: 1.65;
+}
+
+.accommodation-variants li + li {
+  margin-top: var(--spacing-xs);
+}
+
+.accommodation-item--group .accommodation-title {
+  margin-bottom: var(--spacing-sm);
 }
 
 .accommodation-images {

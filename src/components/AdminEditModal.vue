@@ -257,7 +257,7 @@ const editableFieldsConfig = computed(() => {
       isEditable: true,
       options: ACCOMMODATION_OPTIONS.map((opt) => ({
         value: opt.value,
-        label: opt.label,
+        label: opt.fullLabel ?? opt.label,
       })),
     },
     diet: {

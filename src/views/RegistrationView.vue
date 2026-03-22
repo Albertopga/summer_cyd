@@ -397,27 +397,66 @@
             <fieldset
               class="form-subfieldset"
               role="radiogroup"
-              :aria-describedby="describedByFor('accommodation')"
+              :aria-describedby="accommodationFieldsetDescribedBy"
             >
               <legend>Alojamiento preferido *</legend>
+              <p id="accommodation-outlets-help" class="form-help">
+                {{ ACCOMMODATION_OUTLETS_NOTE }}
+              </p>
               <div class="option-list option-list--radio">
-                <div
-                  v-for="option in ACCOMMODATION_OPTIONS"
-                  :key="option.value"
-                  class="option-item"
+                <template
+                  v-for="(block, blockIndex) in accommodationFieldGroups"
+                  :key="block.type === 'single' ? block.option.value : `${block.groupKey}-${blockIndex}`"
                 >
-                  <input
-                    :id="`accommodation-${option.value}`"
-                    v-model="form.accommodation"
-                    type="radio"
-                    name="accommodation"
-                    :value="option.value"
-                    required
-                    aria-required="true"
-                    @change="() => validateField('accommodation')"
-                  />
-                  <label :for="`accommodation-${option.value}`">{{ option.label }}</label>
-                </div>
+                  <div
+                    v-if="block.type === 'single'"
+                    class="option-item"
+                  >
+                    <input
+                      :id="`accommodation-${block.option.value}`"
+                      v-model="form.accommodation"
+                      type="radio"
+                      name="accommodation"
+                      :value="block.option.value"
+                      required
+                      aria-required="true"
+                      @change="() => validateField('accommodation')"
+                    />
+                    <label :for="`accommodation-${block.option.value}`">{{
+                      block.option.label
+                    }}</label>
+                  </div>
+                  <div
+                    v-else
+                    class="accommodation-subgroup"
+                    role="group"
+                    :aria-labelledby="`accommodation-chozo-${blockIndex}`"
+                  >
+                    <p
+                      class="accommodation-subgroup-title"
+                      :id="`accommodation-chozo-${blockIndex}`"
+                    >
+                      {{ block.title }}
+                    </p>
+                    <div
+                      v-for="option in block.options"
+                      :key="option.value"
+                      class="option-item"
+                    >
+                      <input
+                        :id="`accommodation-${option.value}`"
+                        v-model="form.accommodation"
+                        type="radio"
+                        name="accommodation"
+                        :value="option.value"
+                        required
+                        aria-required="true"
+                        @change="() => validateField('accommodation')"
+                      />
+                      <label :for="`accommodation-${option.value}`">{{ option.label }}</label>
+                    </div>
+                  </div>
+                </template>
               </div>
               <div class="form-row" v-if="form.accommodation === 'especial'">
                 <label for="comments">Comentarios adicionales</label>
@@ -589,12 +628,14 @@ import AppSectionHeader from '@/components/AppSectionHeader.vue'
 import AppCard from '@/components/AppCard.vue'
 import {
   ACCOMMODATION_OPTIONS,
+  ACCOMMODATION_OUTLETS_NOTE,
   CONTACT_INFO,
   DIET_OPTIONS,
   EVENT_DATES_LABEL_SHORT,
   EVENT_DATES,
   EVENT_YEAR,
   FIELD_LABELS,
+  groupAccommodationOptions,
   TELEGRAM_TOOLTIP,
   VALIDATION_PATTERNS,
 } from '@/constants'
@@ -799,6 +840,17 @@ const describedByFor = (field) => {
 
   return ids.length > 0 ? ids.join(' ') : undefined
 }
+
+const accommodationFieldGroups = computed(() =>
+  groupAccommodationOptions(ACCOMMODATION_OPTIONS),
+)
+
+const accommodationFieldsetDescribedBy = computed(() => {
+  const ids = ['accommodation-outlets-help']
+  const extra = describedByFor('accommodation')
+  if (extra) ids.push(extra)
+  return ids.join(' ')
+})
 
 const validateField = (field) => {
   clearStatus()
@@ -1473,6 +1525,23 @@ watch(
 
 .option-list--radio .option-item:hover {
   border-color: var(--color-accent-light);
+}
+
+.accommodation-subgroup {
+  display: grid;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  background-color: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--color-cream-dark);
+}
+
+.accommodation-subgroup-title {
+  margin: 0 0 var(--spacing-xs);
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-primary);
 }
 
 .form-consent {

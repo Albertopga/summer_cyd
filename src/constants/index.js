@@ -52,6 +52,37 @@ export const EVENT_DATES = {
 export const EVENT_DATES_LABEL = '21, 22 y 23 de Agosto'
 export const EVENT_DATES_LABEL_SHORT = '21 al 23 de Agosto'
 
+/** Texto común sobre electricidad en alojamientos (modal, formulario, etc.) */
+export const ACCOMMODATION_OUTLETS_NOTE =
+  'En todos los alojamientos hay enchufes, aunque se recomienda traer regletas o alargador.'
+
+/**
+ * Agrupa opciones con el mismo `groupKey` consecutivo (p. ej. Chozo compartido / individual).
+ * @returns {Array<{ type: 'single', option: object } | { type: 'group', groupKey: string, title: string, options: object[] }>}
+ */
+export function groupAccommodationOptions(options) {
+  if (!options?.length) return []
+  const result = []
+  let i = 0
+  while (i < options.length) {
+    const opt = options[i]
+    if (opt.groupKey) {
+      const gk = opt.groupKey
+      const title = opt.groupTitle || 'Chozo.'
+      const groupOptions = []
+      while (i < options.length && options[i].groupKey === gk) {
+        groupOptions.push(options[i])
+        i++
+      }
+      result.push({ type: 'group', groupKey: gk, title, options: groupOptions })
+    } else {
+      result.push({ type: 'single', option: opt })
+      i++
+    }
+  }
+  return result
+}
+
 // Opciones de alojamiento
 export const ACCOMMODATION_OPTIONS = [
   {
@@ -63,13 +94,19 @@ export const ACCOMMODATION_OPTIONS = [
   },
   {
     value: 'chozos',
-    label: 'Chozo compartido (2 personas) (150€ por persona)',
+    label: 'Compartido (2 personas, 150€ por persona)',
+    fullLabel: 'Chozo — Compartido (2 personas, 150€ por persona)',
+    groupKey: 'chozo',
+    groupTitle: 'Chozo.',
     images: chozosImages,
     description: 'Alojamiento en chozo compartido con otra persona.',
   },
   {
     value: 'chozo-individual',
-    label: 'Chozo individual (300€)',
+    label: 'Individual (si quieres intimidad, el Chozo para ti solo son 300€)',
+    fullLabel: 'Chozo — Individual (300€)',
+    groupKey: 'chozo',
+    groupTitle: 'Chozo.',
     images: chozosImages,
     description: 'Si quieres intimidad, alojamiento individual en un chozo solo para ti.',
   },
