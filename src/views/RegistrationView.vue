@@ -354,9 +354,13 @@
                 aria-required="true"
                 :aria-invalid="errors.arrivalDate ? 'true' : 'false'"
                 :aria-describedby="describedByFor('arrivalDate')"
+                :title="arrivalHelpText"
                 @blur="() => validateField('arrivalDate')"
                 @change="() => validateField('arrivalDate')"
               />
+              <p id="arrivalDate-help" class="form-help">
+                {{ arrivalHelpText }}
+              </p>
               <span
                 id="arrivalDate-error"
                 class="form-error"
@@ -751,16 +755,22 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
+/** Parsea 'YYYY-MM-DD' como fecha local (evita desfases UTC en getDay() / getDate()). */
+const parseEventDateLocal = (dateString) => {
+  const [y, m, d] = dateString.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
 // Helper para obtener el día de la semana en español
 const getDayOfWeek = (dateString) => {
-  const date = new Date(dateString)
+  const date = parseEventDateLocal(dateString)
   const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
   return days[date.getDay()]
 }
 
 // Helper para obtener el día del mes
 const getDayOfMonth = (dateString) => {
-  const date = new Date(dateString)
+  const date = parseEventDateLocal(dateString)
   return date.getDate()
 }
 
@@ -778,7 +788,24 @@ const minArrivalDateTime = computed(() => {
 })
 
 const maxArrivalDateTime = computed(() => {
-  return EVENT_DATES.start ? `${EVENT_DATES.start}T20:00` : ''
+  return EVENT_DATES.start ? `${EVENT_DATES.start}T20:30` : ''
+})
+
+/** Texto de ayuda y mensajes de error alineados con EVENT_DATES y la franja de check-in. */
+const arrivalHelpText = computed(() => {
+  const d = parseEventDateLocal(EVENT_DATES.start)
+  const dayName = getDayOfWeek(EVENT_DATES.start)
+  const monthLong = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(d)
+  return `El check-in es el ${dayName} ${d.getDate()} de ${monthLong} de ${EVENT_YEAR} entre las 17:00 y las 20:30.`
+})
+
+const arrivalWindowInvalidMessage = computed(() => {
+  const when = new Intl.DateTimeFormat('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(parseEventDateLocal(EVENT_DATES.start))
+  return `La llegada debe ser el ${when} entre las 17:00 y las 20:30.`
 })
 const minDepartureDateTime = computed(() => {
   return EVENT_DATES.start ? `${EVENT_DATES.start}T00:00` : ''
@@ -826,6 +853,7 @@ const describedByFor = (field) => {
     phone: 'phone-help',
     birthDate: 'birthDate-help',
     guardianFullName: 'guardianFullName-help',
+    arrivalDate: 'arrivalDate-help',
     comments: 'comments-help',
     emergencyContactPhone: 'emergency-contact-phone-help',
   }
@@ -925,10 +953,18 @@ const validateField = (field) => {
         return false
       }
       const arrival = new Date(form.arrivalDate)
-      const start = new Date(EVENT_DATES.start)
-      const end = new Date(EVENT_DATES.end)
-      if (arrival < start || arrival > end) {
-        errors.arrivalDate = 'La llegada debe ser entre el 24 y el 26 de julio.'
+      const min = minArrivalDateTime.value ? new Date(minArrivalDateTime.value) : null
+      const max = maxArrivalDateTime.value ? new Date(maxArrivalDateTime.value) : null
+      if (
+        Number.isNaN(arrival.getTime()) ||
+        !min ||
+        !max ||
+        Number.isNaN(min.getTime()) ||
+        Number.isNaN(max.getTime()) ||
+        arrival < min ||
+        arrival > max
+      ) {
+        errors.arrivalDate = arrivalWindowInvalidMessage.value
         return false
       }
       errors.arrivalDate = ''
