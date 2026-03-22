@@ -48,6 +48,18 @@
         </article>
 
         <article class="faq-section">
+          <h2>¿Cuál es la política de cancelación de la reserva?</h2>
+          <p>
+            Si cancelas antes del 1 de agosto de {{ EVENT_YEAR }}, se retiene un 10&nbsp;% por gastos
+            administrativos.
+          </p>
+          <p>
+            Si cancelas después del 1 de agosto de {{ EVENT_YEAR }}, se retiene un 65&nbsp;% en
+            aplicación de las políticas de cancelación de reservas de Campa Gestión y Ocio S.L.
+          </p>
+        </article>
+
+        <article class="faq-section">
           <h2>¿La entrada a las jornadas es gratuita?</h2>
           <p>
             No, quien quiera venir a las jornadas, necesita estar apuntado y haber pagado su plaza.
@@ -130,7 +142,8 @@
             Por supuesto que sí. En función de las posibilidades, se puede optar por ser colaborador
             (personas individuales, clubes y asociaciones) organizando actividades, o patrocinador
             (en el caso de empresas). Toda la información necesaria al respecto se encuentra en el
-            apartado "Cómo colaborar".
+            apartado
+            <RouterLink to="/actividades" class="faq-link">Cómo colaborar</RouterLink>.
           </p>
         </article>
 
@@ -211,7 +224,14 @@
               class="faq-link"
               >Instagram<span class="sr-only"> (se abre en nueva ventana)</span></a
             >
-            y Bluesky.
+            y
+            <a
+              :href="CONTACT_INFO.bluesky"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="faq-link"
+              >Bluesky<span class="sr-only"> (se abre en nueva ventana)</span></a
+            >.
           </p>
         </article>
 

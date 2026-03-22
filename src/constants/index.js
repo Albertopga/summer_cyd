@@ -298,6 +298,7 @@ export const CONTACT_INFO = {
   telegram: 'https://t.me/castillaydragon',
   instagram: 'https://www.instagram.com/castillaydragon/',
   facebook: 'https://www.facebook.com/castillaydragon/',
+  bluesky: 'https://bsky.app/profile/asociacioncyd.bsky.social',
 }
 
 // Patrocinadores y colaboradores
