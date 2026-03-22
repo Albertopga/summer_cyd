@@ -2,6 +2,7 @@
 # Requiere secrets en el repo: Settings → Secrets and variables → Actions
 #   SUPABASE_URL       → https://tu-proyecto.supabase.co (sin barra final)
 #   SUPABASE_ANON_KEY  → anon public key (misma que VITE_SUPABASE_ANON_KEY)
+# En GitHub pega el valor SIN comillas simples/dobles (si copias desde .env, quítalas).
 #
 # No uses la service_role aquí.
 
@@ -23,13 +24,34 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           set -euo pipefail
-          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+          url="${SUPABASE_URL:-}"
+          key="${SUPABASE_ANON_KEY:-}"
+          if [ -z "$url" ] || [ -z "$key" ]; then
             echo "::error::Faltan secrets SUPABASE_URL o SUPABASE_ANON_KEY en el repositorio."
             exit 1
           fi
-          BASE="${SUPABASE_URL%/}"
+          # curl exit 3 = URL mal formada (típico: comillas o saltos al pegar el secret)
+          url=$(printf '%s' "$url" | head -n1 | tr -d '\r')
+          key=$(printf '%s' "$key" | head -n1 | tr -d '\r')
+          url="${url#"${url%%[![:space:]]*}"}"
+          url="${url%"${url##*[![:space:]]}"}"
+          key="${key#"${key%%[![:space:]]*}"}"
+          key="${key%"${key##*[![:space:]]}"}"
+          url="${url#\'}"
+          url="${url%\'}"
+          url="${url#\"}"
+          url="${url%\"}"
+          key="${key#\'}"
+          key="${key%\'}"
+          key="${key#\"}"
+          key="${key%\"}"
+          BASE="${url%/}"
+          if [ -z "$BASE" ] || [ "${BASE#https://}" = "$BASE" ]; then
+            echo "::error::SUPABASE_URL inválida tras limpiar espacios/comillas. Debe ser https://....supabase.co (sin comillas en el secret de GitHub)."
+            exit 1
+          fi
           curl -sfS \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -H "apikey: ${key}" \
+            -H "Authorization: Bearer ${key}" \
             "${BASE}/auth/v1/health" \
             -o /dev/null
