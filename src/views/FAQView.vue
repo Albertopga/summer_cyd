@@ -97,7 +97,7 @@
             normas puede conllevar incluso la expulsión inmediata del "Retiro Lúdico C&D". Aunque
             también recomendamos leer las Condiciones Generales de las jornadas que acepta toda
             persona que asista como alojado y participante. Puedes encontrarlas en el apartado:
-            Condiciones generales.
+            <RouterLink to="/normas" class="faq-link">Normas del evento</RouterLink>.
           </p>
         </article>
 
