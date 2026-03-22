@@ -17,6 +17,23 @@
         comidas y actividades accesibles para todas las personas participantes.
       </p>
 
+      <div
+        v-if="registrationClosed"
+        class="registration-closed-banner"
+        role="alert"
+        aria-live="polite"
+      >
+        <p>
+          El plazo de inscripción ha finalizado. El último día para preinscribirte fue el
+          {{ registrationDeadlineLabel }}. Si necesitas ayuda, escríbenos a
+          <a :href="`mailto:${CONTACT_INFO.email}`">{{ CONTACT_INFO.email }}</a
+          >.
+        </p>
+      </div>
+      <p v-else class="registration-deadline-note">
+        Plazo de inscripción: hasta el {{ registrationDeadlineLabel }} (inclusive).
+      </p>
+
       <div class="registration-layout">
         <aside class="registration-summary" aria-label="Información adicional para la inscripción">
           <AppCard title="Detalles clave" :text="eventDetailsText" icon="🗓️" variant="info" />
@@ -72,6 +89,8 @@
           @submit.prevent="handleSubmit"
           novalidate
         >
+          <fieldset class="registration-form-wrap" :disabled="registrationClosed">
+            <legend class="sr-only">Formulario de inscripción</legend>
           <fieldset class="form-fieldset">
             <legend>
               Datos personales
@@ -596,14 +615,23 @@
           </div>
 
           <div class="form-actions">
-            <button class="cta-button cta-primary" type="submit" :disabled="isSubmitting">
+            <button
+              class="cta-button cta-primary"
+              type="submit"
+              :disabled="isSubmitting || registrationClosed"
+            >
               <span v-if="!isSubmitting">Enviar solicitud</span>
               <span v-else>
                 <span class="spinner" aria-hidden="true"></span>
                 Enviando...
               </span>
             </button>
-            <button class="form-reset" type="button" @click="handleReset" :disabled="isSubmitting">
+            <button
+              class="form-reset"
+              type="button"
+              @click="handleReset"
+              :disabled="isSubmitting || registrationClosed"
+            >
               Limpiar formulario
             </button>
           </div>
@@ -618,6 +646,7 @@
           >
             {{ status.message }}
           </div>
+          </fieldset>
         </form>
       </div>
     </div>
@@ -640,7 +669,11 @@ import {
   EVENT_DEPARTURE_MAX_TIME,
   EVENT_YEAR,
   FIELD_LABELS,
+  formatDeadlineLabelEs,
+  getRegistrationLastValidDate,
   groupAccommodationOptions,
+  isRegistrationDeadlinePassed,
+  parseEventDateLocal,
   TELEGRAM_TOOLTIP,
   VALIDATION_PATTERNS,
 } from '@/constants'
@@ -694,6 +727,11 @@ const status = reactive({
 
 const isSubmitting = ref(false)
 const showTelegramTooltip = ref(false)
+
+const registrationClosed = computed(() => isRegistrationDeadlinePassed())
+const registrationDeadlineLabel = computed(() =>
+  formatDeadlineLabelEs(getRegistrationLastValidDate()),
+)
 
 const toggleTelegramTooltip = () => {
   showTelegramTooltip.value = !showTelegramTooltip.value
@@ -755,12 +793,6 @@ onUnmounted(() => {
   document.removeEventListener('keydown', handleEscape)
   document.removeEventListener('click', handleClickOutside)
 })
-
-/** Parsea 'YYYY-MM-DD' como fecha local (evita desfases UTC en getDay() / getDate()). */
-const parseEventDateLocal = (dateString) => {
-  const [y, m, d] = dateString.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
 
 // Helper para obtener el día de la semana en español
 const getDayOfWeek = (dateString) => {
@@ -1129,6 +1161,12 @@ const handleSubmit = async () => {
     return
   }
 
+  if (registrationClosed.value) {
+    status.type = 'error'
+    status.message = 'El plazo de inscripción ha finalizado.'
+    return
+  }
+
   const isValid = validateForm()
 
   if (!isValid) {
@@ -1172,7 +1210,9 @@ const handleSubmit = async () => {
     } else {
       status.type = 'error'
       // Mensajes de error más específicos según el tipo de error
-      if (result.error?.includes('duplicate') || result.error?.includes('unique')) {
+      if (result.error?.includes('plazo')) {
+        status.message = result.error
+      } else if (result.error?.includes('duplicate') || result.error?.includes('unique')) {
         status.message =
           'Ya existe un registro con esta combinación de correo electrónico, nombre y fecha de nacimiento. Si crees que es un error, contacta con nosotros.'
       } else if (result.error?.includes('network') || result.error?.includes('fetch')) {
@@ -1297,6 +1337,33 @@ watch(
   margin-top: var(--spacing-sm);
   color: var(--color-text-light);
   font-size: 1rem;
+}
+
+.registration-closed-banner {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  background-color: #fff8e6;
+  border: 1px solid #e6d08c;
+  color: var(--color-text);
+}
+
+.registration-closed-banner a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.registration-deadline-note {
+  margin-top: var(--spacing-sm);
+  font-size: 0.95rem;
+  color: var(--color-text-light);
+}
+
+.registration-form-wrap {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
 }
 
 .registration-layout {

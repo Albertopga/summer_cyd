@@ -48,6 +48,16 @@
         </article>
 
         <article class="faq-section">
+          <h2>¿Hasta cuándo puedo inscribirme o proponer actividades?</h2>
+          <p>
+            La inscripción de participantes permanece abierta hasta el
+            {{ registrationDeadlineLabel }} (inclusive). Para proponer actividades puedes usar el
+            <RouterLink to="/actividades" class="faq-link">formulario de actividades</RouterLink>
+            hasta el {{ activityDeadlineLabel }} (inclusive).
+          </p>
+        </article>
+
+        <article class="faq-section">
           <h2>¿Cuál es la política de cancelación de la reserva?</h2>
           <p>
             Si cancelas antes del 1 de agosto de {{ EVENT_YEAR }}, se retiene un 10&nbsp;% por gastos
@@ -252,13 +262,28 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppSectionHeader from '@/components/AppSectionHeader.vue'
-import { CONTACT_INFO, EVENT_DATES_LABEL_SHORT, EVENT_YEAR } from '@/constants'
+import {
+  CONTACT_INFO,
+  EVENT_DATES_LABEL_SHORT,
+  EVENT_YEAR,
+  formatDeadlineLabelEs,
+  getActivityRegistrationLastValidDate,
+  getRegistrationLastValidDate,
+} from '@/constants'
 
 defineOptions({
   name: 'FAQView',
 })
+
+const registrationDeadlineLabel = computed(() =>
+  formatDeadlineLabelEs(getRegistrationLastValidDate()),
+)
+const activityDeadlineLabel = computed(() =>
+  formatDeadlineLabelEs(getActivityRegistrationLastValidDate()),
+)
 </script>
 
 <style scoped>

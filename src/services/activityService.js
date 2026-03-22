@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/lib/supabase'
+import { isActivityRegistrationDeadlinePassed } from '@/constants'
 
 /**
  * Sube un archivo a Supabase Storage
@@ -113,6 +114,14 @@ async function uploadActivityDocuments(files, organizerEmail, activityIndex) {
  */
 export async function saveActivities(organizerName, organizerEmail, activities) {
   try {
+    if (isActivityRegistrationDeadlinePassed()) {
+      return {
+        success: false,
+        data: null,
+        error: 'El plazo para registrar actividades ha finalizado.',
+      }
+    }
+
     if (!organizerName || !organizerName.trim()) {
       return {
         success: false,

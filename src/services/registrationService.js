@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/lib/supabase'
+import { isRegistrationDeadlinePassed } from '@/constants'
 
 /**
  * Guarda un nuevo registro de asistente en la base de datos
@@ -13,6 +14,14 @@ import { supabase } from '@/lib/supabase'
  */
 export async function saveRegistration(registrationData, isMinor) {
   try {
+    if (isRegistrationDeadlinePassed()) {
+      return {
+        success: false,
+        data: null,
+        error: 'El plazo de inscripción ha finalizado.',
+      }
+    }
+
     // Preparar los datos para insertar en la base de datos
     const dataToInsert = {
       first_name: registrationData.firstName,

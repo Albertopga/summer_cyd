@@ -55,6 +55,59 @@ export const EVENT_DATES_LABEL_SHORT = '21 al 23 de Agosto'
 /** Hora máxima del último día para salida estimada (alineada con el cierre del evento a las 20:00). */
 export const EVENT_DEPARTURE_MAX_TIME = '20:00'
 
+/**
+ * Parsea 'YYYY-MM-DD' como fecha local (evita desfases UTC en getDay() / getDate()).
+ * @param {string} dateString
+ * @returns {Date}
+ */
+export function parseEventDateLocal(dateString) {
+  const [y, m, d] = dateString.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+function startOfLocalDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+/** Último día (inclusive) para inscribirse: un mes calendario antes del inicio del evento. */
+export function getRegistrationLastValidDate() {
+  const start = parseEventDateLocal(EVENT_DATES.start)
+  const d = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+  d.setMonth(d.getMonth() - 1)
+  return d
+}
+
+/** Último día (inclusive) para proponer actividades: 7 días antes del inicio del evento. */
+export function getActivityRegistrationLastValidDate() {
+  const start = parseEventDateLocal(EVENT_DATES.start)
+  const d = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+  d.setDate(d.getDate() - 7)
+  return d
+}
+
+/** true si ya no se aceptan inscripciones de asistentes (día siguiente al último día válido). */
+export function isRegistrationDeadlinePassed() {
+  const today = startOfLocalDay(new Date())
+  const last = startOfLocalDay(getRegistrationLastValidDate())
+  return today > last
+}
+
+/** true si ya no se aceptan propuestas de actividades. */
+export function isActivityRegistrationDeadlinePassed() {
+  const today = startOfLocalDay(new Date())
+  const last = startOfLocalDay(getActivityRegistrationLastValidDate())
+  return today > last
+}
+
+/** Etiqueta legible en español para una fecha local. */
+export function formatDeadlineLabelEs(date) {
+  return new Intl.DateTimeFormat('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+}
+
 /** Texto común sobre electricidad en alojamientos (modal, formulario, etc.) */
 export const ACCOMMODATION_OUTLETS_NOTE =
   'En todos los alojamientos hay enchufes, aunque se recomienda traer regletas o alargador.'

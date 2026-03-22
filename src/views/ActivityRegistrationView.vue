@@ -17,12 +17,31 @@
         dirigir por cada participante.
       </p>
 
+      <div
+        v-if="activityRegistrationClosed"
+        class="registration-closed-banner"
+        role="alert"
+        aria-live="polite"
+      >
+        <p>
+          El plazo para enviar propuestas de actividades ha finalizado. El último día era el
+          {{ activityDeadlineLabel }}. Si necesitas ayuda, escríbenos a
+          <a :href="`mailto:${CONTACT_INFO.email}`">{{ CONTACT_INFO.email }}</a
+          >.
+        </p>
+      </div>
+      <p v-else class="registration-deadline-note">
+        Plazo para proponer actividades: hasta el {{ activityDeadlineLabel }} (inclusive).
+      </p>
+
       <form
         id="activity-registration-form"
         class="registration-form"
         @submit.prevent="handleSubmit"
         novalidate
       >
+        <fieldset class="activity-form-wrap" :disabled="activityRegistrationClosed">
+          <legend class="sr-only">Formulario de actividades</legend>
         <fieldset class="form-fieldset">
           <legend>Datos del organizador</legend>
           <p class="form-help" style="margin-bottom: var(--spacing-md)">
@@ -303,7 +322,7 @@
 
             <div class="form-row">
               <label :for="`activityParticipantNeeds-${index}`"
-                >Necesidades a cubrir por los participantes</label
+                >Necesidades a cubrir por los participantes *</label
               >
               <textarea
                 :id="`activityParticipantNeeds-${index}`"
@@ -311,17 +330,32 @@
                 :name="`activityParticipantNeeds-${index}`"
                 rows="3"
                 maxlength="500"
-                :aria-describedby="`activityParticipantNeeds-${index}-help`"
+                required
+                aria-required="true"
+                :aria-invalid="errors[`activities.${index}.participantNeeds`] ? 'true' : 'false'"
+                :aria-describedby="`activityParticipantNeeds-${index}-help activityParticipantNeeds-${index}-error`"
+                @blur="() => validateActivityField(index, 'participantNeeds')"
               ></textarea>
               <p :id="`activityParticipantNeeds-${index}-help`" class="form-help">
                 Indica qué necesitan traer o preparar los participantes (materiales, personajes,
                 etc.)
               </p>
+              <span
+                :id="`activityParticipantNeeds-${index}-error`"
+                class="form-error"
+                :class="{
+                  'form-error-hidden': !errors[`activities.${index}.participantNeeds`],
+                }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors[`activities.${index}.participantNeeds`] || '&nbsp;' }}
+              </span>
             </div>
 
             <div class="form-row">
               <label :for="`activityOrganizationNeeds-${index}`"
-                >Necesidades a cubrir por la organización del evento</label
+                >Necesidades a cubrir por la organización del evento *</label
               >
               <textarea
                 :id="`activityOrganizationNeeds-${index}`"
@@ -329,12 +363,27 @@
                 :name="`activityOrganizationNeeds-${index}`"
                 rows="3"
                 maxlength="500"
-                :aria-describedby="`activityOrganizationNeeds-${index}-help`"
+                required
+                aria-required="true"
+                :aria-invalid="errors[`activities.${index}.organizationNeeds`] ? 'true' : 'false'"
+                :aria-describedby="`activityOrganizationNeeds-${index}-help activityOrganizationNeeds-${index}-error`"
+                @blur="() => validateActivityField(index, 'organizationNeeds')"
               ></textarea>
               <p :id="`activityOrganizationNeeds-${index}-help`" class="form-help">
                 Indica qué necesitas que proporcione la organización (espacios, materiales,
                 equipamiento, etc.)
               </p>
+              <span
+                :id="`activityOrganizationNeeds-${index}-error`"
+                class="form-error"
+                :class="{
+                  'form-error-hidden': !errors[`activities.${index}.organizationNeeds`],
+                }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors[`activities.${index}.organizationNeeds`] || '&nbsp;' }}
+              </span>
             </div>
 
             <div class="form-row">
@@ -378,47 +427,87 @@
             </div>
 
             <div class="form-row">
-              <label :for="`activitySpaceNeed-${index}`">Necesidad de espacio</label>
+              <label :for="`activitySpaceNeed-${index}`">Necesidad de espacio *</label>
               <select
                 :id="`activitySpaceNeed-${index}`"
                 v-model="activity.spaceNeed"
                 :name="`activitySpaceNeed-${index}`"
+                required
+                aria-required="true"
+                :aria-invalid="errors[`activities.${index}.spaceNeed`] ? 'true' : 'false'"
+                :aria-describedby="`activitySpaceNeed-${index}-error`"
+                @change="() => validateActivityField(index, 'spaceNeed')"
               >
                 <option value="">Selecciona una opción</option>
                 <option v-for="option in SPACE_NEEDS" :key="option.value" :value="option.value">
                   {{ option.label }}
                 </option>
               </select>
+              <span
+                :id="`activitySpaceNeed-${index}-error`"
+                class="form-error"
+                :class="{ 'form-error-hidden': !errors[`activities.${index}.spaceNeed`] }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors[`activities.${index}.spaceNeed`] || '&nbsp;' }}
+              </span>
             </div>
 
             <div class="form-row">
-              <label :for="`activitySetup-${index}`">Puesta en Marcha</label>
+              <label :for="`activitySetup-${index}`">Puesta en Marcha *</label>
               <textarea
                 :id="`activitySetup-${index}`"
                 v-model.trim="activity.setup"
                 :name="`activitySetup-${index}`"
                 rows="3"
                 maxlength="500"
-                :aria-describedby="`activitySetup-${index}-help`"
+                required
+                aria-required="true"
+                :aria-invalid="errors[`activities.${index}.setup`] ? 'true' : 'false'"
+                :aria-describedby="`activitySetup-${index}-help activitySetup-${index}-error`"
+                @blur="() => validateActivityField(index, 'setup')"
               ></textarea>
               <p :id="`activitySetup-${index}-help`" class="form-help">
                 Describe cómo se prepara o monta la actividad
               </p>
+              <span
+                :id="`activitySetup-${index}-error`"
+                class="form-error"
+                :class="{ 'form-error-hidden': !errors[`activities.${index}.setup`] }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors[`activities.${index}.setup`] || '&nbsp;' }}
+              </span>
             </div>
 
             <div class="form-row">
-              <label :for="`activityObservations-${index}`">Observaciones</label>
+              <label :for="`activityObservations-${index}`">Observaciones *</label>
               <textarea
                 :id="`activityObservations-${index}`"
                 v-model.trim="activity.observations"
                 :name="`activityObservations-${index}`"
                 rows="3"
                 maxlength="500"
-                :aria-describedby="`activityObservations-${index}-help`"
+                required
+                aria-required="true"
+                :aria-invalid="errors[`activities.${index}.observations`] ? 'true' : 'false'"
+                :aria-describedby="`activityObservations-${index}-help activityObservations-${index}-error`"
+                @blur="() => validateActivityField(index, 'observations')"
               ></textarea>
               <p :id="`activityObservations-${index}-help`" class="form-help">
                 Cualquier información adicional que consideres relevante.
               </p>
+              <span
+                :id="`activityObservations-${index}-error`"
+                class="form-error"
+                :class="{ 'form-error-hidden': !errors[`activities.${index}.observations`] }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors[`activities.${index}.observations`] || '&nbsp;' }}
+              </span>
             </div>
 
             <button
@@ -460,24 +549,43 @@
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn btn-secondary" @click="handleReset">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="handleReset"
+            :disabled="activityRegistrationClosed"
+          >
             Limpiar formulario
           </button>
-          <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            :disabled="isSubmitting || activityRegistrationClosed"
+          >
             <span v-if="!isSubmitting">Enviar actividades</span>
             <span v-else>Enviando...</span>
           </button>
         </div>
+        </fieldset>
       </form>
     </div>
   </section>
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppSectionHeader from '@/components/AppSectionHeader.vue'
-import { ACTIVITY_TYPES, SPACE_NEEDS, TIME_SLOTS, VALIDATION_PATTERNS } from '@/constants'
+import {
+  ACTIVITY_TYPES,
+  CONTACT_INFO,
+  SPACE_NEEDS,
+  TIME_SLOTS,
+  VALIDATION_PATTERNS,
+  formatDeadlineLabelEs,
+  getActivityRegistrationLastValidDate,
+  isActivityRegistrationDeadlinePassed,
+} from '@/constants'
 import { saveActivities } from '@/services/activityService'
 
 const emailPattern = VALIDATION_PATTERNS.email
@@ -503,6 +611,11 @@ const status = reactive({
 })
 
 const isSubmitting = ref(false)
+
+const activityRegistrationClosed = computed(() => isActivityRegistrationDeadlinePassed())
+const activityDeadlineLabel = computed(() =>
+  formatDeadlineLabelEs(getActivityRegistrationLastValidDate()),
+)
 
 const createEmptyActivity = () => ({
   type: '',
@@ -696,6 +809,46 @@ const validateActivityField = (activityIndex, field) => {
       errors[errorKey] = ''
       return true
 
+    case 'participantNeeds':
+      if (!activity.participantNeeds?.trim()) {
+        errors[errorKey] = 'Indica las necesidades a cubrir por los participantes.'
+        return false
+      }
+      errors[errorKey] = ''
+      return true
+
+    case 'organizationNeeds':
+      if (!activity.organizationNeeds?.trim()) {
+        errors[errorKey] = 'Indica las necesidades a cubrir por la organización.'
+        return false
+      }
+      errors[errorKey] = ''
+      return true
+
+    case 'spaceNeed':
+      if (!activity.spaceNeed) {
+        errors[errorKey] = 'Selecciona una necesidad de espacio.'
+        return false
+      }
+      errors[errorKey] = ''
+      return true
+
+    case 'setup':
+      if (!activity.setup?.trim()) {
+        errors[errorKey] = 'Describe la puesta en marcha.'
+        return false
+      }
+      errors[errorKey] = ''
+      return true
+
+    case 'observations':
+      if (!activity.observations?.trim()) {
+        errors[errorKey] = 'Completa el campo de observaciones.'
+        return false
+      }
+      errors[errorKey] = ''
+      return true
+
     default:
       return true
   }
@@ -709,13 +862,17 @@ const validateActivities = () => {
   let isValid = true
   const requiredFields = [
     'type',
-    'organizerName',
     'name',
     'minParticipants',
     'maxParticipants',
     'description',
     'preferredTimeSlot',
     'duration',
+    'participantNeeds',
+    'organizationNeeds',
+    'spaceNeed',
+    'setup',
+    'observations',
   ]
 
   form.activities.forEach((activity, index) => {
@@ -732,6 +889,12 @@ const validateActivities = () => {
 
 const handleSubmit = async () => {
   clearStatus()
+
+  if (activityRegistrationClosed.value) {
+    status.type = 'error'
+    status.message = 'El plazo para registrar actividades ha finalizado.'
+    return
+  }
 
   // Validar datos del organizador primero
   const nameValid = validateOrganizerName()
@@ -786,7 +949,9 @@ const handleSubmit = async () => {
       resetForm()
     } else {
       status.type = 'error'
-      if (result.error?.includes('network') || result.error?.includes('fetch')) {
+      if (result.error?.includes('plazo')) {
+        status.message = result.error
+      } else if (result.error?.includes('network') || result.error?.includes('fetch')) {
         status.message =
           'Error de conexión. Por favor, verifica tu conexión a internet e inténtalo de nuevo.'
       } else {
@@ -886,6 +1051,36 @@ watch(
   margin-top: var(--spacing-sm);
   color: var(--color-text-light);
   font-size: 1rem;
+}
+
+.registration-closed-banner {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  background-color: #fff8e6;
+  border: 1px solid #e6d08c;
+  color: var(--color-text);
+}
+
+.registration-closed-banner a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.registration-deadline-note {
+  margin-top: var(--spacing-sm);
+  font-size: 0.95rem;
+  color: var(--color-text-light);
+}
+
+.activity-form-wrap {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
 }
 
 .registration-form {
