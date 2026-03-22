@@ -10,12 +10,17 @@
 
       <AppSectionHeader label="Organización de actividades" title="Registra tu actividad" />
 
-      <p class="registration-intro">
-        Si quieres organizar alguna actividad durante el Retiro Lúdico, completa este formulario.
-        Por motivos organizativos y para dar opción a que todos los participantes puedan tanto
-        organizar como disfrutar de las actividades, limitamos a 2 el número de actividades a
-        dirigir por cada participante.
-      </p>
+      <div class="registration-intro">
+        <p class="registration-intro-lead">
+          Si quieres organizar alguna actividad durante el Retiro Lúdico, regístrala con este
+          formulario.
+        </p>
+        <p class="registration-intro-note">
+          Por motivos organizativos, cada participante puede dirigir como máximo
+          <strong>2 actividades</strong>, para que todos tengan opción de organizar y de disfrutar
+          del resto del programa.
+        </p>
+      </div>
 
       <div
         v-if="activityRegistrationClosed"
@@ -42,460 +47,471 @@
       >
         <fieldset class="activity-form-wrap" :disabled="activityRegistrationClosed">
           <legend class="sr-only">Formulario de actividades</legend>
-        <fieldset class="form-fieldset">
-          <legend>Datos del organizador</legend>
-          <p class="form-help" style="margin-bottom: var(--spacing-md)">
-            Introduce tu nombre y email para vincular las actividades con tu registro. El email debe
-            ser el mismo que usaste al registrarte.
-          </p>
+          <fieldset class="form-fieldset">
+            <legend>Datos del organizador</legend>
+            <p class="form-help" style="margin-bottom: var(--spacing-md)">
+              Introduce tu nombre y email para vincular las actividades con tu registro. El email
+              debe ser el mismo que usaste al registrarte.
+            </p>
 
-          <div class="form-row-group">
-            <div class="form-row">
-              <label for="organizerName">Nombre del Organizador *</label>
-              <input
-                id="organizerName"
-                v-model.trim="form.organizerName"
-                type="text"
-                name="organizerName"
-                required
-                aria-required="true"
-                :aria-invalid="errors.organizerName ? 'true' : 'false'"
-                :aria-describedby="'organizerName-error'"
-                placeholder="Nombre completo"
-                @blur="validateOrganizerName"
-              />
-              <span
-                id="organizerName-error"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors.organizerName }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors.organizerName || '&nbsp;' }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <label for="organizerEmail">Email del organizador *</label>
-              <input
-                id="organizerEmail"
-                v-model.trim="form.organizerEmail"
-                type="email"
-                name="organizerEmail"
-                required
-                aria-required="true"
-                :aria-invalid="errors.organizerEmail ? 'true' : 'false'"
-                :aria-describedby="'organizerEmail-error'"
-                placeholder="tu@email.com"
-                @blur="validateOrganizerEmail"
-              />
-              <span
-                id="organizerEmail-error"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors.organizerEmail }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors.organizerEmail || '&nbsp;' }}
-              </span>
-            </div>
-          </div>
-        </fieldset>
-
-        <div v-if="form.activities.length === 0" class="no-activities">
-          <p>No has añadido ninguna actividad todavía.</p>
-          <button type="button" class="add-activity-button" @click="addActivity">
-            + Añadir primera actividad
-          </button>
-        </div>
-
-        <div v-else class="activities-container">
-          <div v-for="(activity, index) in form.activities" :key="index" class="activity-form">
-            <h3 class="activity-form-title">Actividad {{ index + 1 }}</h3>
-
-            <div class="form-row">
-              <label :for="`activityType-${index}`">
-                Tipo de Actividad *
-                <span class="legend-note"
-                  >(Rol en Vivo: mínimo viable igual o inferior a 15 participantes)</span
+            <div class="form-row-group">
+              <div class="form-row">
+                <label for="organizerName">Nombre del Organizador *</label>
+                <input
+                  id="organizerName"
+                  v-model.trim="form.organizerName"
+                  type="text"
+                  name="organizerName"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors.organizerName ? 'true' : 'false'"
+                  :aria-describedby="'organizerName-error'"
+                  placeholder="Nombre completo"
+                  @blur="validateOrganizerName"
+                />
+                <span
+                  id="organizerName-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.organizerName }"
+                  role="alert"
+                  aria-live="polite"
                 >
-              </label>
-              <select
-                :id="`activityType-${index}`"
-                v-model="activity.type"
-                :name="`activityType-${index}`"
-                required
-                aria-required="true"
-                :aria-invalid="errors[`activities.${index}.type`] ? 'true' : 'false'"
-                :aria-describedby="`activityType-${index}-error`"
-                @change="() => validateActivityField(index, 'type')"
-              >
-                <option value="">Selecciona un tipo</option>
-                <option v-for="option in ACTIVITY_TYPES" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-              <span
-                :id="`activityType-${index}-error`"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors[`activities.${index}.type`] }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors[`activities.${index}.type`] || '&nbsp;' }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <label :for="`activityName-${index}`">Nombre de la actividad *</label>
-              <input
-                :id="`activityName-${index}`"
-                v-model.trim="activity.name"
-                type="text"
-                :name="`activityName-${index}`"
-                required
-                aria-required="true"
-                :aria-invalid="errors[`activities.${index}.name`] ? 'true' : 'false'"
-                :aria-describedby="`activityName-${index}-error`"
-                @blur="() => validateActivityField(index, 'name')"
-              />
-              <span
-                :id="`activityName-${index}-error`"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors[`activities.${index}.name`] }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors[`activities.${index}.name`] || '&nbsp;' }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <div class="form-row-group">
-                <div class="form-row form-row-inline">
-                  <label :for="`activityMinParticipants-${index}`"
-                    >Mínimo viable de participantes <span class="help-indicator">(1)</span>*</label
-                  >
-                  <input
-                    :id="`activityMinParticipants-${index}`"
-                    v-model.number="activity.minParticipants"
-                    type="number"
-                    :name="`activityMinParticipants-${index}`"
-                    min="1"
-                    required
-                    aria-required="true"
-                    :aria-invalid="errors[`activities.${index}.minParticipants`] ? 'true' : 'false'"
-                    :aria-describedby="`activityMinParticipants-${index}-error activityMinParticipants-${index}-help`"
-                    @blur="() => validateActivityField(index, 'minParticipants')"
-                  />
-                  <span
-                    :id="`activityMinParticipants-${index}-error`"
-                    class="form-error"
-                    :class="{
-                      'form-error-hidden': !errors[`activities.${index}.minParticipants`],
-                    }"
-                    role="alert"
-                    aria-live="polite"
-                  >
-                    {{ errors[`activities.${index}.minParticipants`] || '&nbsp;' }}
-                  </span>
-                </div>
-
-                <div class="form-row form-row-inline">
-                  <label :for="`activityMaxParticipants-${index}`">Máximo de participantes *</label>
-                  <input
-                    :id="`activityMaxParticipants-${index}`"
-                    v-model.number="activity.maxParticipants"
-                    type="number"
-                    :name="`activityMaxParticipants-${index}`"
-                    min="1"
-                    required
-                    aria-required="true"
-                    :aria-invalid="errors[`activities.${index}.maxParticipants`] ? 'true' : 'false'"
-                    :aria-describedby="`activityMaxParticipants-${index}-error`"
-                    @blur="() => validateActivityField(index, 'maxParticipants')"
-                  />
-                  <span
-                    :id="`activityMaxParticipants-${index}-error`"
-                    class="form-error"
-                    :class="{
-                      'form-error-hidden': !errors[`activities.${index}.maxParticipants`],
-                    }"
-                    role="alert"
-                    aria-live="polite"
-                  >
-                    {{ errors[`activities.${index}.maxParticipants`] || '&nbsp;' }}
-                  </span>
-                </div>
+                  {{ errors.organizerName || '&nbsp;' }}
+                </span>
               </div>
-              <p :id="`activityMinParticipants-${index}-help`" class="form-help">
-                <span class="help-indicator">(1)</span> El mínimo de personas necesarias para que la
-                actividad se pueda desarrollar correctamente. La actividad solo se realizará si se
-                alcanza este número de participantes.
-              </p>
-            </div>
 
-            <div class="form-row">
-              <label :for="`activityDescription-${index}`">Descripción *</label>
-              <textarea
-                :id="`activityDescription-${index}`"
-                v-model.trim="activity.description"
-                :name="`activityDescription-${index}`"
-                rows="4"
-                required
-                aria-required="true"
-                :aria-invalid="errors[`activities.${index}.description`] ? 'true' : 'false'"
-                :aria-describedby="`activityDescription-${index}-error`"
-                maxlength="1000"
-                @blur="() => validateActivityField(index, 'description')"
-              ></textarea>
-              <span
-                :id="`activityDescription-${index}-error`"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors[`activities.${index}.description`] }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors[`activities.${index}.description`] || '&nbsp;' }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <label :for="`activityPreferredTimeSlot-${index}`"
-                >Franja horaria preferida *
-                <span class="legend-note"
-                  >(La organización intentará respetar tus preferencias)</span
-                ></label
-              >
-              <select
-                :id="`activityPreferredTimeSlot-${index}`"
-                v-model="activity.preferredTimeSlot"
-                :name="`activityPreferredTimeSlot-${index}`"
-                required
-                aria-required="true"
-                :aria-invalid="errors[`activities.${index}.preferredTimeSlot`] ? 'true' : 'false'"
-                :aria-describedby="`activityPreferredTimeSlot-${index}-error`"
-                @change="() => validateActivityField(index, 'preferredTimeSlot')"
-              >
-                <option value="">Selecciona una franja horaria</option>
-                <option v-for="option in TIME_SLOTS" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-              <span
-                :id="`activityPreferredTimeSlot-${index}-error`"
-                class="form-error"
-                :class="{
-                  'form-error-hidden': !errors[`activities.${index}.preferredTimeSlot`],
-                }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors[`activities.${index}.preferredTimeSlot`] || '&nbsp;' }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <label :for="`activityDuration-${index}`">Duración de la actividad *</label>
-              <input
-                :id="`activityDuration-${index}`"
-                v-model.trim="activity.duration"
-                type="text"
-                :name="`activityDuration-${index}`"
-                placeholder="Ej: 2 horas, 3 horas, 4 horas..."
-                required
-                aria-required="true"
-                :aria-invalid="errors[`activities.${index}.duration`] ? 'true' : 'false'"
-                :aria-describedby="`activityDuration-${index}-error`"
-                @blur="() => validateActivityField(index, 'duration')"
-              />
-              <span
-                :id="`activityDuration-${index}-error`"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors[`activities.${index}.duration`] }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors[`activities.${index}.duration`] || '&nbsp;' }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <label :for="`activityParticipantNeeds-${index}`"
-                >Necesidades a cubrir por los participantes</label
-              >
-              <textarea
-                :id="`activityParticipantNeeds-${index}`"
-                v-model.trim="activity.participantNeeds"
-                :name="`activityParticipantNeeds-${index}`"
-                rows="3"
-                maxlength="500"
-                :aria-describedby="`activityParticipantNeeds-${index}-help`"
-              ></textarea>
-              <p :id="`activityParticipantNeeds-${index}-help`" class="form-help">
-                Indica qué necesitan traer o preparar los participantes (materiales, personajes,
-                etc.)
-              </p>
-            </div>
-
-            <div class="form-row">
-              <label :for="`activityOrganizationNeeds-${index}`"
-                >Necesidades a cubrir por la organización del evento</label
-              >
-              <textarea
-                :id="`activityOrganizationNeeds-${index}`"
-                v-model.trim="activity.organizationNeeds"
-                :name="`activityOrganizationNeeds-${index}`"
-                rows="3"
-                maxlength="500"
-                :aria-describedby="`activityOrganizationNeeds-${index}-help`"
-              ></textarea>
-              <p :id="`activityOrganizationNeeds-${index}-help`" class="form-help">
-                Indica qué necesitas que proporcione la organización (espacios, materiales,
-                equipamiento, etc.)
-              </p>
-            </div>
-
-            <div class="form-row">
-              <label :for="`activityDocuments-${index}`"
-                >Documentos para imprimir (si es necesario)</label
-              >
-              <input
-                :id="`activityDocuments-${index}`"
-                :ref="`fileInput-${index}`"
-                type="file"
-                :name="`activityDocuments-${index}`"
-                multiple
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                :aria-describedby="`activityDocuments-${index}-help`"
-                @change="(e) => handleFileChange(index, e)"
-              />
-              <p :id="`activityDocuments-${index}-help`" class="form-help">
-                Si necesitas que la organización imprima algún documento para tu actividad, súbelo
-                aquí. Formatos aceptados: PDF, Word, imágenes (JPG, PNG). Máximo 10MB por archivo.
-              </p>
-              <div v-if="activity.documents && activity.documents.length > 0" class="file-list">
-                <p class="file-list-title">Archivos seleccionados:</p>
-                <ul class="file-list-items">
-                  <li
-                    v-for="(file, fileIndex) in activity.documents"
-                    :key="fileIndex"
-                    class="file-item"
-                  >
-                    <span class="file-name">{{ file.name }}</span>
-                    <button
-                      type="button"
-                      class="file-remove"
-                      @click="removeFile(index, fileIndex)"
-                      :aria-label="`Eliminar archivo ${file.name}`"
-                    >
-                      ✕
-                    </button>
-                  </li>
-                </ul>
+              <div class="form-row">
+                <label for="organizerEmail">Email del organizador *</label>
+                <input
+                  id="organizerEmail"
+                  v-model.trim="form.organizerEmail"
+                  type="email"
+                  name="organizerEmail"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors.organizerEmail ? 'true' : 'false'"
+                  :aria-describedby="'organizerEmail-error'"
+                  placeholder="tu@email.com"
+                  @blur="validateOrganizerEmail"
+                />
+                <span
+                  id="organizerEmail-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.organizerEmail }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors.organizerEmail || '&nbsp;' }}
+                </span>
               </div>
             </div>
+          </fieldset>
 
-            <div class="form-row">
-              <label :for="`activitySpaceNeed-${index}`">Necesidad de espacio</label>
-              <select
-                :id="`activitySpaceNeed-${index}`"
-                v-model="activity.spaceNeed"
-                :name="`activitySpaceNeed-${index}`"
-              >
-                <option value="">Selecciona una opción</option>
-                <option v-for="option in SPACE_NEEDS" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
-
-            <div class="form-row">
-              <label :for="`activitySetup-${index}`">Puesta en Marcha</label>
-              <textarea
-                :id="`activitySetup-${index}`"
-                v-model.trim="activity.setup"
-                :name="`activitySetup-${index}`"
-                rows="3"
-                maxlength="500"
-                :aria-describedby="`activitySetup-${index}-help`"
-              ></textarea>
-              <p :id="`activitySetup-${index}-help`" class="form-help">
-                Describe cómo se prepara o monta la actividad
-              </p>
-            </div>
-
-            <div class="form-row">
-              <label :for="`activityObservations-${index}`">Observaciones</label>
-              <textarea
-                :id="`activityObservations-${index}`"
-                v-model.trim="activity.observations"
-                :name="`activityObservations-${index}`"
-                rows="3"
-                maxlength="500"
-                :aria-describedby="`activityObservations-${index}-help`"
-              ></textarea>
-              <p :id="`activityObservations-${index}-help`" class="form-help">
-                Cualquier información adicional que consideres relevante.
-              </p>
-            </div>
-
-            <button
-              v-if="form.activities.length > 1"
-              type="button"
-              class="remove-activity-button"
-              @click="removeActivity(index)"
-              aria-label="Eliminar actividad"
-            >
-              Eliminar actividad
+          <div v-if="form.activities.length === 0" class="no-activities">
+            <p>No has añadido ninguna actividad todavía.</p>
+            <button type="button" class="add-activity-button" @click="addActivity">
+              + Añadir primera actividad
             </button>
           </div>
 
-          <button
-            v-if="form.activities.length < 2"
-            type="button"
-            class="add-activity-button"
-            @click="addActivity"
-          >
-            + Añadir otra actividad (máximo 2)
-          </button>
+          <div v-else class="activities-container">
+            <div v-for="(activity, index) in form.activities" :key="index" class="activity-form">
+              <h3 class="activity-form-title">Actividad {{ index + 1 }}</h3>
 
-          <p class="form-help" style="margin-top: var(--spacing-md)">
-            <strong>Nota importante:</strong> Las actividades deberán alcanzar el mínimo de
-            participantes para poder realizarse. La Organización limita la inscripción para
-            participar en una actividad por franja horaria, para que no se solapen. Se tendrá en
-            cuenta la hora de inicio de la actividad + la duración de la actividad + 30 minutos de
-            margen. Para realizar las actividades se debe cumplimentar el formulario de actividad
-            pertinente y tener el visto bueno de la organización.
-          </p>
-        </div>
+              <div class="form-row">
+                <label :for="`activityType-${index}`">
+                  Tipo de Actividad *
+                  <span class="legend-note"
+                    >(Rol en Vivo: mínimo viable igual o inferior a 15 participantes)</span
+                  >
+                </label>
+                <select
+                  :id="`activityType-${index}`"
+                  v-model="activity.type"
+                  :name="`activityType-${index}`"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors[`activities.${index}.type`] ? 'true' : 'false'"
+                  :aria-describedby="`activityType-${index}-error`"
+                  @change="() => validateActivityField(index, 'type')"
+                >
+                  <option value="">Selecciona un tipo</option>
+                  <option
+                    v-for="option in ACTIVITY_TYPES"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+                <span
+                  :id="`activityType-${index}-error`"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors[`activities.${index}.type`] }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors[`activities.${index}.type`] || '&nbsp;' }}
+                </span>
+              </div>
 
-        <div
-          v-if="status.message"
-          :class="['status-message', `status-${status.type}`]"
-          role="alert"
-        >
-          {{ status.message }}
-        </div>
+              <div class="form-row">
+                <label :for="`activityName-${index}`">Nombre de la actividad *</label>
+                <input
+                  :id="`activityName-${index}`"
+                  v-model.trim="activity.name"
+                  type="text"
+                  :name="`activityName-${index}`"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors[`activities.${index}.name`] ? 'true' : 'false'"
+                  :aria-describedby="`activityName-${index}-error`"
+                  @blur="() => validateActivityField(index, 'name')"
+                />
+                <span
+                  :id="`activityName-${index}-error`"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors[`activities.${index}.name`] }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors[`activities.${index}.name`] || '&nbsp;' }}
+                </span>
+              </div>
 
-        <div class="form-actions">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            @click="handleReset"
-            :disabled="activityRegistrationClosed"
+              <div class="form-row">
+                <div class="form-row-group">
+                  <div class="form-row form-row-inline">
+                    <label :for="`activityMinParticipants-${index}`"
+                      >Mínimo viable de participantes
+                      <span class="help-indicator">(1)</span>*</label
+                    >
+                    <input
+                      :id="`activityMinParticipants-${index}`"
+                      v-model.number="activity.minParticipants"
+                      type="number"
+                      :name="`activityMinParticipants-${index}`"
+                      min="1"
+                      required
+                      aria-required="true"
+                      :aria-invalid="
+                        errors[`activities.${index}.minParticipants`] ? 'true' : 'false'
+                      "
+                      :aria-describedby="`activityMinParticipants-${index}-error activityMinParticipants-${index}-help`"
+                      @blur="() => validateActivityField(index, 'minParticipants')"
+                    />
+                    <span
+                      :id="`activityMinParticipants-${index}-error`"
+                      class="form-error"
+                      :class="{
+                        'form-error-hidden': !errors[`activities.${index}.minParticipants`],
+                      }"
+                      role="alert"
+                      aria-live="polite"
+                    >
+                      {{ errors[`activities.${index}.minParticipants`] || '&nbsp;' }}
+                    </span>
+                  </div>
+
+                  <div class="form-row form-row-inline">
+                    <label :for="`activityMaxParticipants-${index}`"
+                      >Máximo de participantes *</label
+                    >
+                    <input
+                      :id="`activityMaxParticipants-${index}`"
+                      v-model.number="activity.maxParticipants"
+                      type="number"
+                      :name="`activityMaxParticipants-${index}`"
+                      min="1"
+                      required
+                      aria-required="true"
+                      :aria-invalid="
+                        errors[`activities.${index}.maxParticipants`] ? 'true' : 'false'
+                      "
+                      :aria-describedby="`activityMaxParticipants-${index}-error`"
+                      @blur="() => validateActivityField(index, 'maxParticipants')"
+                    />
+                    <span
+                      :id="`activityMaxParticipants-${index}-error`"
+                      class="form-error"
+                      :class="{
+                        'form-error-hidden': !errors[`activities.${index}.maxParticipants`],
+                      }"
+                      role="alert"
+                      aria-live="polite"
+                    >
+                      {{ errors[`activities.${index}.maxParticipants`] || '&nbsp;' }}
+                    </span>
+                  </div>
+                </div>
+                <p :id="`activityMinParticipants-${index}-help`" class="form-help">
+                  <span class="help-indicator">(1)</span> El mínimo de personas necesarias para que
+                  la actividad se pueda desarrollar correctamente. La actividad solo se realizará si
+                  se alcanza este número de participantes.
+                </p>
+              </div>
+
+              <div class="form-row">
+                <label :for="`activityDescription-${index}`">Descripción *</label>
+                <textarea
+                  :id="`activityDescription-${index}`"
+                  v-model.trim="activity.description"
+                  :name="`activityDescription-${index}`"
+                  rows="4"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors[`activities.${index}.description`] ? 'true' : 'false'"
+                  :aria-describedby="`activityDescription-${index}-error`"
+                  maxlength="1000"
+                  @blur="() => validateActivityField(index, 'description')"
+                ></textarea>
+                <span
+                  :id="`activityDescription-${index}-error`"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors[`activities.${index}.description`] }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors[`activities.${index}.description`] || '&nbsp;' }}
+                </span>
+              </div>
+
+              <div class="form-row">
+                <label :for="`activityPreferredTimeSlot-${index}`"
+                  >Franja horaria preferida *
+                  <span class="legend-note"
+                    >(La organización intentará respetar tus preferencias)</span
+                  ></label
+                >
+                <select
+                  :id="`activityPreferredTimeSlot-${index}`"
+                  v-model="activity.preferredTimeSlot"
+                  :name="`activityPreferredTimeSlot-${index}`"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors[`activities.${index}.preferredTimeSlot`] ? 'true' : 'false'"
+                  :aria-describedby="`activityPreferredTimeSlot-${index}-error`"
+                  @change="() => validateActivityField(index, 'preferredTimeSlot')"
+                >
+                  <option value="">Selecciona una franja horaria</option>
+                  <option v-for="option in TIME_SLOTS" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <span
+                  :id="`activityPreferredTimeSlot-${index}-error`"
+                  class="form-error"
+                  :class="{
+                    'form-error-hidden': !errors[`activities.${index}.preferredTimeSlot`],
+                  }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors[`activities.${index}.preferredTimeSlot`] || '&nbsp;' }}
+                </span>
+              </div>
+
+              <div class="form-row">
+                <label :for="`activityDuration-${index}`">Duración de la actividad *</label>
+                <input
+                  :id="`activityDuration-${index}`"
+                  v-model.trim="activity.duration"
+                  type="text"
+                  :name="`activityDuration-${index}`"
+                  placeholder="Ej: 2 horas, 3 horas, 4 horas..."
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors[`activities.${index}.duration`] ? 'true' : 'false'"
+                  :aria-describedby="`activityDuration-${index}-error`"
+                  @blur="() => validateActivityField(index, 'duration')"
+                />
+                <span
+                  :id="`activityDuration-${index}-error`"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors[`activities.${index}.duration`] }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors[`activities.${index}.duration`] || '&nbsp;' }}
+                </span>
+              </div>
+
+              <div class="form-row">
+                <label :for="`activityParticipantNeeds-${index}`"
+                  >Necesidades a cubrir por los participantes</label
+                >
+                <textarea
+                  :id="`activityParticipantNeeds-${index}`"
+                  v-model.trim="activity.participantNeeds"
+                  :name="`activityParticipantNeeds-${index}`"
+                  rows="3"
+                  maxlength="500"
+                  :aria-describedby="`activityParticipantNeeds-${index}-help`"
+                ></textarea>
+                <p :id="`activityParticipantNeeds-${index}-help`" class="form-help">
+                  Indica qué necesitan traer o preparar los participantes (materiales, personajes,
+                  etc.)
+                </p>
+              </div>
+
+              <div class="form-row">
+                <label :for="`activityOrganizationNeeds-${index}`"
+                  >Necesidades a cubrir por la organización del evento</label
+                >
+                <textarea
+                  :id="`activityOrganizationNeeds-${index}`"
+                  v-model.trim="activity.organizationNeeds"
+                  :name="`activityOrganizationNeeds-${index}`"
+                  rows="3"
+                  maxlength="500"
+                  :aria-describedby="`activityOrganizationNeeds-${index}-help`"
+                ></textarea>
+                <p :id="`activityOrganizationNeeds-${index}-help`" class="form-help">
+                  Indica qué necesitas que proporcione la organización (espacios, materiales,
+                  equipamiento, etc.)
+                </p>
+              </div>
+
+              <div class="form-row">
+                <label :for="`activityDocuments-${index}`"
+                  >Documentos para imprimir (si es necesario)</label
+                >
+                <input
+                  :id="`activityDocuments-${index}`"
+                  :ref="`fileInput-${index}`"
+                  type="file"
+                  :name="`activityDocuments-${index}`"
+                  multiple
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  :aria-describedby="`activityDocuments-${index}-help`"
+                  @change="(e) => handleFileChange(index, e)"
+                />
+                <p :id="`activityDocuments-${index}-help`" class="form-help">
+                  Si necesitas que la organización imprima algún documento para tu actividad, súbelo
+                  aquí. Formatos aceptados: PDF, Word, imágenes (JPG, PNG). Máximo 10MB por archivo.
+                </p>
+                <div v-if="activity.documents && activity.documents.length > 0" class="file-list">
+                  <p class="file-list-title">Archivos seleccionados:</p>
+                  <ul class="file-list-items">
+                    <li
+                      v-for="(file, fileIndex) in activity.documents"
+                      :key="fileIndex"
+                      class="file-item"
+                    >
+                      <span class="file-name">{{ file.name }}</span>
+                      <button
+                        type="button"
+                        class="file-remove"
+                        @click="removeFile(index, fileIndex)"
+                        :aria-label="`Eliminar archivo ${file.name}`"
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label :for="`activitySpaceNeed-${index}`">Necesidad de espacio</label>
+                <select
+                  :id="`activitySpaceNeed-${index}`"
+                  v-model="activity.spaceNeed"
+                  :name="`activitySpaceNeed-${index}`"
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option v-for="option in SPACE_NEEDS" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <label :for="`activitySetup-${index}`">Puesta en Marcha</label>
+                <textarea
+                  :id="`activitySetup-${index}`"
+                  v-model.trim="activity.setup"
+                  :name="`activitySetup-${index}`"
+                  rows="3"
+                  maxlength="500"
+                  :aria-describedby="`activitySetup-${index}-help`"
+                ></textarea>
+                <p :id="`activitySetup-${index}-help`" class="form-help">
+                  Describe cómo se prepara o monta la actividad
+                </p>
+              </div>
+
+              <div class="form-row">
+                <label :for="`activityObservations-${index}`">Observaciones</label>
+                <textarea
+                  :id="`activityObservations-${index}`"
+                  v-model.trim="activity.observations"
+                  :name="`activityObservations-${index}`"
+                  rows="3"
+                  maxlength="500"
+                  :aria-describedby="`activityObservations-${index}-help`"
+                ></textarea>
+                <p :id="`activityObservations-${index}-help`" class="form-help">
+                  Cualquier información adicional que consideres relevante.
+                </p>
+              </div>
+
+              <button
+                v-if="form.activities.length > 1"
+                type="button"
+                class="remove-activity-button"
+                @click="removeActivity(index)"
+                aria-label="Eliminar actividad"
+              >
+                Eliminar actividad
+              </button>
+            </div>
+
+            <button
+              v-if="form.activities.length < 2"
+              type="button"
+              class="add-activity-button"
+              @click="addActivity"
+            >
+              + Añadir otra actividad (máximo 2)
+            </button>
+
+            <p class="form-help" style="margin-top: var(--spacing-md)">
+              <strong>Nota importante:</strong> Las actividades deberán alcanzar el mínimo de
+              participantes para poder realizarse. La Organización limita la inscripción para
+              participar en una actividad por franja horaria, para que no se solapen. Se tendrá en
+              cuenta la hora de inicio de la actividad + la duración de la actividad + 30 minutos de
+              margen. Para realizar las actividades se debe cumplimentar el formulario de actividad
+              pertinente y tener el visto bueno de la organización.
+            </p>
+          </div>
+
+          <div
+            v-if="status.message"
+            :class="['status-message', `status-${status.type}`]"
+            role="alert"
           >
-            Limpiar formulario
-          </button>
-          <button
-            type="submit"
-            class="btn btn-primary"
-            :disabled="isSubmitting || activityRegistrationClosed"
-          >
-            <span v-if="!isSubmitting">Enviar actividades</span>
-            <span v-else>Enviando...</span>
-          </button>
-        </div>
+            {{ status.message }}
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="handleReset"
+              :disabled="activityRegistrationClosed"
+            >
+              Limpiar formulario
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              :disabled="isSubmitting || activityRegistrationClosed"
+            >
+              <span v-if="!isSubmitting">Enviar actividades</span>
+              <span v-else>Enviando...</span>
+            </button>
+          </div>
         </fieldset>
       </form>
     </div>
@@ -934,8 +950,30 @@ watch(
 
 .registration-intro {
   margin-top: var(--spacing-sm);
-  color: var(--color-text-light);
+  display: grid;
+  gap: var(--spacing-md);
   font-size: 1rem;
+  line-height: 1.55;
+}
+
+.registration-intro-lead {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.registration-intro-note {
+  margin: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-accent);
+  background-color: rgba(244, 162, 97, 0.08);
+  color: var(--color-text-light);
+  font-size: 0.95rem;
+}
+
+.registration-intro-note strong {
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 .registration-closed-banner {

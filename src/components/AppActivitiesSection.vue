@@ -12,6 +12,16 @@
           variant="activities"
           @click="openModal(activity)"
         />
+        <div class="form-info-card activities-register-card">
+          <h3>¿Quieres organizar alguna actividad?</h3>
+          <p>
+            Si quieres proponer y dirigir actividades durante el evento, registralas en el
+            formulario de actividades.
+          </p>
+          <RouterLink to="/actividades" class="activity-link">
+            Ir al formulario de actividades
+          </RouterLink>
+        </div>
       </div>
     </div>
 
@@ -22,6 +32,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import AppSectionHeader from './AppSectionHeader.vue'
 import AppCard from './AppCard.vue'
 import ActivityModal from './ActivityModal.vue'
@@ -70,5 +81,53 @@ const closeModal = () => {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: var(--spacing-xl);
   }
+}
+
+.activities-register-card {
+  grid-column: 1 / -1;
+}
+
+.form-info-card {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-cream-dark);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.form-info-card h3 {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.form-info-card p {
+  margin: 0;
+  color: var(--color-text-light);
+}
+
+.activity-link {
+  display: inline-block;
+  margin-top: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  text-align: center;
+}
+
+.activity-link:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.activity-link:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 </style>

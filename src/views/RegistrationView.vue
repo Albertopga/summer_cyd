@@ -91,561 +91,564 @@
         >
           <fieldset class="registration-form-wrap" :disabled="registrationClosed">
             <legend class="sr-only">Formulario de inscripción</legend>
-          <fieldset class="form-fieldset">
-            <legend>
-              Datos personales
-              <span class="legend-note">(nombre y apellidos, tal como aparecen en tu DNI)</span>
-            </legend>
-            <div class="form-row">
-              <label for="firstName">Nombre *</label>
-              <input
-                id="firstName"
-                v-model.trim="form.firstName"
-                type="text"
-                name="firstName"
-                autocomplete="given-name"
-                required
-                aria-required="true"
-                :aria-invalid="errors.firstName ? 'true' : 'false'"
-                :aria-describedby="describedByFor('firstName')"
-                @blur="() => validateField('firstName')"
-              />
-              <span
-                id="firstName-error"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors.firstName }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors.firstName || '&nbsp;' }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <label for="lastName">Apellidos *</label>
-              <input
-                id="lastName"
-                v-model.trim="form.lastName"
-                type="text"
-                name="lastName"
-                autocomplete="family-name"
-                required
-                aria-required="true"
-                :aria-invalid="errors.lastName ? 'true' : 'false'"
-                :aria-describedby="describedByFor('lastName')"
-                @blur="() => validateField('lastName')"
-              />
-              <span
-                id="lastName-error"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors.lastName }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors.lastName || '&nbsp;' }}
-              </span>
-            </div>
-            <div class="form-row">
-              <label for="lastName"
-                >Mote/Alias
-                <span class="legend-note"
-                  >(Este nombre será el que usaremos para identificarte en el evento)</span
-                ></label
-              >
-              <input
-                id="nickname"
-                v-model.trim="form.nickname"
-                type="text"
-                name="nickname"
-                autocomplete="family-name"
-                required
-                aria-required="true"
-                :aria-describedby="describedByFor('nickname')"
-                @blur="() => validateField('nickname')"
-              />
-              <span
-                id="nickname-error"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors.nickname }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors.nickname || '&nbsp;' }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <label for="email">Correo electrónico *</label>
-              <input
-                id="email"
-                v-model.trim="form.email"
-                type="email"
-                name="email"
-                autocomplete="email"
-                inputmode="email"
-                required
-                aria-required="true"
-                :aria-invalid="errors.email ? 'true' : 'false'"
-                :aria-describedby="describedByFor('email')"
-                @blur="() => validateField('email')"
-              />
-              <span
-                id="email-error"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors.email }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors.email || '&nbsp;' }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <label for="phone">Teléfono de contacto *</label>
-              <input
-                id="phone"
-                v-model.trim="form.phone"
-                type="tel"
-                name="phone"
-                autocomplete="tel"
-                inputmode="tel"
-                required
-                aria-required="true"
-                :aria-invalid="errors.phone ? 'true' : 'false'"
-                :aria-describedby="describedByFor('phone')"
-                @blur="() => validateField('phone')"
-              />
-              <p id="phone-help" class="form-help">
-                Usa un teléfono activo durante los días del retiro. Te mantendremos informado vía
-                <button
-                  type="button"
-                  class="tooltip-trigger"
-                  :aria-expanded="showTelegramTooltip"
-                  :aria-controls="'telegram-tooltip'"
-                  @click="toggleTelegramTooltip"
-                  @mouseenter="showTelegramTooltip = true"
-                  @mouseleave="handleTooltipMouseLeave"
-                  aria-label="Más información sobre Telegram"
-                >
-                  Telegram
-                </button>
-                de actividades y horarios durante el evento.
+            <fieldset class="form-fieldset">
+              <legend>
+                Datos personales
+                <span class="legend-note">(nombre y apellidos, tal como aparecen en tu DNI)</span>
+              </legend>
+              <div class="form-row">
+                <label for="firstName">Nombre *</label>
+                <input
+                  id="firstName"
+                  v-model.trim="form.firstName"
+                  type="text"
+                  name="firstName"
+                  autocomplete="given-name"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors.firstName ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('firstName')"
+                  @blur="() => validateField('firstName')"
+                />
                 <span
-                  v-if="showTelegramTooltip"
-                  id="telegram-tooltip"
-                  class="tooltip"
-                  role="tooltip"
+                  id="firstName-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.firstName }"
+                  role="alert"
                   aria-live="polite"
-                  @mouseenter="
-                    () => {
-                      if (tooltipTimeout) clearTimeout(tooltipTimeout)
-                      showTelegramTooltip = true
-                    }
-                  "
-                  @mouseleave="
-                    () => {
-                      if (tooltipTimeout) clearTimeout(tooltipTimeout)
-                      showTelegramTooltip = false
-                    }
-                  "
                 >
-                  <span class="tooltip-content">
-                    {{ TELEGRAM_TOOLTIP }}
-                  </span>
+                  {{ errors.firstName || '&nbsp;' }}
+                </span>
+              </div>
+
+              <div class="form-row">
+                <label for="lastName">Apellidos *</label>
+                <input
+                  id="lastName"
+                  v-model.trim="form.lastName"
+                  type="text"
+                  name="lastName"
+                  autocomplete="family-name"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors.lastName ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('lastName')"
+                  @blur="() => validateField('lastName')"
+                />
+                <span
+                  id="lastName-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.lastName }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors.lastName || '&nbsp;' }}
+                </span>
+              </div>
+              <div class="form-row">
+                <label for="lastName"
+                  >Mote/Alias
+                  <span class="legend-note"
+                    >(Este nombre será el que usaremos para identificarte en el evento)</span
+                  ></label
+                >
+                <input
+                  id="nickname"
+                  v-model.trim="form.nickname"
+                  type="text"
+                  name="nickname"
+                  autocomplete="family-name"
+                  required
+                  aria-required="true"
+                  :aria-describedby="describedByFor('nickname')"
+                  @blur="() => validateField('nickname')"
+                />
+                <span
+                  id="nickname-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.nickname }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors.nickname || '&nbsp;' }}
+                </span>
+              </div>
+
+              <div class="form-row">
+                <label for="email">Correo electrónico *</label>
+                <input
+                  id="email"
+                  v-model.trim="form.email"
+                  type="email"
+                  name="email"
+                  autocomplete="email"
+                  inputmode="email"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors.email ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('email')"
+                  @blur="() => validateField('email')"
+                />
+                <span
+                  id="email-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.email }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors.email || '&nbsp;' }}
+                </span>
+              </div>
+
+              <div class="form-row">
+                <label for="phone">Teléfono de contacto *</label>
+                <input
+                  id="phone"
+                  v-model.trim="form.phone"
+                  type="tel"
+                  name="phone"
+                  autocomplete="tel"
+                  inputmode="tel"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors.phone ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('phone')"
+                  @blur="() => validateField('phone')"
+                />
+                <p id="phone-help" class="form-help">
+                  Usa un teléfono activo durante los días del retiro. Te mantendremos informado vía
                   <button
                     type="button"
-                    class="tooltip-close"
-                    @click="showTelegramTooltip = false"
-                    aria-label="Cerrar información sobre Telegram"
+                    class="tooltip-trigger"
+                    :aria-expanded="showTelegramTooltip"
+                    :aria-controls="'telegram-tooltip'"
+                    @click="toggleTelegramTooltip"
+                    @mouseenter="showTelegramTooltip = true"
+                    @mouseleave="handleTooltipMouseLeave"
+                    aria-label="Más información sobre Telegram"
                   >
-                    <span aria-hidden="true">×</span>
+                    Telegram
                   </button>
-                </span>
-              </p>
-              <span
-                id="phone-error"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors.phone }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors.phone || '&nbsp;' }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <label for="birthDate">Fecha de nacimiento *</label>
-              <input
-                id="birthDate"
-                v-model="form.birthDate"
-                type="date"
-                name="birthDate"
-                :max="EVENT_DATES.start"
-                required
-                aria-required="true"
-                :aria-invalid="errors.birthDate ? 'true' : 'false'"
-                :aria-describedby="describedByFor('birthDate')"
-                @blur="() => validateField('birthDate')"
-              />
-              <span
-                id="birthDate-error"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors.birthDate }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors.birthDate || '&nbsp;' }}
-              </span>
-            </div>
-            <fieldset class="form-fieldset">
-              <legend v-if="isMinor">Responsable del menor</legend>
-              <legend v-else>Contacto de emergencia (opcional)</legend>
-
-              <div class="form-row">
-                <label for="emergencyContactName">Nombre completo {{ isMinor ? '*' : '' }}</label>
-                <input
-                  id="emergencyContactName"
-                  v-model.trim="form.emergencyContactName"
-                  type="text"
-                  name="emergencyContactName"
-                  :required="isMinor"
-                  :aria-required="isMinor"
-                  :aria-invalid="errors.emergencyContactName ? 'true' : 'false'"
-                  :aria-describedby="describedByFor('emergencyContactName')"
-                  @blur="() => validateField('emergencyContactName')"
-                />
-                <span
-                  id="emergencyContactName-error"
-                  class="form-error"
-                  :class="{ 'form-error-hidden': !errors.emergencyContactName }"
-                  role="alert"
-                  aria-live="polite"
-                >
-                  {{ errors.emergencyContactName || '&nbsp;' }}
-                </span>
-              </div>
-
-              <div class="form-row">
-                <label for="emergencyContactPhone"
-                  >Teléfono de emergencia {{ isMinor ? '*' : '' }}</label
-                >
-                <input
-                  id="emergencyContactPhone"
-                  v-model.trim="form.emergencyContactPhone"
-                  type="tel"
-                  name="emergencyContactPhone"
-                  inputmode="tel"
-                  :required="isMinor"
-                  :aria-required="isMinor"
-                  :aria-invalid="errors.emergencyContactPhone ? 'true' : 'false'"
-                  :aria-describedby="describedByFor('emergencyContactPhone')"
-                  @blur="() => validateField('emergencyContactPhone')"
-                />
-                <p id="emergency-contact-phone-help" class="form-help">
-                  Este número solo se utilizará en caso de urgencia durante el evento.
+                  de actividades y horarios durante el evento.
+                  <span
+                    v-if="showTelegramTooltip"
+                    id="telegram-tooltip"
+                    class="tooltip"
+                    role="tooltip"
+                    aria-live="polite"
+                    @mouseenter="
+                      () => {
+                        if (tooltipTimeout) clearTimeout(tooltipTimeout)
+                        showTelegramTooltip = true
+                      }
+                    "
+                    @mouseleave="
+                      () => {
+                        if (tooltipTimeout) clearTimeout(tooltipTimeout)
+                        showTelegramTooltip = false
+                      }
+                    "
+                  >
+                    <span class="tooltip-content">
+                      {{ TELEGRAM_TOOLTIP }}
+                    </span>
+                    <button
+                      type="button"
+                      class="tooltip-close"
+                      @click="showTelegramTooltip = false"
+                      aria-label="Cerrar información sobre Telegram"
+                    >
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  </span>
                 </p>
                 <span
-                  id="emergencyContactPhone-error"
+                  id="phone-error"
                   class="form-error"
-                  :class="{ 'form-error-hidden': !errors.emergencyContactPhone }"
+                  :class="{ 'form-error-hidden': !errors.phone }"
                   role="alert"
                   aria-live="polite"
                 >
-                  {{ errors.emergencyContactPhone || '&nbsp;' }}
+                  {{ errors.phone || '&nbsp;' }}
                 </span>
               </div>
-            </fieldset>
-          </fieldset>
 
-          <fieldset class="form-fieldset">
-            <legend>Logística del retiro</legend>
-
-            <div class="form-row">
-              <label for="arrivalDate">Llegada estimada *</label>
-              <input
-                id="arrivalDate"
-                v-model="form.arrivalDate"
-                type="datetime-local"
-                name="arrivalDate"
-                :min="minArrivalDateTime"
-                :max="maxArrivalDateTime"
-                required
-                aria-required="true"
-                :aria-invalid="errors.arrivalDate ? 'true' : 'false'"
-                :aria-describedby="describedByFor('arrivalDate')"
-                :title="arrivalHelpText"
-                @blur="() => validateField('arrivalDate')"
-                @change="() => validateField('arrivalDate')"
-              />
-              <p id="arrivalDate-help" class="form-help">
-                {{ arrivalHelpText }}
-              </p>
-              <span
-                id="arrivalDate-error"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors.arrivalDate }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors.arrivalDate || '&nbsp;' }}
-              </span>
-            </div>
-
-            <div class="form-row">
-              <label for="departureDate">Salida estimada (fecha y hora)</label>
-              <input
-                id="departureDate"
-                v-model="form.departureDate"
-                type="datetime-local"
-                name="departureDate"
-                :min="minDepartureDateTime"
-                :max="maxDepartureDateTime"
-                aria-required="false"
-                :aria-invalid="errors.departureDate ? 'true' : 'false'"
-                :aria-describedby="describedByFor('departureDate')"
-                :title="departureHelpText"
-                @blur="() => validateField('departureDate')"
-                @change="() => validateField('departureDate')"
-              />
-              <p id="departureDate-help" class="form-help">
-                {{ departureHelpText }}
-              </p>
-              <span
-                id="departureDate-error"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors.departureDate }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors.departureDate || '&nbsp;' }}
-              </span>
-            </div>
-
-            <fieldset
-              class="form-subfieldset"
-              role="radiogroup"
-              :aria-describedby="accommodationFieldsetDescribedBy"
-            >
-              <legend>Alojamiento preferido *</legend>
-              <p id="accommodation-outlets-help" class="form-help">
-                {{ ACCOMMODATION_OUTLETS_NOTE }}
-              </p>
-              <div class="option-list option-list--radio">
-                <template
-                  v-for="(block, blockIndex) in accommodationFieldGroups"
-                  :key="
-                    block.type === 'single' ? block.option.value : `${block.groupKey}-${blockIndex}`
-                  "
+              <div class="form-row">
+                <label for="birthDate">Fecha de nacimiento *</label>
+                <input
+                  id="birthDate"
+                  v-model="form.birthDate"
+                  type="date"
+                  name="birthDate"
+                  :max="EVENT_DATES.start"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors.birthDate ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('birthDate')"
+                  @blur="() => validateField('birthDate')"
+                />
+                <span
+                  id="birthDate-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.birthDate }"
+                  role="alert"
+                  aria-live="polite"
                 >
-                  <div v-if="block.type === 'single'" class="option-item">
-                    <input
-                      :id="`accommodation-${block.option.value}`"
-                      v-model="form.accommodation"
-                      type="radio"
-                      name="accommodation"
-                      :value="block.option.value"
-                      required
-                      aria-required="true"
-                      @change="() => validateField('accommodation')"
-                    />
-                    <label :for="`accommodation-${block.option.value}`">{{
-                      block.option.label
-                    }}</label>
-                  </div>
-                  <div
-                    v-else
-                    class="accommodation-subgroup"
-                    role="group"
-                    :aria-labelledby="`accommodation-chozo-${blockIndex}`"
+                  {{ errors.birthDate || '&nbsp;' }}
+                </span>
+              </div>
+              <fieldset class="form-fieldset">
+                <legend v-if="isMinor">Responsable del menor</legend>
+                <legend v-else>Contacto de emergencia (opcional)</legend>
+
+                <div class="form-row">
+                  <label for="emergencyContactName">Nombre completo {{ isMinor ? '*' : '' }}</label>
+                  <input
+                    id="emergencyContactName"
+                    v-model.trim="form.emergencyContactName"
+                    type="text"
+                    name="emergencyContactName"
+                    :required="isMinor"
+                    :aria-required="isMinor"
+                    :aria-invalid="errors.emergencyContactName ? 'true' : 'false'"
+                    :aria-describedby="describedByFor('emergencyContactName')"
+                    @blur="() => validateField('emergencyContactName')"
+                  />
+                  <span
+                    id="emergencyContactName-error"
+                    class="form-error"
+                    :class="{ 'form-error-hidden': !errors.emergencyContactName }"
+                    role="alert"
+                    aria-live="polite"
                   >
-                    <p
-                      class="accommodation-subgroup-title"
-                      :id="`accommodation-chozo-${blockIndex}`"
-                    >
-                      {{ block.title }}
-                    </p>
-                    <div v-for="option in block.options" :key="option.value" class="option-item">
+                    {{ errors.emergencyContactName || '&nbsp;' }}
+                  </span>
+                </div>
+
+                <div class="form-row">
+                  <label for="emergencyContactPhone"
+                    >Teléfono de emergencia {{ isMinor ? '*' : '' }}</label
+                  >
+                  <input
+                    id="emergencyContactPhone"
+                    v-model.trim="form.emergencyContactPhone"
+                    type="tel"
+                    name="emergencyContactPhone"
+                    inputmode="tel"
+                    :required="isMinor"
+                    :aria-required="isMinor"
+                    :aria-invalid="errors.emergencyContactPhone ? 'true' : 'false'"
+                    :aria-describedby="describedByFor('emergencyContactPhone')"
+                    @blur="() => validateField('emergencyContactPhone')"
+                  />
+                  <p id="emergency-contact-phone-help" class="form-help">
+                    Este número solo se utilizará en caso de urgencia durante el evento.
+                  </p>
+                  <span
+                    id="emergencyContactPhone-error"
+                    class="form-error"
+                    :class="{ 'form-error-hidden': !errors.emergencyContactPhone }"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {{ errors.emergencyContactPhone || '&nbsp;' }}
+                  </span>
+                </div>
+              </fieldset>
+            </fieldset>
+
+            <fieldset class="form-fieldset">
+              <legend>Logística del retiro</legend>
+
+              <div class="form-row">
+                <label for="arrivalDate">Llegada estimada *</label>
+                <input
+                  id="arrivalDate"
+                  v-model="form.arrivalDate"
+                  type="datetime-local"
+                  name="arrivalDate"
+                  :min="minArrivalDateTime"
+                  :max="maxArrivalDateTime"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors.arrivalDate ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('arrivalDate')"
+                  :title="arrivalHelpText"
+                  @blur="() => validateField('arrivalDate')"
+                  @change="() => validateField('arrivalDate')"
+                />
+                <p id="arrivalDate-help" class="form-help">
+                  {{ arrivalHelpText }}
+                </p>
+                <span
+                  id="arrivalDate-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.arrivalDate }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors.arrivalDate || '&nbsp;' }}
+                </span>
+              </div>
+
+              <div class="form-row">
+                <label for="departureDate">Salida estimada (fecha y hora)</label>
+                <input
+                  id="departureDate"
+                  v-model="form.departureDate"
+                  type="datetime-local"
+                  name="departureDate"
+                  :min="minDepartureDateTime"
+                  :max="maxDepartureDateTime"
+                  aria-required="false"
+                  :aria-invalid="errors.departureDate ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('departureDate')"
+                  :title="departureHelpText"
+                  @blur="() => validateField('departureDate')"
+                  @change="() => validateField('departureDate')"
+                />
+                <p id="departureDate-help" class="form-help">
+                  {{ departureHelpText }}
+                </p>
+                <span
+                  id="departureDate-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.departureDate }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors.departureDate || '&nbsp;' }}
+                </span>
+              </div>
+
+              <fieldset
+                class="form-subfieldset"
+                role="radiogroup"
+                :aria-describedby="accommodationFieldsetDescribedBy"
+              >
+                <legend>Alojamiento preferido *</legend>
+                <p id="accommodation-outlets-help" class="form-help">
+                  {{ ACCOMMODATION_OUTLETS_NOTE }}
+                </p>
+                <div class="option-list option-list--radio">
+                  <template
+                    v-for="(block, blockIndex) in accommodationFieldGroups"
+                    :key="
+                      block.type === 'single'
+                        ? block.option.value
+                        : `${block.groupKey}-${blockIndex}`
+                    "
+                  >
+                    <div v-if="block.type === 'single'" class="option-item">
                       <input
-                        :id="`accommodation-${option.value}`"
+                        :id="`accommodation-${block.option.value}`"
                         v-model="form.accommodation"
                         type="radio"
                         name="accommodation"
-                        :value="option.value"
+                        :value="block.option.value"
                         required
                         aria-required="true"
                         @change="() => validateField('accommodation')"
                       />
-                      <label :for="`accommodation-${option.value}`">{{ option.label }}</label>
+                      <label :for="`accommodation-${block.option.value}`">{{
+                        block.option.label
+                      }}</label>
                     </div>
-                  </div>
-                </template>
-              </div>
-              <div class="form-row" v-if="form.accommodation === 'especial'">
-                <label for="comments">Comentarios adicionales</label>
-                <textarea
-                  id="comments"
-                  v-model.trim="form.comments"
-                  name="comments"
-                  rows="4"
-                  :aria-describedby="describedByFor('comments')"
-                  maxlength="600"
-                ></textarea>
-                <p id="comments-help" class="form-help">
-                  Cuéntanos tu caso particular, o dudas que tengas para que podamos ayudarte mejor.
+                    <div
+                      v-else
+                      class="accommodation-subgroup"
+                      role="group"
+                      :aria-labelledby="`accommodation-chozo-${blockIndex}`"
+                    >
+                      <p
+                        class="accommodation-subgroup-title"
+                        :id="`accommodation-chozo-${blockIndex}`"
+                      >
+                        {{ block.title }}
+                      </p>
+                      <div v-for="option in block.options" :key="option.value" class="option-item">
+                        <input
+                          :id="`accommodation-${option.value}`"
+                          v-model="form.accommodation"
+                          type="radio"
+                          name="accommodation"
+                          :value="option.value"
+                          required
+                          aria-required="true"
+                          @change="() => validateField('accommodation')"
+                        />
+                        <label :for="`accommodation-${option.value}`">{{ option.label }}</label>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+                <div class="form-row" v-if="form.accommodation === 'especial'">
+                  <label for="comments">Comentarios adicionales</label>
+                  <textarea
+                    id="comments"
+                    v-model.trim="form.comments"
+                    name="comments"
+                    rows="4"
+                    :aria-describedby="describedByFor('comments')"
+                    maxlength="600"
+                  ></textarea>
+                  <p id="comments-help" class="form-help">
+                    Cuéntanos tu caso particular, o dudas que tengas para que podamos ayudarte
+                    mejor.
+                  </p>
+                </div>
+                <span
+                  id="accommodation-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.accommodation }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors.accommodation || '&nbsp;' }}
+                </span>
+              </fieldset>
+
+              <fieldset class="form-subfieldset" aria-describedby="diet-help">
+                <legend>Restricciones alimentarias</legend>
+                <p id="diet-help" class="form-help">
+                  Selecciona todas las opciones que apliquen. Si no tienes restricciones, deja las
+                  casillas sin marcar.
                 </p>
-              </div>
+                <div class="option-list option-list--checkbox">
+                  <div v-for="option in DIET_OPTIONS" :key="option.value" class="option-item">
+                    <input
+                      :id="`diet-${option.value}`"
+                      v-model="form.diet"
+                      type="checkbox"
+                      name="diet"
+                      :value="option.value"
+                    />
+                    <label :for="`diet-${option.value}`">{{ option.label }}</label>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <label for="dietComments">Comentarios adicionales</label>
+                  <textarea
+                    id="dietComments"
+                    v-model.trim="form.dietComments"
+                    name="dietComments"
+                    rows="4"
+                    :aria-describedby="describedByFor('dietComments')"
+                    maxlength="600"
+                  ></textarea>
+                  <p id="dietComments-help" class="form-help">
+                    Cuéntanos tus restricciones alimentarias para que podamos organizar la comida
+                    adecuadamente.
+                  </p>
+                </div>
+              </fieldset>
+            </fieldset>
+
+            <div class="form-consent">
+              <label class="checkbox-consent">
+                <input
+                  id="terms"
+                  v-model="form.terms"
+                  type="checkbox"
+                  name="terms"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors.terms ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('terms')"
+                  @change="() => validateField('terms')"
+                />
+                <span>
+                  Acepto la
+                  <RouterLink to="/politica-privacidad" class="privacy-link"
+                    >política de privacidad</RouterLink
+                  >
+                  y autorizo el tratamiento de mis datos para la gestión de mi inscripción al
+                  evento.
+                </span>
+              </label>
               <span
-                id="accommodation-error"
+                id="terms-error"
                 class="form-error"
-                :class="{ 'form-error-hidden': !errors.accommodation }"
+                :class="{ 'form-error-hidden': !errors.terms }"
                 role="alert"
                 aria-live="polite"
               >
-                {{ errors.accommodation || '&nbsp;' }}
+                {{ errors.terms || '&nbsp;' }}
               </span>
-            </fieldset>
 
-            <fieldset class="form-subfieldset" aria-describedby="diet-help">
-              <legend>Restricciones alimentarias</legend>
-              <p id="diet-help" class="form-help">
-                Selecciona todas las opciones que apliquen. Si no tienes restricciones, deja las
-                casillas sin marcar.
-              </p>
-              <div class="option-list option-list--checkbox">
-                <div v-for="option in DIET_OPTIONS" :key="option.value" class="option-item">
-                  <input
-                    :id="`diet-${option.value}`"
-                    v-model="form.diet"
-                    type="checkbox"
-                    name="diet"
-                    :value="option.value"
-                  />
-                  <label :for="`diet-${option.value}`">{{ option.label }}</label>
-                </div>
-              </div>
-              <div class="form-row">
-                <label for="dietComments">Comentarios adicionales</label>
-                <textarea
-                  id="dietComments"
-                  v-model.trim="form.dietComments"
-                  name="dietComments"
-                  rows="4"
-                  :aria-describedby="describedByFor('dietComments')"
-                  maxlength="600"
-                ></textarea>
-                <p id="dietComments-help" class="form-help">
-                  Cuéntanos tus restricciones alimentarias para que podamos organizar la comida
-                  adecuadamente.
+              <label class="checkbox-consent">
+                <input
+                  id="norms"
+                  v-model="form.norms"
+                  type="checkbox"
+                  name="norms"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors.norms ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('norms')"
+                  @change="() => validateField('norms')"
+                />
+                <span>
+                  Declaro haber leído y aceptado las
+                  <RouterLink to="/normas" class="privacy-link">normas</RouterLink>
+                  del evento.
+                </span>
+              </label>
+
+              <span
+                id="norms-error"
+                class="form-error"
+                :class="{ 'form-error-hidden': !errors.norms }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors.norms || '&nbsp;' }}
+              </span>
+            </div>
+
+            <div class="form-actions">
+              <button
+                class="cta-button cta-primary"
+                type="submit"
+                :disabled="isSubmitting || registrationClosed"
+              >
+                <span v-if="!isSubmitting">Enviar solicitud</span>
+                <span v-else>
+                  <span class="spinner" aria-hidden="true"></span>
+                  Enviando...
+                </span>
+              </button>
+              <button
+                class="form-reset"
+                type="button"
+                @click="handleReset"
+                :disabled="isSubmitting || registrationClosed"
+              >
+                Limpiar formulario
+              </button>
+            </div>
+
+            <div
+              v-if="status.message || status.type === 'success'"
+              class="form-status"
+              :class="`form-status--${status.type}`"
+              :role="statusRole"
+              :aria-live="statusAriaLive"
+              aria-atomic="true"
+            >
+              <template v-if="status.type === 'success'">
+                <p class="form-status-success-copy">
+                  ¡Gracias por tu interés! Hemos recibido tu solicitud correctamente. Te
+                  contactaremos en las próximas horas. Si quieres organizar actividades, usa el
+                  <RouterLink to="/actividades" class="privacy-link"
+                    >formulario de registro de actividades</RouterLink
+                  >.
                 </p>
-              </div>
-            </fieldset>
-          </fieldset>
-
-          <div class="form-info-card">
-            <h3>¿Quieres organizar alguna actividad?</h3>
-            <p>
-              Si quieres proponer y dirigir actividades durante el evento, puedes registrarlas en un
-              formulario separado. Por motivos organizativos, limitamos a 2 el número de actividades
-              a dirigir por cada participante.
-            </p>
-            <RouterLink to="/actividades" class="activity-link">
-              Ir al formulario de actividades
-            </RouterLink>
-          </div>
-
-          <div class="form-consent">
-            <label class="checkbox-consent">
-              <input
-                id="terms"
-                v-model="form.terms"
-                type="checkbox"
-                name="terms"
-                required
-                aria-required="true"
-                :aria-invalid="errors.terms ? 'true' : 'false'"
-                :aria-describedby="describedByFor('terms')"
-                @change="() => validateField('terms')"
-              />
-              <span>
-                Acepto la
-                <RouterLink to="/politica-privacidad" class="privacy-link"
-                  >política de privacidad</RouterLink
-                >
-                y autorizo el tratamiento de mis datos para la gestión de mi inscripción al evento.
-              </span>
-            </label>
-            <span
-              id="terms-error"
-              class="form-error"
-              :class="{ 'form-error-hidden': !errors.terms }"
-              role="alert"
-              aria-live="polite"
-            >
-              {{ errors.terms || '&nbsp;' }}
-            </span>
-
-            <label class="checkbox-consent">
-              <input
-                id="norms"
-                v-model="form.norms"
-                type="checkbox"
-                name="norms"
-                required
-                aria-required="true"
-                :aria-invalid="errors.norms ? 'true' : 'false'"
-                :aria-describedby="describedByFor('norms')"
-                @change="() => validateField('norms')"
-              />
-              <span>
-                Declaro haber leído y aceptado las
-                <RouterLink to="/normas" class="privacy-link">normas</RouterLink>
-                del evento.
-              </span>
-            </label>
-
-            <span
-              id="norms-error"
-              class="form-error"
-              :class="{ 'form-error-hidden': !errors.norms }"
-              role="alert"
-              aria-live="polite"
-            >
-              {{ errors.norms || '&nbsp;' }}
-            </span>
-          </div>
-
-          <div class="form-actions">
-            <button
-              class="cta-button cta-primary"
-              type="submit"
-              :disabled="isSubmitting || registrationClosed"
-            >
-              <span v-if="!isSubmitting">Enviar solicitud</span>
-              <span v-else>
-                <span class="spinner" aria-hidden="true"></span>
-                Enviando...
-              </span>
-            </button>
-            <button
-              class="form-reset"
-              type="button"
-              @click="handleReset"
-              :disabled="isSubmitting || registrationClosed"
-            >
-              Limpiar formulario
-            </button>
-          </div>
-
-          <div
-            v-if="status.message"
-            class="form-status"
-            :class="`form-status--${status.type}`"
-            :role="statusRole"
-            :aria-live="statusAriaLive"
-            aria-atomic="true"
-          >
-            {{ status.message }}
-          </div>
+              </template>
+              <template v-else>
+                {{ status.message }}
+              </template>
+            </div>
           </fieldset>
         </form>
       </div>
@@ -1204,8 +1207,7 @@ const handleSubmit = async () => {
 
     if (result.success) {
       status.type = 'success'
-      status.message =
-        '¡Gracias por tu interés! Hemos recibido tu solicitud correctamente. Te contactaremos en las próximas horas.'
+      status.message = ''
       resetForm()
     } else {
       status.type = 'error'
@@ -1732,6 +1734,11 @@ watch(
 .form-reset:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.form-status-success-copy {
+  margin: 0;
+  font-weight: 600;
 }
 
 .form-status {
