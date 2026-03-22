@@ -60,8 +60,8 @@
         <article class="faq-section">
           <h2>¿Cuál es la política de cancelación de la reserva?</h2>
           <p>
-            Si cancelas antes del 1 de agosto de {{ EVENT_YEAR }}, se retiene un 10&nbsp;% por gastos
-            administrativos.
+            Si cancelas antes del 1 de agosto de {{ EVENT_YEAR }}, se retiene un 10&nbsp;% por
+            gastos administrativos.
           </p>
           <p>
             Si cancelas después del 1 de agosto de {{ EVENT_YEAR }}, se retiene un 65&nbsp;% en

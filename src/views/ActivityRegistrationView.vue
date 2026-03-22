@@ -322,7 +322,7 @@
 
             <div class="form-row">
               <label :for="`activityParticipantNeeds-${index}`"
-                >Necesidades a cubrir por los participantes *</label
+                >Necesidades a cubrir por los participantes</label
               >
               <textarea
                 :id="`activityParticipantNeeds-${index}`"
@@ -330,32 +330,17 @@
                 :name="`activityParticipantNeeds-${index}`"
                 rows="3"
                 maxlength="500"
-                required
-                aria-required="true"
-                :aria-invalid="errors[`activities.${index}.participantNeeds`] ? 'true' : 'false'"
-                :aria-describedby="`activityParticipantNeeds-${index}-help activityParticipantNeeds-${index}-error`"
-                @blur="() => validateActivityField(index, 'participantNeeds')"
+                :aria-describedby="`activityParticipantNeeds-${index}-help`"
               ></textarea>
               <p :id="`activityParticipantNeeds-${index}-help`" class="form-help">
                 Indica qué necesitan traer o preparar los participantes (materiales, personajes,
                 etc.)
               </p>
-              <span
-                :id="`activityParticipantNeeds-${index}-error`"
-                class="form-error"
-                :class="{
-                  'form-error-hidden': !errors[`activities.${index}.participantNeeds`],
-                }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors[`activities.${index}.participantNeeds`] || '&nbsp;' }}
-              </span>
             </div>
 
             <div class="form-row">
               <label :for="`activityOrganizationNeeds-${index}`"
-                >Necesidades a cubrir por la organización del evento *</label
+                >Necesidades a cubrir por la organización del evento</label
               >
               <textarea
                 :id="`activityOrganizationNeeds-${index}`"
@@ -363,27 +348,12 @@
                 :name="`activityOrganizationNeeds-${index}`"
                 rows="3"
                 maxlength="500"
-                required
-                aria-required="true"
-                :aria-invalid="errors[`activities.${index}.organizationNeeds`] ? 'true' : 'false'"
-                :aria-describedby="`activityOrganizationNeeds-${index}-help activityOrganizationNeeds-${index}-error`"
-                @blur="() => validateActivityField(index, 'organizationNeeds')"
+                :aria-describedby="`activityOrganizationNeeds-${index}-help`"
               ></textarea>
               <p :id="`activityOrganizationNeeds-${index}-help`" class="form-help">
                 Indica qué necesitas que proporcione la organización (espacios, materiales,
                 equipamiento, etc.)
               </p>
-              <span
-                :id="`activityOrganizationNeeds-${index}-error`"
-                class="form-error"
-                :class="{
-                  'form-error-hidden': !errors[`activities.${index}.organizationNeeds`],
-                }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors[`activities.${index}.organizationNeeds`] || '&nbsp;' }}
-              </span>
             </div>
 
             <div class="form-row">
@@ -427,87 +397,47 @@
             </div>
 
             <div class="form-row">
-              <label :for="`activitySpaceNeed-${index}`">Necesidad de espacio *</label>
+              <label :for="`activitySpaceNeed-${index}`">Necesidad de espacio</label>
               <select
                 :id="`activitySpaceNeed-${index}`"
                 v-model="activity.spaceNeed"
                 :name="`activitySpaceNeed-${index}`"
-                required
-                aria-required="true"
-                :aria-invalid="errors[`activities.${index}.spaceNeed`] ? 'true' : 'false'"
-                :aria-describedby="`activitySpaceNeed-${index}-error`"
-                @change="() => validateActivityField(index, 'spaceNeed')"
               >
                 <option value="">Selecciona una opción</option>
                 <option v-for="option in SPACE_NEEDS" :key="option.value" :value="option.value">
                   {{ option.label }}
                 </option>
               </select>
-              <span
-                :id="`activitySpaceNeed-${index}-error`"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors[`activities.${index}.spaceNeed`] }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors[`activities.${index}.spaceNeed`] || '&nbsp;' }}
-              </span>
             </div>
 
             <div class="form-row">
-              <label :for="`activitySetup-${index}`">Puesta en Marcha *</label>
+              <label :for="`activitySetup-${index}`">Puesta en Marcha</label>
               <textarea
                 :id="`activitySetup-${index}`"
                 v-model.trim="activity.setup"
                 :name="`activitySetup-${index}`"
                 rows="3"
                 maxlength="500"
-                required
-                aria-required="true"
-                :aria-invalid="errors[`activities.${index}.setup`] ? 'true' : 'false'"
-                :aria-describedby="`activitySetup-${index}-help activitySetup-${index}-error`"
-                @blur="() => validateActivityField(index, 'setup')"
+                :aria-describedby="`activitySetup-${index}-help`"
               ></textarea>
               <p :id="`activitySetup-${index}-help`" class="form-help">
                 Describe cómo se prepara o monta la actividad
               </p>
-              <span
-                :id="`activitySetup-${index}-error`"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors[`activities.${index}.setup`] }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors[`activities.${index}.setup`] || '&nbsp;' }}
-              </span>
             </div>
 
             <div class="form-row">
-              <label :for="`activityObservations-${index}`">Observaciones *</label>
+              <label :for="`activityObservations-${index}`">Observaciones</label>
               <textarea
                 :id="`activityObservations-${index}`"
                 v-model.trim="activity.observations"
                 :name="`activityObservations-${index}`"
                 rows="3"
                 maxlength="500"
-                required
-                aria-required="true"
-                :aria-invalid="errors[`activities.${index}.observations`] ? 'true' : 'false'"
-                :aria-describedby="`activityObservations-${index}-help activityObservations-${index}-error`"
-                @blur="() => validateActivityField(index, 'observations')"
+                :aria-describedby="`activityObservations-${index}-help`"
               ></textarea>
               <p :id="`activityObservations-${index}-help`" class="form-help">
                 Cualquier información adicional que consideres relevante.
               </p>
-              <span
-                :id="`activityObservations-${index}-error`"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors[`activities.${index}.observations`] }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors[`activities.${index}.observations`] || '&nbsp;' }}
-              </span>
             </div>
 
             <button
@@ -809,46 +739,6 @@ const validateActivityField = (activityIndex, field) => {
       errors[errorKey] = ''
       return true
 
-    case 'participantNeeds':
-      if (!activity.participantNeeds?.trim()) {
-        errors[errorKey] = 'Indica las necesidades a cubrir por los participantes.'
-        return false
-      }
-      errors[errorKey] = ''
-      return true
-
-    case 'organizationNeeds':
-      if (!activity.organizationNeeds?.trim()) {
-        errors[errorKey] = 'Indica las necesidades a cubrir por la organización.'
-        return false
-      }
-      errors[errorKey] = ''
-      return true
-
-    case 'spaceNeed':
-      if (!activity.spaceNeed) {
-        errors[errorKey] = 'Selecciona una necesidad de espacio.'
-        return false
-      }
-      errors[errorKey] = ''
-      return true
-
-    case 'setup':
-      if (!activity.setup?.trim()) {
-        errors[errorKey] = 'Describe la puesta en marcha.'
-        return false
-      }
-      errors[errorKey] = ''
-      return true
-
-    case 'observations':
-      if (!activity.observations?.trim()) {
-        errors[errorKey] = 'Completa el campo de observaciones.'
-        return false
-      }
-      errors[errorKey] = ''
-      return true
-
     default:
       return true
   }
@@ -868,11 +758,6 @@ const validateActivities = () => {
     'description',
     'preferredTimeSlot',
     'duration',
-    'participantNeeds',
-    'organizationNeeds',
-    'spaceNeed',
-    'setup',
-    'observations',
   ]
 
   form.activities.forEach((activity, index) => {

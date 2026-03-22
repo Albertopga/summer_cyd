@@ -1,6 +1,6 @@
 <template>
   <div class="section-header">
-    <span class="section-label">{{ label }}</span>
+    <span v-if="label" class="section-label">{{ label }}</span>
     <component :is="headingLevel" class="section-title">{{ title }}</component>
   </div>
 </template>
@@ -11,7 +11,7 @@ import { computed } from 'vue'
 const props = defineProps({
   label: {
     type: String,
-    required: true,
+    default: '',
   },
   title: {
     type: String,

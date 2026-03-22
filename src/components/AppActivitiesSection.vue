@@ -1,7 +1,7 @@
 <template>
   <section class="section">
     <div class="container">
-      <AppSectionHeader label="Programa" title="Actividades" />
+      <AppSectionHeader title="Detalles del evento" />
       <div class="activities-grid">
         <AppCard
           v-for="activity in ACTIVITIES"
