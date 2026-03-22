@@ -1,0 +1,35 @@
+# Ping periódico al API de Supabase para reducir riesgo de pausa por inactividad (plan gratuito).
+# Requiere secrets en el repo: Settings → Secrets and variables → Actions
+#   SUPABASE_URL       → https://tu-proyecto.supabase.co (sin barra final)
+#   SUPABASE_ANON_KEY  → anon public key (misma que VITE_SUPABASE_ANON_KEY)
+#
+# No uses la service_role aquí.
+
+name: Supabase keep-alive
+
+on:
+  schedule:
+    # Lunes y jueves 10:00 UTC (~2 veces/semana)
+    - cron: '0 10 * * 1,4'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Auth health
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            echo "::error::Faltan secrets SUPABASE_URL o SUPABASE_ANON_KEY en el repositorio."
+            exit 1
+          fi
+          BASE="${SUPABASE_URL%/}"
+          curl -sfS \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "${BASE}/auth/v1/health" \
+            -o /dev/null
