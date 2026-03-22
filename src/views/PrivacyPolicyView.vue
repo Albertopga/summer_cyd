@@ -6,9 +6,11 @@
       <div class="privacy-content">
         <p class="privacy-intro">
           En cumplimiento del Reglamento (UE) 2016/679 del Parlamento Europeo y del Consejo de 27 de
-          abril de 2016 (RGPD) y de la Ley Orgánica 3/2018, de 5 de diciembre, de Protección de
-          Datos Personales y garantía de los derechos digitales (LOPDGDD), le informamos sobre el
-          tratamiento de sus datos personales.
+          abril de 2016 (RGPD), de la Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos
+          Personales y garantía de los derechos digitales (LOPDGDD) y de la Ley Orgánica 1/1982, de
+          5 de mayo, de protección civil del derecho al honor, a la intimidad personal y familiar y
+          a la propia imagen, le informamos sobre el tratamiento de sus datos personales, incluida
+          su imagen cuando resulte aplicable.
         </p>
 
         <article class="privacy-section">
@@ -49,15 +51,34 @@
               <strong>Cumplimiento de obligaciones legales:</strong> En caso de ser necesario para
               cumplir con obligaciones legales aplicables.
             </li>
+            <li>
+              <strong>Difusión de imagen (fotografía y vídeo):</strong> Solo si nos otorga el
+              consentimiento específico indicado en el formulario de inscripción, la captación,
+              reproducción, comunicación pública y publicación de su imagen (incluida la voz en
+              grabaciones de vídeo) con fines informativos, promocionales o de memoria del evento,
+              en los soportes descritos en el apartado 7.
+            </li>
           </ul>
         </article>
 
         <article class="privacy-section">
           <h2>3. Base jurídica del tratamiento</h2>
           <p>
-            El tratamiento de sus datos personales se basa en el consentimiento que nos ha otorgado
-            al aceptar esta política de privacidad y completar el
-            <a href="/registration">formulario de inscripción</a> (art. 6.1.a) RGPD).
+            El tratamiento de sus datos personales obtenidos a través del
+            <a href="/registration">formulario de inscripción</a> (identificación, contacto,
+            logística, preferencias y contacto de emergencia) se basa en el consentimiento que nos
+            otorga al aceptar esta política de privacidad (art. 6.1.a del RGPD).
+          </p>
+          <p>
+            El tratamiento de su <strong>imagen</strong> para las finalidades de difusión descritas
+            en el apartado 2 se basa en un <strong>consentimiento específico, separado e inequívoco</strong>
+            que puede marcar de forma voluntaria en el formulario de inscripción (art. 6.1.a del
+            RGPD y, en lo que respecta a la propia imagen, el marco de la Ley Orgánica 1/1982, en
+            relación con el artículo 18.1 de la Constitución Española).
+          </p>
+          <p>
+            La negativa a otorgar el consentimiento para el tratamiento de su imagen no condiciona
+            la inscripción al evento ni la prestación de los servicios asociados a la misma.
           </p>
           <p>
             En el caso de menores de edad, el consentimiento será otorgado por el tutor o
@@ -75,6 +96,11 @@
             <li>Datos de preferencias: restricciones alimentarias, necesidades especiales</li>
             <li>Datos de contacto de emergencia: nombre y teléfono del contacto de emergencia</li>
             <li>En caso de menores: datos del tutor o responsable acompañante (nombre completo)</li>
+            <li>
+              <strong>Datos de imagen:</strong> Fotografías y/o grabaciones audiovisuales en las que
+              usted sea identificable, únicamente cuando haya prestado el consentimiento específico
+              en el formulario.
+            </li>
           </ul>
         </article>
 
@@ -89,6 +115,14 @@
             En concreto, los datos se conservarán durante un período máximo de 3 años desde la
             finalización del evento, salvo que exista una obligación legal que requiera una
             conservación superior o que usted ejerza su derecho de supresión antes de dicho plazo.
+          </p>
+          <p>
+            Los materiales que incorporen su imagen y hayan sido publicados con su consentimiento
+            podrán conservarse mientras dicho consentimiento no sea retirado y, en todo caso,
+            durante el tiempo necesario para las finalidades indicadas; las copias en redes
+            sociales, sitios web de terceros o medios de comunicación pueden permanecer accesibles
+            más allá de ese plazo en función de las políticas de cada plataforma; atenderemos las
+            solicitudes de retirada o limitación en la medida de lo razonablemente posible.
           </p>
         </article>
 
@@ -112,15 +146,55 @@
               En caso de urgencia médica, se podrán facilitar los datos de contacto de emergencia a
               los servicios sanitarios correspondientes.
             </li>
+            <li>
+              <strong>Difusión de imagen:</strong> Si ha prestado consentimiento para el tratamiento
+              de su imagen, esta podrá ser comunicada a colaboradores o encargados de tratamiento
+              (por ejemplo, personas o empresas que realicen fotografía o vídeo para la
+              organización) y publicada en sitios web, perfiles en redes sociales u otros medios
+              digitales o impresos gestionados por la Asociación o, en su caso, por colaboradores
+              con fines informativos o promocionales del evento. El uso de redes u otras plataformas
+              puede implicar el tratamiento de datos por parte de dichos terceros conforme a sus
+              propias políticas de privacidad.
+            </li>
           </ul>
           <p>
             No realizamos transferencias internacionales de datos fuera del Espacio Económico
-            Europeo.
+            Europeo, salvo que usted acepte expresamente servicios de terceros (por ejemplo, redes
+            sociales con sede fuera del EEE) mediante la publicación de contenidos en dichas
+            plataformas; en tal supuesto, le recomendamos consultar la política de privacidad del
+            proveedor correspondiente.
           </p>
         </article>
 
         <article class="privacy-section">
-          <h2>7. Derechos del interesado</h2>
+          <h2>7. Tratamiento de la imagen: alcance del consentimiento</h2>
+          <p>
+            Si marca la casilla específica en el formulario de inscripción, usted
+            <strong>autoriza</strong> a la Asociación cultural Castilla y Dragón a captar su imagen
+            (fotografía y/o vídeo) durante el desarrollo del evento y a
+            <strong>reproducirla, distribuirla y comunicarla públicamente</strong>, sin contraprestación
+            económica, a través de medios propios o de colaboradores, incluidos de forma enunciativa:
+            página web, boletines, redes sociales (por ejemplo, Facebook, Instagram, Bluesky,
+            Telegram u otras), material gráfico o audiovisual de promoción de ediciones actuales o
+            futuras, y difusión a medios de comunicación cuando proceda.
+          </p>
+          <p>
+            Este consentimiento no supone una cesión patrimonial de derechos de propiedad
+            intelectual sobre obras de terceros; se refiere al derecho a la propia imagen y al uso
+            de datos personales derivados de la imagen conforme al RGPD.
+          </p>
+          <p>
+            Podrá <strong>retirar su consentimiento</strong> en cualquier momento dirigiéndose al
+            correo indicado en el apartado 9; la retirada no afectará a la licitud del tratamiento
+            basado en el consentimiento previo a su retirada. Tras recibir su solicitud, dejaremos
+            de utilizar su imagen en nuevas publicaciones en la medida de lo posible; la retirada
+            de contenidos ya difundidos en internet o en medios ajenos puede verse limitada por la
+            naturaleza de dichas plataformas o por el interés informativo legítimo archivado.
+          </p>
+        </article>
+
+        <article class="privacy-section">
+          <h2>8. Derechos del interesado</h2>
           <p>Usted tiene derecho a ejercer los siguientes derechos sobre sus datos personales:</p>
           <ul>
             <li>
@@ -150,13 +224,14 @@
             <li>
               <strong>Derecho a retirar el consentimiento:</strong> Retirar el consentimiento
               otorgado en cualquier momento, sin que ello afecte a la licitud del tratamiento
-              anterior.
+              anterior. En particular, podrá retirar el consentimiento relativo al tratamiento de
+              su imagen con los efectos descritos en el apartado 7.
             </li>
           </ul>
         </article>
 
         <article class="privacy-section">
-          <h2>8. Cómo ejercer sus derechos</h2>
+          <h2>9. Cómo ejercer sus derechos</h2>
           <p>Para ejercer sus derechos, puede dirigirse a nosotros mediante:</p>
           <ul>
             <li>
@@ -178,7 +253,7 @@
         </article>
 
         <article class="privacy-section">
-          <h2>9. Almacenamiento y medidas de seguridad</h2>
+          <h2>10. Almacenamiento y medidas de seguridad</h2>
           <p>
             Sus datos personales se almacenan en la plataforma Supabase, un servicio de base de
             datos en la nube que cumple con el Reglamento General de Protección de Datos (RGPD).
@@ -221,14 +296,14 @@
         </article>
 
         <article class="privacy-section">
-          <h2>10. Modificaciones</h2>
+          <h2>11. Modificaciones</h2>
           <p>
             Nos reservamos el derecho a modificar esta política de privacidad para adaptarla a
             novedades legislativas, jurisprudenciales o de interpretación de la Agencia Española de
             Protección de Datos. En tal caso, se le informará de dichas modificaciones con la
             antelación suficiente.
           </p>
-          <p><strong>Última actualización:</strong> Enero 2025</p>
+          <p><strong>Última actualización:</strong> marzo de 2026</p>
         </article>
 
         <nav class="privacy-nav" aria-label="Navegación de la política de privacidad">

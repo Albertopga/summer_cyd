@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS public.registrations (
   
   -- Consentimiento
   terms_accepted BOOLEAN NOT NULL DEFAULT false,
+  image_consent_accepted BOOLEAN NOT NULL DEFAULT false,
   
   -- Estado de pago
   accommodation_paid BOOLEAN NOT NULL DEFAULT false,
@@ -125,6 +126,7 @@ COMMENT ON COLUMN public.registrations.diet IS 'Array de restricciones alimentar
 COMMENT ON COLUMN public.registrations.comments IS 'Comentarios adicionales sobre alojamiento';
 COMMENT ON COLUMN public.registrations.diet_comments IS 'Comentarios adicionales sobre restricciones alimentarias';
 COMMENT ON COLUMN public.registrations.terms_accepted IS 'Indica si se aceptaron los términos y condiciones';
+COMMENT ON COLUMN public.registrations.image_consent_accepted IS 'Consentimiento específico para tratamiento de imagen (difusión) según política de privacidad';
 COMMENT ON COLUMN public.registrations.accommodation_paid IS 'Indica si el alojamiento está pagado';
 COMMENT ON COLUMN public.registrations.created_at IS 'Fecha y hora de creación del registro';
 COMMENT ON COLUMN public.registrations.updated_at IS 'Fecha y hora de última actualización';

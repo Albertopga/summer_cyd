@@ -40,6 +40,7 @@ export async function saveRegistration(registrationData, isMinor) {
       comments: registrationData.comments || null,
       diet_comments: registrationData.dietComments || null,
       terms_accepted: registrationData.terms,
+      image_consent_accepted: Boolean(registrationData.imageConsent),
     }
 
     // Insertar en la tabla de registros

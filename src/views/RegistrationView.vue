@@ -578,6 +578,29 @@
 
               <label class="checkbox-consent">
                 <input
+                  id="imageConsent"
+                  v-model="form.imageConsent"
+                  type="checkbox"
+                  name="imageConsent"
+                  :aria-describedby="'imageConsent-help'"
+                />
+                <span>
+                  <strong>Opcional:</strong> autorizo la captación y el uso de mi imagen (fotografía
+                  y/o vídeo) para su publicación con fines informativos o promocionales del evento,
+                  según lo descrito en la
+                  <RouterLink to="/politica-privacidad" class="privacy-link"
+                    >política de privacidad</RouterLink
+                  >
+                  (apartados 2, 3 y 7).
+                </span>
+              </label>
+              <p id="imageConsent-help" class="form-help" style="margin-top: 0.25rem">
+                Si no marcas esta casilla, podrás inscribirte igualmente; la organización no usará tu
+                imagen para difusión con base en este consentimiento.
+              </p>
+
+              <label class="checkbox-consent">
+                <input
                   id="norms"
                   v-model="form.norms"
                   type="checkbox"
@@ -703,6 +726,7 @@ const form = reactive({
   emergencyContactName: '',
   emergencyContactPhone: '',
   terms: false,
+  imageConsent: false,
   norms: false,
 })
 
@@ -1152,6 +1176,7 @@ const resetForm = () => {
   form.emergencyContactName = ''
   form.emergencyContactPhone = ''
   form.terms = false
+  form.imageConsent = false
   form.norms = false
 
   Object.keys(errors).forEach((key) => {

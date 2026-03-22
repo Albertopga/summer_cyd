@@ -285,6 +285,12 @@ const editableFieldsConfig = computed(() => {
       type: 'checkbox',
       isEditable: true,
     },
+    image_consent_accepted: {
+      key: 'image_consent_accepted',
+      label: 'Consentimiento imagen (difusión)',
+      type: 'checkbox',
+      isEditable: true,
+    },
     accommodation_paid: {
       key: 'accommodation_paid',
       label: 'Alojamiento pagado',
@@ -337,8 +343,12 @@ watch(
         if (fieldKey === 'diet' && Array.isArray(value)) {
           formData[fieldKey] = [...value]
         }
-        // Manejar booleanos (is_minor, terms_accepted)
-        else if (fieldKey === 'is_minor' || fieldKey === 'terms_accepted') {
+        // Manejar booleanos (is_minor, terms_accepted, image_consent_accepted)
+        else if (
+          fieldKey === 'is_minor' ||
+          fieldKey === 'terms_accepted' ||
+          fieldKey === 'image_consent_accepted'
+        ) {
           formData[fieldKey] = Boolean(value)
         }
         // Manejar fechas datetime-local (arrival_date, departure_date)
@@ -454,7 +464,11 @@ const handleSave = async () => {
       } else {
         newValue = null
       }
-    } else if (fieldKey === 'is_minor' || fieldKey === 'terms_accepted') {
+    } else if (
+      fieldKey === 'is_minor' ||
+      fieldKey === 'terms_accepted' ||
+      fieldKey === 'image_consent_accepted'
+    ) {
       // Asegurar que sea boolean
       newValue = Boolean(newValue)
     } else if (fieldKey === 'diet') {
@@ -472,7 +486,11 @@ const handleSave = async () => {
       if (JSON.stringify(originalArray) !== JSON.stringify(newArray)) {
         updates[fieldKey] = newValue
       }
-    } else if (fieldKey === 'is_minor' || fieldKey === 'terms_accepted') {
+    } else if (
+      fieldKey === 'is_minor' ||
+      fieldKey === 'terms_accepted' ||
+      fieldKey === 'image_consent_accepted'
+    ) {
       // Comparar booleanos
       if (Boolean(originalValue) !== Boolean(newValue)) {
         updates[fieldKey] = newValue

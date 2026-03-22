@@ -329,6 +329,7 @@ const handleDownloadExcel = async () => {
       { header: 'Comentarios', key: 'comentarios', width: 30 },
       { header: 'Comentarios dieta', key: 'comentariosDieta', width: 20 },
       { header: 'Términos aceptados', key: 'terminosAceptados', width: 18 },
+      { header: 'Consentimiento imagen (difusión)', key: 'consentimientoImagen', width: 26 },
       { header: 'Alojamiento pagado', key: 'alojamientoPagado', width: 18 },
       { header: 'Fecha registro', key: 'fechaRegistro', width: 20 },
       { header: 'Última actualización', key: 'ultimaActualizacion', width: 20 },
@@ -377,6 +378,7 @@ const handleDownloadExcel = async () => {
         comentarios: reg.comments || '',
         comentariosDieta: reg.diet_comments || '',
         terminosAceptados: reg.terms_accepted ? 'Sí' : 'No',
+        consentimientoImagen: reg.image_consent_accepted ? 'Sí' : 'No',
         alojamientoPagado: reg.accommodation_paid ? 'Sí' : 'No',
         fechaRegistro: reg.created_at
           ? new Date(reg.created_at).toLocaleDateString('es-ES', {
