@@ -384,9 +384,13 @@
                 aria-required="false"
                 :aria-invalid="errors.departureDate ? 'true' : 'false'"
                 :aria-describedby="describedByFor('departureDate')"
+                :title="departureHelpText"
                 @blur="() => validateField('departureDate')"
                 @change="() => validateField('departureDate')"
               />
+              <p id="departureDate-help" class="form-help">
+                {{ departureHelpText }}
+              </p>
               <span
                 id="departureDate-error"
                 class="form-error"
@@ -410,12 +414,11 @@
               <div class="option-list option-list--radio">
                 <template
                   v-for="(block, blockIndex) in accommodationFieldGroups"
-                  :key="block.type === 'single' ? block.option.value : `${block.groupKey}-${blockIndex}`"
+                  :key="
+                    block.type === 'single' ? block.option.value : `${block.groupKey}-${blockIndex}`
+                  "
                 >
-                  <div
-                    v-if="block.type === 'single'"
-                    class="option-item"
-                  >
+                  <div v-if="block.type === 'single'" class="option-item">
                     <input
                       :id="`accommodation-${block.option.value}`"
                       v-model="form.accommodation"
@@ -442,11 +445,7 @@
                     >
                       {{ block.title }}
                     </p>
-                    <div
-                      v-for="option in block.options"
-                      :key="option.value"
-                      class="option-item"
-                    >
+                    <div v-for="option in block.options" :key="option.value" class="option-item">
                       <input
                         :id="`accommodation-${option.value}`"
                         v-model="form.accommodation"
@@ -635,8 +634,10 @@ import {
   ACCOMMODATION_OUTLETS_NOTE,
   CONTACT_INFO,
   DIET_OPTIONS,
+  EVENT_DATES_LABEL,
   EVENT_DATES_LABEL_SHORT,
   EVENT_DATES,
+  EVENT_DEPARTURE_MAX_TIME,
   EVENT_YEAR,
   FIELD_LABELS,
   groupAccommodationOptions,
@@ -812,8 +813,18 @@ const minDepartureDateTime = computed(() => {
 })
 
 const maxDepartureDateTime = computed(() => {
-  return EVENT_DATES.end ? `${EVENT_DATES.end}T21:00` : ''
+  return EVENT_DATES.end ? `${EVENT_DATES.end}T${EVENT_DEPARTURE_MAX_TIME}` : ''
 })
+
+const departureHelpText = computed(
+  () =>
+    `Opcional. Indica tu salida entre las fechas del evento (${EVENT_DATES_LABEL_SHORT} de ${EVENT_YEAR}); como muy tarde a las 20:00 del último día (cierre al público).`,
+)
+
+const departureWindowInvalidMessage = computed(
+  () =>
+    `La salida debe estar entre el ${EVENT_DATES_LABEL} de ${EVENT_YEAR}, como muy tarde a las 20:00 del último día.`,
+)
 
 const statusRole = computed(() => (status.type === 'error' ? 'alert' : 'status'))
 const statusAriaLive = computed(() => (status.type === 'error' ? 'assertive' : 'polite'))
@@ -854,6 +865,7 @@ const describedByFor = (field) => {
     birthDate: 'birthDate-help',
     guardianFullName: 'guardianFullName-help',
     arrivalDate: 'arrivalDate-help',
+    departureDate: 'departureDate-help',
     comments: 'comments-help',
     emergencyContactPhone: 'emergency-contact-phone-help',
   }
@@ -869,9 +881,7 @@ const describedByFor = (field) => {
   return ids.length > 0 ? ids.join(' ') : undefined
 }
 
-const accommodationFieldGroups = computed(() =>
-  groupAccommodationOptions(ACCOMMODATION_OPTIONS),
-)
+const accommodationFieldGroups = computed(() => groupAccommodationOptions(ACCOMMODATION_OPTIONS))
 
 const accommodationFieldsetDescribedBy = computed(() => {
   const ids = ['accommodation-outlets-help']
@@ -977,16 +987,23 @@ const validateField = (field) => {
         return true
       }
       const departure = new Date(form.departureDate)
-      const start = new Date(EVENT_DATES.start + 'T00:00')
-      const end = new Date(EVENT_DATES.end + 'T21:00')
-      if (departure < start || departure > end) {
-        errors.departureDate =
-          'La salida debe ser entre el 21 y el 23 de agosto, hasta las 21:00 del día 23.'
+      const min = minDepartureDateTime.value ? new Date(minDepartureDateTime.value) : null
+      const max = maxDepartureDateTime.value ? new Date(maxDepartureDateTime.value) : null
+      if (
+        Number.isNaN(departure.getTime()) ||
+        !min ||
+        !max ||
+        Number.isNaN(min.getTime()) ||
+        Number.isNaN(max.getTime()) ||
+        departure < min ||
+        departure > max
+      ) {
+        errors.departureDate = departureWindowInvalidMessage.value
         return false
       }
       if (form.arrivalDate) {
-        const arrival = new Date(form.arrivalDate + 'T00:00')
-        if (departure < arrival) {
+        const arrival = new Date(form.arrivalDate)
+        if (Number.isNaN(arrival.getTime()) || departure < arrival) {
           errors.departureDate = 'La fecha y hora de salida no puede ser anterior a la de llegada.'
           return false
         }

@@ -52,6 +52,9 @@ export const EVENT_DATES = {
 export const EVENT_DATES_LABEL = '21, 22 y 23 de Agosto'
 export const EVENT_DATES_LABEL_SHORT = '21 al 23 de Agosto'
 
+/** Hora máxima del último día para salida estimada (alineada con el cierre del evento a las 20:00). */
+export const EVENT_DEPARTURE_MAX_TIME = '20:00'
+
 /** Texto común sobre electricidad en alojamientos (modal, formulario, etc.) */
 export const ACCOMMODATION_OUTLETS_NOTE =
   'En todos los alojamientos hay enchufes, aunque se recomienda traer regletas o alargador.'
