@@ -2,7 +2,7 @@
   <div class="admin-tab-content">
     <div>
       <div class="list-header">
-        <h2>Usuarios administradores ({{ totalUsers }})</h2>
+        <h2>Mi panel ({{ totalUsers }})</h2>
         <div class="controls-group">
           <button
             type="button"
@@ -89,44 +89,24 @@
       </div>
     </div>
     <div class="info-section" role="region" aria-labelledby="users-info-title">
-      <h3 id="users-info-title">Información sobre gestión de usuarios</h3>
-      <p>
-        Como esta aplicación solo tiene frontend (sin backend), la gestión completa de usuarios
-        administradores debe hacerse desde el
-        <strong>Dashboard de Supabase</strong> por seguridad.
-      </p>
-      <p>
-        <strong>Para crear usuarios administradores:</strong>
-      </p>
-      <ol>
-        <li>
-          Ve a tu proyecto en
-          <a href="https://app.supabase.com" target="_blank" rel="noopener noreferrer"
-            >Supabase Dashboard</a
-          >
-        </li>
-        <li>Navega a <strong>Authentication</strong> → <strong>Users</strong></li>
-        <li>Haz clic en <strong>Add user</strong> → <strong>Create new user</strong></li>
-        <li>Completa el formulario y marca <strong>Auto Confirm User</strong></li>
-      </ol>
-      <p>
-        <strong>Nota sobre usuarios creados desde aquí:</strong>
-      </p>
+      <h3 id="users-info-title">Qué puedes hacer en esta pestaña</h3>
       <ul>
-        <li>Los usuarios creados son <strong>usuarios reales</strong> en Supabase Auth</li>
         <li>
-          <strong>Necesitan confirmar su email</strong> antes de poder iniciar sesión (recibirán un
-          email de confirmación)
+          <strong>Crear usuario:</strong> da de alta una cuenta nueva (recibirá correo para confirmar
+          el email antes de poder iniciar sesión, salvo que configures otro flujo en Supabase).
         </li>
         <li>
-          Una vez confirmado el email, <strong>pueden iniciar sesión</strong> y acceder al panel de
-          administración
-        </li>
-        <li>
-          Para crear usuarios que puedan iniciar sesión inmediatamente (sin confirmar email), usa el
-          dashboard de Supabase y marca "Auto Confirm User"
+          <strong>Cambiar tu contraseña:</strong> usa <strong>Editar</strong> en tu propia fila;
+          no puedes cambiar la contraseña de otras cuentas desde aquí.
         </li>
       </ul>
+      <p class="info-section-note">
+        Para borrar usuarios o crear cuentas con confirmación automática, usa el
+        <a href="https://app.supabase.com" target="_blank" rel="noopener noreferrer"
+          >Dashboard de Supabase</a
+        >
+        → <strong>Authentication</strong> → <strong>Users</strong>.
+      </p>
     </div>
     <!-- Modal de creación -->
     <AdminUserModal v-if="showCreateModal" @close="closeCreateModal" @saved="handleUserCreated" />
@@ -321,13 +301,21 @@ defineExpose({
   margin: var(--spacing-sm) 0;
 }
 
-.info-section ol {
+.info-section ol,
+.info-section ul {
   margin: var(--spacing-sm) 0;
   padding-left: var(--spacing-lg);
 }
 
 .info-section li {
   margin: var(--spacing-xs) 0;
+}
+
+.info-section-note {
+  margin-top: var(--spacing-md);
+  margin-bottom: 0;
+  font-size: 0.9375rem;
+  color: var(--color-text-muted, var(--color-text));
 }
 
 .info-section a {

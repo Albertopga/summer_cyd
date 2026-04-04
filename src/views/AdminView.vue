@@ -302,7 +302,7 @@ const tabs = computed(() => [
   },
   {
     id: 'users',
-    label: 'Usuarios',
+    label: 'Mi panel',
     count: tabCounts.users,
   },
 ])

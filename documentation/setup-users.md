@@ -1,6 +1,6 @@
-# Usuarios del panel de administración
+# Pestaña Mi panel (cuenta y usuarios)
 
-Esta guía describe cómo encaja la pestaña **Usuarios** de `/admin` con Supabase Auth y qué puedes hacer desde la aplicación frente al dashboard de Supabase.
+Esta guía describe cómo encaja la pestaña **Mi panel** del **Panel de Administración** (ruta `/admin`) con Supabase Auth y qué puedes hacer desde la aplicación frente al dashboard de Supabase.
 
 ## Contexto de seguridad
 
@@ -15,24 +15,13 @@ Hazlo desde Supabase (recomendado):
 3. Activa **Auto Confirm User** para poder iniciar sesión sin confirmar correo
 4. Ejecuta también `supabase-admin-policies.sql` para RLS en `registrations` (ver [setup-admin.md](./setup-admin.md))
 
-## Qué permite la pestaña Usuarios en `/admin`
+## Qué permite la pestaña Mi panel
 
-### Listado
+En la interfaz solo puedes **crear usuarios** nuevos y **cambiar la contraseña de tu propia cuenta** (botón Editar en tu fila).
 
-- Solo se muestra el **usuario con sesión iniciada** (no hay listado global de todos los usuarios de Auth desde el cliente anon).
-
-### Crear usuario
-
-- Crea una cuenta vía **`signUp`**: el usuario recibirá correo de **confirmación** y no podrá entrar hasta confirmar (salvo que cambies el flujo en Supabase).
-- Para dar de alta administradores que entren **al momento**, sigue usando **Supabase Dashboard** con **Auto Confirm User**.
-
-### Editar
-
-- Solo puedes cambiar la **contraseña del usuario actual** (tú, con sesión iniciada). Para otros correos, usa el dashboard de Supabase.
-
-### Eliminar
-
-- El botón está deshabilitado: borrar usuarios se hace en **Authentication** → **Users** en Supabase.
+- **Listado:** solo aparece el **usuario con sesión iniciada** (no hay listado global de Auth con la clave anon).
+- **Crear usuario:** vía **`signUp`**; el nuevo usuario recibe correo de **confirmación** salvo que cambies el flujo en Supabase. Para altas con **Auto Confirm User**, usa el dashboard de Supabase.
+- **Eliminar:** no está disponible aquí; en **Authentication** → **Users** del dashboard de Supabase.
 
 ## Recuperar contraseña (admin)
 
