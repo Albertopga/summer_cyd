@@ -2,7 +2,7 @@
   <div class="admin-tab-content">
     <div>
       <div class="list-header">
-        <h2>Usuarios ({{ totalUsers }})</h2>
+        <h2>Usuarios administradores ({{ totalUsers }})</h2>
         <div class="controls-group">
           <button
             type="button"
@@ -29,7 +29,7 @@
       </div>
 
       <div v-else class="users-table-wrapper">
-        <table class="users-table" aria-label="Lista de usuarios">
+        <table class="users-table" aria-label="Lista de usuarios administradores">
           <thead>
             <tr>
               <th scope="col">Email</th>
@@ -77,12 +77,8 @@
                   @click="confirmDelete(user)"
                   class="delete-button"
                   :aria-label="`Eliminar usuario ${user.email}`"
-                  :disabled="user.id === currentUserId"
-                  :title="
-                    user.id === currentUserId
-                      ? 'No puedes eliminar la cuenta con la que estás conectado'
-                      : 'Eliminar usuario'
-                  "
+                  disabled
+                  title="No se pueden eliminar usuarios desde aquí. Usa el dashboard de Supabase."
                 >
                   Eliminar
                 </button>
@@ -95,10 +91,9 @@
     <div class="info-section" role="region" aria-labelledby="users-info-title">
       <h3 id="users-info-title">Información sobre gestión de usuarios</h3>
       <p>
-        El <strong>listado y el borrado</strong> de cuentas usan la Edge Function
-        <code>admin-users</code> en Supabase: la clave <code>service_role</code> solo existe en el
-        servidor. Si el listado falla con un error de despliegue, revisa en el repositorio
-        <strong>documentation/setup-users.md</strong> (sección Edge Function <code>admin-users</code>).
+        Como esta aplicación solo tiene frontend (sin backend), la gestión completa de usuarios
+        administradores debe hacerse desde el
+        <strong>Dashboard de Supabase</strong> por seguridad.
       </p>
       <p>
         <strong>Para crear usuarios administradores:</strong>
@@ -167,23 +162,22 @@
           </button>
         </header>
         <div class="modal-body">
-          <p v-if="userToDelete">
-            ¿Eliminar definitivamente la cuenta <strong>{{ userToDelete.email }}</strong>? Esta
-            acción no se puede deshacer.
+          <p>No se pueden eliminar usuarios desde el panel de administración por seguridad.</p>
+          <p>
+            Para eliminar usuarios, ve al{' '}
+            <a href="https://app.supabase.com" target="_blank" rel="noopener noreferrer"
+              >Dashboard de Supabase</a
+            >
+            → <strong>Authentication</strong> → <strong>Users</strong>.
           </p>
-          <p v-if="userToDelete?.id === currentUserId" class="warning-text">
-            <strong>Advertencia:</strong> no puedes eliminar la cuenta con la que estás conectado.
+          <p v-if="userToDelete.id === currentUserId" class="warning-text">
+            <strong>Advertencia:</strong> No puedes eliminar tu propia cuenta mientras estés
+            autenticado.
           </p>
-          <p v-if="deleteError" class="form-error" role="alert">{{ deleteError }}</p>
         </div>
         <footer class="modal-footer">
           <button type="button" @click="cancelDelete" class="cancel-button">Cancelar</button>
-          <button
-            type="button"
-            @click="executeDelete"
-            class="delete-button"
-            :disabled="isDeleting || userToDelete?.id === currentUserId"
-          >
+          <button type="button" @click="executeDelete" class="delete-button" :disabled="isDeleting">
             <span v-if="!isDeleting">Eliminar</span>
             <span v-else>
               <span class="spinner" aria-hidden="true"></span>
@@ -198,7 +192,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import { getAllUsers, deleteUser } from '@/services/adminService'
+import { getAllUsers } from '@/services/adminService'
 import { supabase } from '@/lib/supabase'
 import AdminUserModal from '@/components/AdminUserModal.vue'
 
@@ -216,7 +210,6 @@ const selectedUser = ref(null)
 const showCreateModal = ref(false)
 const userToDelete = ref(null)
 const isDeleting = ref(false)
-const deleteError = ref('')
 const currentUserId = ref(null)
 
 const loadUsers = async () => {
@@ -269,30 +262,17 @@ const handleUserUpdated = () => {
 }
 
 const confirmDelete = (user) => {
-  deleteError.value = ''
   userToDelete.value = user
 }
 
 const cancelDelete = () => {
-  deleteError.value = ''
   userToDelete.value = null
 }
 
 const executeDelete = async () => {
-  if (!userToDelete.value || userToDelete.value.id === currentUserId.value) {
-    cancelDelete()
-    return
-  }
-  isDeleting.value = true
-  deleteError.value = ''
-  const result = await deleteUser(userToDelete.value.id)
-  isDeleting.value = false
-  if (result.success) {
-    cancelDelete()
-    await loadUsers()
-  } else {
-    deleteError.value = result.error || 'Error al eliminar el usuario'
-  }
+  cancelDelete()
+  error.value =
+    'No se pueden eliminar usuarios desde aquí. Usa el dashboard de Supabase (Authentication → Users).'
 }
 
 const formatDate = (dateString) => {
@@ -599,12 +579,6 @@ defineExpose({
 .warning-text {
   color: var(--color-accent);
   font-weight: 600;
-}
-
-.form-error {
-  font-size: 0.875rem;
-  color: var(--color-accent);
-  margin-top: var(--spacing-sm);
 }
 
 .modal-footer {

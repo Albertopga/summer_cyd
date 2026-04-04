@@ -1,5 +1,0 @@
-# Configuración CLI de Supabase (https://supabase.com/docs/guides/cli/config)
-# Tras `supabase link`, despliega la función: supabase functions deploy admin-users
-
-[functions.admin-users]
-verify_jwt = true

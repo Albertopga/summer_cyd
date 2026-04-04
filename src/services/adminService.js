@@ -447,97 +447,33 @@ export async function createActivityAdmin(payload) {
   }
 }
 
-function adminUsersFunctionUrl() {
-  const rawUrl = import.meta.env.VITE_SUPABASE_URL
-  const url = rawUrl
-    ? String(rawUrl)
-        .trim()
-        .replace(/^['"]+/, '')
-        .replace(/['"]+$/, '')
-        .trim()
-    : ''
-  if (!url) return ''
-  return `${url.replace(/\/$/, '')}/functions/v1/admin-users`
-}
-
-function adminUsersAnonKey() {
-  const raw = import.meta.env.VITE_SUPABASE_ANON_KEY
-  return raw
-    ? String(raw)
-        .trim()
-        .replace(/^['"]+/, '')
-        .replace(/['"]+$/, '')
-        .trim()
-    : ''
-}
-
-async function getAdminSessionToken() {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession()
-  if (error || !session?.access_token) {
-    return { token: null, error: 'Debes iniciar sesión para gestionar usuarios.' }
-  }
-  return { token: session.access_token, error: null }
-}
-
 /**
- * Lista todos los usuarios de Supabase Auth vía Edge Function `admin-users` (service_role solo en servidor).
+ * Obtiene todos los usuarios del sistema
+ * Nota: Sin backend, solo podemos obtener información del usuario actual
+ * Para gestionar usuarios, usa el dashboard de Supabase
  * @returns {Promise<{success: boolean, data: Array|null, error: string|null, count: number|null}>}
  */
 export async function getAllUsers() {
   try {
-    const { token, error: tokenError } = await getAdminSessionToken()
-    if (!token) {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
+
+    if (error) {
       return {
         success: false,
         data: null,
-        error: tokenError || 'Sesión no válida',
+        error: 'No se pudo obtener información del usuario actual',
         count: null,
       }
     }
 
-    const fnUrl = adminUsersFunctionUrl()
-    const anonKey = adminUsersAnonKey()
-    if (!fnUrl || !anonKey) {
-      return {
-        success: false,
-        data: null,
-        error: 'Faltan VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY.',
-        count: null,
-      }
-    }
-
-    const res = await fetch(fnUrl, {
-      method: 'GET',
-      headers: {
-        apikey: anonKey,
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    const body = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      const msg =
-        body?.error ||
-        (res.status === 404
-          ? 'La función admin-users no está desplegada. Ejecuta: supabase functions deploy admin-users'
-          : `Error al listar usuarios (${res.status})`)
-      return {
-        success: false,
-        data: null,
-        error: typeof msg === 'string' ? msg : 'Error al listar usuarios',
-        count: null,
-      }
-    }
-
-    const list = Array.isArray(body.users) ? body.users : []
     return {
       success: true,
-      data: list,
+      data: user ? [user] : [],
       error: null,
-      count: list.length,
+      count: user ? 1 : 0,
     }
   } catch (error) {
     console.error('Error inesperado al obtener usuarios:', error)
@@ -607,64 +543,17 @@ export async function createUser(email, password) {
 }
 
 /**
- * Elimina un usuario de Auth vía Edge Function `admin-users`. No permite borrar la cuenta en sesión (también validado en servidor).
+ * Elimina un usuario
+ * Nota: Sin backend, no podemos eliminar usuarios directamente
+ * Usa el dashboard de Supabase para eliminar usuarios
  * @param {string} userId - ID del usuario a eliminar
  * @returns {Promise<{success: boolean, error: string|null}>}
  */
 export async function deleteUser(userId) {
-  try {
-    if (!userId) {
-      return { success: false, error: 'Falta el identificador del usuario.' }
-    }
-
-    const {
-      data: { user: current },
-    } = await supabase.auth.getUser()
-    if (current?.id === userId) {
-      return { success: false, error: 'No puedes eliminar tu propia cuenta.' }
-    }
-
-    const { token, error: tokenError } = await getAdminSessionToken()
-    if (!token) {
-      return { success: false, error: tokenError || 'Sesión no válida' }
-    }
-
-    const fnUrl = adminUsersFunctionUrl()
-    const anonKey = adminUsersAnonKey()
-    if (!fnUrl || !anonKey) {
-      return { success: false, error: 'Faltan VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY.' }
-    }
-
-    const res = await fetch(fnUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: anonKey,
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ userId }),
-    })
-
-    const body = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      const msg =
-        body?.error ||
-        (res.status === 404
-          ? 'La función admin-users no está desplegada. Ejecuta: supabase functions deploy admin-users'
-          : `Error al eliminar (${res.status})`)
-      return {
-        success: false,
-        error: typeof msg === 'string' ? msg : 'Error al eliminar el usuario',
-      }
-    }
-
-    return { success: true, error: null }
-  } catch (error) {
-    console.error('Error inesperado al eliminar usuario:', error)
-    return {
-      success: false,
-      error: error.message || 'Error inesperado al eliminar el usuario',
-    }
+  return {
+    success: false,
+    error:
+      'No se puede eliminar usuarios desde el frontend por seguridad. Usa el dashboard de Supabase (Authentication → Users) para eliminar usuarios.',
   }
 }
 
