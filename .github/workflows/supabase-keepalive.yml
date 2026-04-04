@@ -1,8 +1,8 @@
-# Ping periódico al API de Supabase para reducir riesgo de pausa por inactividad (plan gratuito).
-# Requiere secrets en el repo: Settings → Secrets and variables → Actions
-#   SUPABASE_URL       → https://tu-proyecto.supabase.co (sin barra final)
-#   SUPABASE_ANON_KEY  → anon public key (misma que VITE_SUPABASE_ANON_KEY)
-# En GitHub pega el valor SIN comillas simples/dobles (si copias desde .env, quítalas).
+# Ping periódico con consulta REAL a Postgres (PostgREST RPC). /auth/v1/health no basta
+# para la pausa por inactividad del plan gratuito.
+#
+# 1) Ejecuta en Supabase SQL Editor: supabase-keepalive-rpc.sql
+# 2) Secrets → Actions: SUPABASE_URL, SUPABASE_ANON_KEY (sin comillas al pegar)
 #
 # No uses la service_role aquí.
 
@@ -10,15 +10,15 @@ name: Supabase keep-alive
 
 on:
   schedule:
-    # Lunes y jueves 10:00 UTC (~2 veces/semana)
-    - cron: '0 10 * * 1,4'
+    # Cada día 10:00 UTC (margen frente al umbral típico ~7 días sin actividad en BD)
+    - cron: '0 10 * * *'
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Auth health
+      - name: Ping Postgres (rpc keepalive_ping)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -50,8 +50,10 @@ jobs:
             echo "::error::SUPABASE_URL inválida tras limpiar espacios/comillas. Debe ser https://....supabase.co (sin comillas en el secret de GitHub)."
             exit 1
           fi
-          curl -sfS \
+          curl -sfS -X POST \
             -H "apikey: ${key}" \
             -H "Authorization: Bearer ${key}" \
-            "${BASE}/auth/v1/health" \
-            -o /dev/null
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -d '{}' \
+            "${BASE}/rest/v1/rpc/keepalive_ping"
