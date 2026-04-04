@@ -1,8 +1,142 @@
 <template>
   <main id="main-content" class="admin-view">
     <div class="container">
-      <!-- Pantalla de login -->
-      <section v-if="!isAuthenticated" class="admin-login">
+      <!-- Recuperación: nueva contraseña (tras enlace del correo) -->
+      <section v-if="showRecoveryPasswordForm" class="admin-login">
+        <h1>Establecer nueva contraseña</h1>
+        <p class="admin-login-lead">
+          Elige una contraseña nueva para tu cuenta de administración.
+        </p>
+        <form @submit.prevent="handleRecoveryPasswordSubmit" class="login-form" novalidate>
+          <div class="form-group">
+            <label for="recovery-password">Nueva contraseña</label>
+            <input
+              id="recovery-password"
+              v-model.trim="recoveryForm.password"
+              type="password"
+              required
+              aria-required="true"
+              autocomplete="new-password"
+              minlength="6"
+              :aria-invalid="recoveryErrors.password ? 'true' : 'false'"
+              :aria-describedby="recoveryErrors.password ? 'recovery-password-error' : undefined"
+            />
+            <span
+              v-if="recoveryErrors.password"
+              id="recovery-password-error"
+              class="form-error"
+              role="alert"
+              aria-live="polite"
+            >
+              {{ recoveryErrors.password }}
+            </span>
+          </div>
+          <div class="form-group">
+            <label for="recovery-password-confirm">Confirmar contraseña</label>
+            <input
+              id="recovery-password-confirm"
+              v-model.trim="recoveryForm.passwordConfirm"
+              type="password"
+              required
+              aria-required="true"
+              autocomplete="new-password"
+              minlength="6"
+              :aria-invalid="recoveryErrors.passwordConfirm ? 'true' : 'false'"
+              :aria-describedby="
+                recoveryErrors.passwordConfirm ? 'recovery-password-confirm-error' : undefined
+              "
+            />
+            <span
+              v-if="recoveryErrors.passwordConfirm"
+              id="recovery-password-confirm-error"
+              class="form-error"
+              role="alert"
+              aria-live="polite"
+            >
+              {{ recoveryErrors.passwordConfirm }}
+            </span>
+          </div>
+          <div
+            v-if="recoveryStatus.message"
+            class="form-status"
+            :class="`form-status--${recoveryStatus.type}`"
+          >
+            {{ recoveryStatus.message }}
+          </div>
+          <button type="submit" class="cta-button cta-primary" :disabled="isSavingRecoveryPassword">
+            <span v-if="!isSavingRecoveryPassword">Guardar contraseña</span>
+            <span v-else>
+              <span class="spinner" aria-hidden="true"></span>
+              Guardando...
+            </span>
+          </button>
+          <button
+            type="button"
+            class="cta-button cta-secondary"
+            :disabled="isSavingRecoveryPassword"
+            @click="cancelPasswordRecovery"
+          >
+            Cancelar
+          </button>
+        </form>
+      </section>
+
+      <!-- Solicitar correo de recuperación -->
+      <section v-else-if="authMode === 'requestReset'" class="admin-login">
+        <h1>Recuperar contraseña</h1>
+        <p class="admin-login-lead">
+          Te enviaremos un enlace a tu correo para restablecer la contraseña.
+        </p>
+        <form @submit.prevent="handleRequestResetSubmit" class="login-form" novalidate>
+          <div class="form-group">
+            <label for="reset-email">Correo electrónico</label>
+            <input
+              id="reset-email"
+              v-model.trim="resetForm.email"
+              type="email"
+              required
+              aria-required="true"
+              autocomplete="email"
+              :aria-invalid="resetErrors.email ? 'true' : 'false'"
+              :aria-describedby="resetErrors.email ? 'reset-email-error' : undefined"
+            />
+            <span
+              v-if="resetErrors.email"
+              id="reset-email-error"
+              class="form-error"
+              role="alert"
+              aria-live="polite"
+            >
+              {{ resetErrors.email }}
+            </span>
+          </div>
+          <div
+            v-if="resetStatus.message"
+            class="form-status"
+            :class="`form-status--${resetStatus.type}`"
+          >
+            {{ resetStatus.message }}
+          </div>
+          <button type="submit" class="cta-button cta-primary" :disabled="isSendingReset">
+            <span v-if="!isSendingReset">Enviar enlace</span>
+            <span v-else>
+              <span class="spinner" aria-hidden="true"></span>
+              Enviando...
+            </span>
+          </button>
+          <button
+            type="button"
+            class="cta-button cta-secondary"
+            :disabled="isSendingReset"
+            @click="goBackToLogin"
+          >
+            Volver al inicio de sesión
+          </button>
+        </form>
+      </section>
+
+      <!-- Login -->
+      <section v-else-if="!isAuthenticated" class="admin-login">
         <h1>Panel de Administración</h1>
         <form @submit.prevent="handleLogin" class="login-form" novalidate>
           <div class="form-group">
@@ -66,6 +200,11 @@
               Iniciando sesión...
             </span>
           </button>
+          <p class="admin-forgot-wrap">
+            <button type="button" class="link-button" @click="authMode = 'requestReset'">
+              ¿Olvidaste tu contraseña?
+            </button>
+          </p>
         </form>
       </section>
 
@@ -99,7 +238,6 @@
             <AdminActivitiesTab @update-count="(count) => updateTabCount('activities', count)" />
           </template>
 
-          <!-- Pestaña de usuarios -->
           <template #users>
             <AdminUsersTab @update-count="(count) => updateTabCount('users', count)" />
           </template>
@@ -110,8 +248,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
-import { signIn, signOut, getCurrentUser, onAuthStateChange } from '@/services/authService'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
+import {
+  signIn,
+  signOut,
+  getSession,
+  onAuthStateChange,
+  requestPasswordReset,
+  updatePasswordAfterRecovery,
+} from '@/services/authService'
 import AdminTabs from '@/components/AdminTabs.vue'
 import AdminRegistrationsTab from '@/components/AdminRegistrationsTab.vue'
 import AdminActivitiesTab from '@/components/AdminActivitiesTab.vue'
@@ -121,18 +266,29 @@ defineOptions({
   name: 'AdminView',
 })
 
-const isAuthenticated = ref(false)
+/** @type {import('vue').Ref<import('@supabase/supabase-js').Session|null>} */
+const sessionRef = ref(null)
+const needsRecoveryPassword = ref(false)
+/** @type {import('vue').Ref<'login'|'requestReset'>} */
+const authMode = ref('login')
+
+const isAuthenticated = computed(() => !!sessionRef.value)
+
+const showRecoveryPasswordForm = computed(
+  () => needsRecoveryPassword.value && !!sessionRef.value,
+)
+
 const isLoggingIn = ref(false)
+const isSendingReset = ref(false)
+const isSavingRecoveryPassword = ref(false)
 const defaultTab = ref('registrations')
 
-// Contadores para las pestañas
 const tabCounts = reactive({
   registrations: 0,
   activities: 0,
   users: 0,
 })
 
-// Configuración de pestañas
 const tabs = computed(() => [
   {
     id: 'registrations',
@@ -166,21 +322,80 @@ const loginStatus = reactive({
   type: 'idle',
 })
 
-// Verificar autenticación al montar el componente
-onMounted(async () => {
-  const { user } = await getCurrentUser()
-  if (user) {
-    isAuthenticated.value = true
-  }
+const resetForm = reactive({
+  email: '',
+})
 
-  // Escuchar cambios en el estado de autenticación
-  onAuthStateChange((event, session) => {
-    isAuthenticated.value = !!session
+const resetErrors = reactive({
+  email: '',
+})
+
+const resetStatus = reactive({
+  message: '',
+  type: 'idle',
+})
+
+const recoveryForm = reactive({
+  password: '',
+  passwordConfirm: '',
+})
+
+const recoveryErrors = reactive({
+  password: '',
+  passwordConfirm: '',
+})
+
+const recoveryStatus = reactive({
+  message: '',
+  type: 'idle',
+})
+
+/** @type {import('vue').Ref<{ unsubscribe: () => void }|null>} */
+let authSubscription = null
+
+function stripAuthHashFromUrl() {
+  if (typeof window === 'undefined') return
+  if (!window.location.pathname.endsWith('/admin')) return
+  if (!window.location.hash) return
+  window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+}
+
+onMounted(async () => {
+  const { data } = onAuthStateChange((event, session) => {
+    sessionRef.value = session
+
+    if (event === 'PASSWORD_RECOVERY') {
+      needsRecoveryPassword.value = true
+      authMode.value = 'login'
+      nextTick(() => stripAuthHashFromUrl())
+    }
+
+    if (event === 'SIGNED_OUT') {
+      needsRecoveryPassword.value = false
+      authMode.value = 'login'
+    }
   })
+  authSubscription = data?.subscription ?? null
+
+  const { session } = await getSession()
+  sessionRef.value = session
+  if (
+    typeof window !== 'undefined' &&
+    session &&
+    window.location.hash &&
+    window.location.hash.includes('type=recovery')
+  ) {
+    needsRecoveryPassword.value = true
+    nextTick(() => stripAuthHashFromUrl())
+  }
+})
+
+onUnmounted(() => {
+  authSubscription?.unsubscribe()
+  authSubscription = null
 })
 
 const handleLogin = async () => {
-  // Validar formulario
   loginErrors.email = ''
   loginErrors.password = ''
   loginStatus.message = ''
@@ -209,7 +424,6 @@ const handleLogin = async () => {
   const result = await signIn(loginForm.email, loginForm.password)
 
   if (result.success) {
-    isAuthenticated.value = true
     loginForm.email = ''
     loginForm.password = ''
   } else {
@@ -220,15 +434,90 @@ const handleLogin = async () => {
   isLoggingIn.value = false
 }
 
+const goBackToLogin = () => {
+  authMode.value = 'login'
+  resetForm.email = ''
+  resetErrors.email = ''
+  resetStatus.message = ''
+  resetStatus.type = 'idle'
+}
+
+const handleRequestResetSubmit = async () => {
+  resetErrors.email = ''
+  resetStatus.message = ''
+  resetStatus.type = 'idle'
+
+  if (!resetForm.email.trim()) {
+    resetErrors.email = 'El correo electrónico es obligatorio'
+    return
+  }
+
+  isSendingReset.value = true
+  const result = await requestPasswordReset(resetForm.email)
+  isSendingReset.value = false
+
+  if (result.success) {
+    resetStatus.type = 'success'
+    resetStatus.message =
+      'Si existe una cuenta con ese correo, recibirás un enlace para restablecer la contraseña. Revisa también la carpeta de spam.'
+  } else {
+    resetStatus.type = 'error'
+    resetStatus.message = result.error || 'No se pudo enviar el correo. Inténtalo de nuevo.'
+  }
+}
+
+const handleRecoveryPasswordSubmit = async () => {
+  recoveryErrors.password = ''
+  recoveryErrors.passwordConfirm = ''
+  recoveryStatus.message = ''
+  recoveryStatus.type = 'idle'
+
+  let ok = true
+  if (!recoveryForm.password || recoveryForm.password.length < 6) {
+    recoveryErrors.password = 'La contraseña debe tener al menos 6 caracteres.'
+    ok = false
+  }
+  if (recoveryForm.password !== recoveryForm.passwordConfirm) {
+    recoveryErrors.passwordConfirm = 'Las contraseñas no coinciden.'
+    ok = false
+  }
+  if (!ok) return
+
+  isSavingRecoveryPassword.value = true
+  const result = await updatePasswordAfterRecovery(recoveryForm.password)
+  isSavingRecoveryPassword.value = false
+
+  if (result.success) {
+    recoveryStatus.type = 'success'
+    recoveryStatus.message = 'Contraseña actualizada. Ya puedes usar el panel.'
+    recoveryForm.password = ''
+    recoveryForm.passwordConfirm = ''
+    needsRecoveryPassword.value = false
+  } else {
+    recoveryStatus.type = 'error'
+    recoveryStatus.message = result.error || 'No se pudo guardar la contraseña.'
+  }
+}
+
+const cancelPasswordRecovery = async () => {
+  await signOut()
+  needsRecoveryPassword.value = false
+  recoveryForm.password = ''
+  recoveryForm.passwordConfirm = ''
+  recoveryErrors.password = ''
+  recoveryErrors.passwordConfirm = ''
+  recoveryStatus.message = ''
+  recoveryStatus.type = 'idle'
+}
+
 const handleLogout = async () => {
   const result = await signOut()
   if (result.success) {
-    isAuthenticated.value = false
+    needsRecoveryPassword.value = false
   }
 }
 
 const handleTabChange = (tabId) => {
-  // Aquí puedes agregar lógica adicional cuando cambia la pestaña
   console.log('Tab cambiado a:', tabId)
 }
 
@@ -265,8 +554,16 @@ const updateTabCount = (tabId, count) => {
   font-family: var(--font-heading);
   font-size: 2rem;
   color: var(--color-primary);
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
   text-align: center;
+}
+
+.admin-login-lead {
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: 0.95rem;
+  margin: 0 0 var(--spacing-lg);
+  line-height: 1.45;
 }
 
 .login-form {
@@ -313,6 +610,82 @@ const updateTabCount = (tabId, count) => {
 .form-status--error {
   background-color: #fce8e6;
   color: var(--color-accent);
+}
+
+.form-status--success {
+  background-color: #e6f4ea;
+  color: var(--color-primary);
+}
+
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.cta-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.cta-primary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.cta-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.cta-primary:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.cta-secondary {
+  background-color: var(--color-cream-dark);
+  color: var(--color-text);
+}
+
+.cta-secondary:hover:not(:disabled) {
+  background-color: var(--color-cream);
+}
+
+.cta-secondary:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.admin-forgot-wrap {
+  text-align: center;
+  margin: 0;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.link-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .spinner {

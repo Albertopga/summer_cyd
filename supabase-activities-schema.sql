@@ -93,6 +93,9 @@ ALTER TABLE public.activities ENABLE ROW LEVEL SECURITY;
 -- Eliminar políticas existentes si existen (para evitar conflictos)
 DROP POLICY IF EXISTS "allow_insert_activities" ON public.activities;
 DROP POLICY IF EXISTS "allow_select_activities" ON public.activities;
+DROP POLICY IF EXISTS "allow_anon_select_recent_activities" ON public.activities;
+DROP POLICY IF EXISTS "allow_authenticated_select_all_activities" ON public.activities;
+DROP POLICY IF EXISTS "allow_authenticated_update_activities" ON public.activities;
 
 -- Política: Permitir inserción de actividades (cualquiera puede proponer actividades)
 CREATE POLICY "allow_insert_activities"
@@ -102,14 +105,106 @@ CREATE POLICY "allow_insert_activities"
   TO anon, authenticated
   WITH CHECK (always_true());
 
--- Política: Permitir SELECT de actividades recientes (necesario para .select() después de .insert())
--- Permite leer actividades creadas en el último minuto para verificar la inserción
-CREATE POLICY "allow_select_activities"
+-- Anon: SELECT solo reciente (necesario para .insert().select() en el formulario público)
+CREATE POLICY "allow_anon_select_recent_activities"
   ON public.activities
   AS PERMISSIVE
   FOR SELECT
-  TO anon, authenticated
+  TO anon
   USING (created_at > NOW() - INTERVAL '1 minute');
+
+-- Autenticados (panel admin): ver todas las actividades
+CREATE POLICY "allow_authenticated_select_all_activities"
+  ON public.activities
+  AS PERMISSIVE
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "allow_authenticated_update_activities"
+  ON public.activities
+  AS PERMISSIVE
+  FOR UPDATE
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- Antes de INSERT: email del organizador debe existir en registrations; máximo 2 actividades por email
+CREATE OR REPLACE FUNCTION public.activities_before_insert_enforce_rules()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  current_count integer;
+BEGIN
+  IF (SELECT auth.uid()) IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.registrations
+    WHERE lower(trim(email)) = NEW.organizer_email
+  ) THEN
+    RAISE EXCEPTION 'ACTIVITIES_ORGANIZER_NOT_REGISTERED'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT COUNT(*)::integer
+  INTO current_count
+  FROM public.activities
+  WHERE organizer_email = NEW.organizer_email;
+
+  IF current_count >= 2 THEN
+    RAISE EXCEPTION 'ACTIVITIES_MAX_PER_ORGANIZER'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS activities_max_per_organizer_trigger ON public.activities;
+DROP TRIGGER IF EXISTS activities_before_insert_enforce_rules_trigger ON public.activities;
+
+CREATE TRIGGER activities_before_insert_enforce_rules_trigger
+  BEFORE INSERT ON public.activities
+  FOR EACH ROW
+  EXECUTE FUNCTION public.activities_before_insert_enforce_rules();
+
+CREATE OR REPLACE FUNCTION public.is_attendee_email_registered(p_email text)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.registrations
+    WHERE lower(trim(email)) = lower(trim(p_email))
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.is_attendee_email_registered(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_attendee_email_registered(text) TO anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.count_activities_for_organizer(p_email text)
+RETURNS integer
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT COUNT(*)::integer
+  FROM public.activities
+  WHERE organizer_email = lower(trim(p_email));
+$$;
+
+REVOKE ALL ON FUNCTION public.count_activities_for_organizer(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.count_activities_for_organizer(text) TO anon, authenticated;
 
 -- Comentarios en la tabla para documentación
 COMMENT ON TABLE public.activities IS 'Actividades propuestas por participantes para el Retiro Lúdico';

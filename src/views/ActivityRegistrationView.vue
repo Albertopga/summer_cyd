@@ -90,9 +90,9 @@
                   required
                   aria-required="true"
                   :aria-invalid="errors.organizerEmail ? 'true' : 'false'"
-                  :aria-describedby="'organizerEmail-error'"
+                  :aria-describedby="organizerEmailDescribedBy"
                   placeholder="tu@email.com"
-                  @blur="validateOrganizerEmail"
+                  @blur="handleOrganizerEmailBlur"
                 />
                 <span
                   id="organizerEmail-error"
@@ -103,6 +103,24 @@
                 >
                   {{ errors.organizerEmail || '&nbsp;' }}
                 </span>
+                <p
+                  v-if="organizerRegistrationHint"
+                  id="organizerEmail-registration-hint"
+                  class="form-help form-help--registration"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {{ organizerRegistrationHint }}
+                </p>
+                <p
+                  v-if="activityQuotaHint"
+                  id="organizerEmail-quota-hint"
+                  class="form-help form-help--quota"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {{ activityQuotaHint }}
+                </p>
               </div>
             </div>
           </fieldset>
@@ -110,7 +128,7 @@
           <div v-if="form.activities.length === 0" class="no-activities">
             <p>No has añadido ninguna actividad todavía.</p>
             <button type="button" class="add-activity-button" @click="addActivity">
-              + Añadir primera actividad
+              + Añadir actividad
             </button>
           </div>
 
@@ -473,7 +491,7 @@
               class="add-activity-button"
               @click="addActivity"
             >
-              + Añadir otra actividad (máximo 2)
+              + Añadir actividad
             </button>
 
             <p class="form-help" style="margin-top: var(--spacing-md)">
@@ -531,8 +549,15 @@ import {
   formatDeadlineLabelEs,
   getActivityRegistrationLastValidDate,
   isActivityRegistrationDeadlinePassed,
+  MAX_ACTIVITIES_PER_ORGANIZER,
 } from '@/constants'
-import { saveActivities } from '@/services/activityService'
+import {
+  ACTIVITIES_MAX_REACHED_MESSAGE,
+  ACTIVITIES_ORGANIZER_NOT_REGISTERED_MESSAGE,
+  countActivitiesForOrganizer,
+  isAttendeeEmailRegistered,
+  saveActivities,
+} from '@/services/activityService'
 
 const emailPattern = VALIDATION_PATTERNS.email
 
@@ -557,11 +582,52 @@ const status = reactive({
 })
 
 const isSubmitting = ref(false)
+/** @type {import('vue').Ref<number|null>} */
+const existingActivityCount = ref(null)
+/** @type {import('vue').Ref<boolean|null>} null = aún no comprobado */
+const attendeeRegistered = ref(null)
 
 const activityRegistrationClosed = computed(() => isActivityRegistrationDeadlinePassed())
 const activityDeadlineLabel = computed(() =>
   formatDeadlineLabelEs(getActivityRegistrationLastValidDate()),
 )
+
+const organizerEmailDescribedBy = computed(() => {
+  const parts = ['organizerEmail-error']
+  if (organizerRegistrationHint.value) {
+    parts.push('organizerEmail-registration-hint')
+  }
+  if (activityQuotaHint.value) {
+    parts.push('organizerEmail-quota-hint')
+  }
+  return parts.join(' ')
+})
+
+const organizerRegistrationHint = computed(() => {
+  if (errors.organizerEmail || attendeeRegistered.value !== false) {
+    return ''
+  }
+  return ACTIVITIES_ORGANIZER_NOT_REGISTERED_MESSAGE
+})
+
+const activityQuotaHint = computed(() => {
+  if (errors.organizerEmail || attendeeRegistered.value !== true) {
+    return ''
+  }
+  if (existingActivityCount.value === null) {
+    return ''
+  }
+  const c = existingActivityCount.value
+  const n = form.activities.length
+  if (c >= MAX_ACTIVITIES_PER_ORGANIZER) {
+    return ACTIVITIES_MAX_REACHED_MESSAGE
+  }
+  if (c + n > MAX_ACTIVITIES_PER_ORGANIZER) {
+    const allowed = MAX_ACTIVITIES_PER_ORGANIZER - c
+    return `Ya tienes ${c} actividad${c === 1 ? '' : 'es'} registrada${c === 1 ? '' : 's'} con este correo. En este envío solo puedes añadir ${allowed} más (máximo ${MAX_ACTIVITIES_PER_ORGANIZER} en total).`
+  }
+  return ''
+})
 
 const createEmptyActivity = () => ({
   type: '',
@@ -624,6 +690,34 @@ const validateOrganizerEmail = () => {
   }
   errors.organizerEmail = ''
   return true
+}
+
+const refreshOrganizerEmailChecks = async () => {
+  existingActivityCount.value = null
+  attendeeRegistered.value = null
+  const email = form.organizerEmail.trim()
+  if (!email || !emailPattern.test(email)) {
+    return
+  }
+
+  const regResult = await isAttendeeEmailRegistered(email)
+  if (regResult.success) {
+    attendeeRegistered.value = regResult.registered
+  }
+
+  const countResult = await countActivitiesForOrganizer(email)
+  if (countResult.success) {
+    existingActivityCount.value = countResult.count
+  }
+}
+
+const handleOrganizerEmailBlur = () => {
+  if (!validateOrganizerEmail()) {
+    existingActivityCount.value = null
+    attendeeRegistered.value = null
+    return
+  }
+  refreshOrganizerEmailChecks()
 }
 
 const handleFileChange = (activityIndex, event) => {
@@ -821,7 +915,30 @@ const handleSubmit = async () => {
     return
   }
 
+  await refreshOrganizerEmailChecks()
+  if (attendeeRegistered.value === false) {
+    status.type = 'error'
+    status.message = ACTIVITIES_ORGANIZER_NOT_REGISTERED_MESSAGE
+    document.getElementById('organizerEmail')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    return
+  }
+  if (attendeeRegistered.value === null) {
+    status.type = 'error'
+    status.message =
+      'No se pudo verificar el correo respecto al registro de asistentes. Inténtalo de nuevo.'
+    return
+  }
+
   const isValid = validateActivities()
+
+  if (existingActivityCount.value !== null) {
+    const total = existingActivityCount.value + form.activities.length
+    if (total > MAX_ACTIVITIES_PER_ORGANIZER) {
+      status.type = 'error'
+      status.message = ACTIVITIES_MAX_REACHED_MESSAGE
+      return
+    }
+  }
 
   if (!isValid) {
     status.type = 'error'
@@ -893,6 +1010,14 @@ const handleReset = () => {
     formElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
+
+watch(
+  () => form.organizerEmail,
+  () => {
+    existingActivityCount.value = null
+    attendeeRegistered.value = null
+  },
+)
 
 // Watchers para validar actividades cuando cambian campos relacionados
 watch(
@@ -1078,6 +1203,18 @@ watch(
   font-size: 0.875rem;
   color: var(--color-text-light);
   margin-top: 0.25rem;
+}
+
+.form-help--quota {
+  color: var(--color-primary-dark);
+  font-weight: 600;
+  margin-top: var(--spacing-sm);
+}
+
+.form-help--registration {
+  color: var(--color-accent);
+  font-weight: 600;
+  margin-top: var(--spacing-sm);
 }
 
 .form-row-inline {

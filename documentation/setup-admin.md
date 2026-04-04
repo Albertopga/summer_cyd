@@ -30,7 +30,30 @@ VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
 VITE_SUPABASE_ANON_KEY=tu_clave_anonima_aqui
 ```
 
-## Paso 4: Acceder al Panel de Administración
+## Paso 4: URLs de Supabase Auth (Site URL y Redirect URLs)
+
+Los enlaces de **recuperación de contraseña** llevan al usuario a tu aplicación con tokens en el fragmento de la URL (`#access_token=...&type=recovery`). Esa dirección base sale de la configuración del proyecto:
+
+1. En Supabase: **Authentication** → **URL Configuration**.
+2. **Site URL**: pon la URL principal de tu app (en local con Vite suele ser `http://localhost:5173`; en producción, `https://tu-dominio.com`).
+3. **Redirect URLs**: añade explícitamente la ruta del panel, por ejemplo:
+   - `http://localhost:5173/admin`
+   - `https://tu-dominio.com/admin`
+4. Si el correo te llevaba a `http://localhost:3000` u otro puerto incorrecto, era porque **Site URL** o la plantilla de email no coincidían con donde corre la app.
+
+Tras cambiar URLs, vuelve a solicitar el correo de recuperación.
+
+## Paso 5: Recuperación de contraseña en la aplicación
+
+En `/admin`:
+
+- Puedes usar **¿Olvidaste tu contraseña?** para recibir un enlace por correo.
+- Al abrir el enlace, la app muestra el formulario **Establecer nueva contraseña** (confirmación incluida). Hasta completarlo no verás el panel.
+- Puedes **Cancelar** para cerrar sesión de ese flujo y volver al login.
+
+**Prueba manual recomendada:** solicitar recuperación, abrir el enlace, guardar contraseña nueva, cerrar sesión e iniciar sesión con la nueva contraseña.
+
+## Paso 6: Acceder al Panel de Administración
 
 1. Inicia tu servidor de desarrollo:
 
@@ -38,7 +61,7 @@ VITE_SUPABASE_ANON_KEY=tu_clave_anonima_aqui
    npm run dev
    ```
 
-2. Ve a `http://localhost:5173/admin` (o la URL de tu aplicación + `/admin`)
+2. Ve a `http://localhost:5173/admin` (o la URL de tu aplicación + `/admin`). También hay un enlace discreto **Administración** en el pie de página.
 
 3. Inicia sesión con las credenciales del usuario administrador que creaste
 
@@ -66,7 +89,7 @@ Puedes editar los siguientes campos (configurables en el componente):
 
 ### Personalizar Campos Editables
 
-Para cambiar qué campos se pueden editar, modifica el array `editableFields` en `src/views/AdminView.vue`:
+Para cambiar qué campos se pueden editar, modifica el array `editableFieldKeys` (y la configuración relacionada) en `src/components/AdminEditModal.vue`:
 
 ```javascript
 const editableFields = ref([

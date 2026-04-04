@@ -363,37 +363,181 @@ export async function updateActivity(id, updates, allowedFields = []) {
 }
 
 /**
- * Obtiene todos los usuarios del sistema
- * Nota: Sin backend, solo podemos obtener información del usuario actual
- * Para gestionar usuarios, usa el dashboard de Supabase
+ * Crea una actividad desde el panel admin (sesión autenticada).
+ * No aplica el límite de 2 por email ni la exigencia de estar en registrations (lo controla el trigger en BD).
+ * @param {Object} payload - Campos de la actividad (snake_case como en la tabla)
+ * @returns {Promise<{success: boolean, data: Object|null, error: string|null}>}
+ */
+export async function createActivityAdmin(payload) {
+  try {
+    const row = {
+      organizer_email: String(payload.organizer_email || '')
+        .trim()
+        .toLowerCase(),
+      organizer_name: String(payload.organizer_name || '').trim(),
+      type: payload.type,
+      name: String(payload.name || '').trim(),
+      description: String(payload.description || '').trim(),
+      min_participants: Number(payload.min_participants),
+      max_participants: Number(payload.max_participants),
+      preferred_time_slot: payload.preferred_time_slot,
+      duration: String(payload.duration || '').trim(),
+      participant_needs: payload.participant_needs?.trim() || null,
+      organization_needs: payload.organization_needs?.trim() || null,
+      space_need: payload.space_need?.trim() || null,
+      setup: payload.setup?.trim() || null,
+      observations: payload.observations?.trim() || null,
+      documents: Array.isArray(payload.documents) ? payload.documents : [],
+      status: payload.status || 'approved',
+    }
+
+    if (!row.organizer_email || !row.organizer_name || !row.type || !row.name || !row.description) {
+      return {
+        success: false,
+        data: null,
+        error: 'Faltan datos obligatorios del organizador o de la actividad.',
+      }
+    }
+
+    if (
+      !Number.isFinite(row.min_participants) ||
+      !Number.isFinite(row.max_participants) ||
+      row.min_participants < 1 ||
+      row.max_participants < 1 ||
+      row.min_participants > row.max_participants
+    ) {
+      return {
+        success: false,
+        data: null,
+        error: 'Revisa el mínimo y máximo de participantes.',
+      }
+    }
+
+    if (!row.preferred_time_slot || !row.duration) {
+      return {
+        success: false,
+        data: null,
+        error: 'Franja horaria y duración son obligatorias.',
+      }
+    }
+
+    const { data, error } = await supabase.from('activities').insert([row]).select().single()
+
+    if (error) {
+      console.error('Error al crear actividad (admin):', error)
+      return {
+        success: false,
+        data: null,
+        error: error.message || 'Error al crear la actividad',
+      }
+    }
+
+    return {
+      success: true,
+      data: data || null,
+      error: null,
+    }
+  } catch (error) {
+    console.error('Error inesperado al crear actividad (admin):', error)
+    return {
+      success: false,
+      data: null,
+      error: error.message || 'Error inesperado al crear la actividad',
+    }
+  }
+}
+
+function adminUsersFunctionUrl() {
+  const rawUrl = import.meta.env.VITE_SUPABASE_URL
+  const url = rawUrl
+    ? String(rawUrl)
+        .trim()
+        .replace(/^['"]+/, '')
+        .replace(/['"]+$/, '')
+        .trim()
+    : ''
+  if (!url) return ''
+  return `${url.replace(/\/$/, '')}/functions/v1/admin-users`
+}
+
+function adminUsersAnonKey() {
+  const raw = import.meta.env.VITE_SUPABASE_ANON_KEY
+  return raw
+    ? String(raw)
+        .trim()
+        .replace(/^['"]+/, '')
+        .replace(/['"]+$/, '')
+        .trim()
+    : ''
+}
+
+async function getAdminSessionToken() {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession()
+  if (error || !session?.access_token) {
+    return { token: null, error: 'Debes iniciar sesión para gestionar usuarios.' }
+  }
+  return { token: session.access_token, error: null }
+}
+
+/**
+ * Lista todos los usuarios de Supabase Auth vía Edge Function `admin-users` (service_role solo en servidor).
  * @returns {Promise<{success: boolean, data: Array|null, error: string|null, count: number|null}>}
  */
 export async function getAllUsers() {
   try {
-    // Sin backend, solo podemos obtener información del usuario actual
-    // Para listar todos los usuarios, necesitarías usar el dashboard de Supabase
-    // o crear un endpoint backend
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser()
-
-    if (error) {
+    const { token, error: tokenError } = await getAdminSessionToken()
+    if (!token) {
       return {
         success: false,
         data: null,
-        error: 'No se pudo obtener información del usuario actual',
+        error: tokenError || 'Sesión no válida',
         count: null,
       }
     }
 
-    // Retornar solo el usuario actual como ejemplo
-    // En producción, esto debería conectarse a una tabla de usuarios o usar backend
+    const fnUrl = adminUsersFunctionUrl()
+    const anonKey = adminUsersAnonKey()
+    if (!fnUrl || !anonKey) {
+      return {
+        success: false,
+        data: null,
+        error: 'Faltan VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY.',
+        count: null,
+      }
+    }
+
+    const res = await fetch(fnUrl, {
+      method: 'GET',
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      const msg =
+        body?.error ||
+        (res.status === 404
+          ? 'La función admin-users no está desplegada. Ejecuta: supabase functions deploy admin-users'
+          : `Error al listar usuarios (${res.status})`)
+      return {
+        success: false,
+        data: null,
+        error: typeof msg === 'string' ? msg : 'Error al listar usuarios',
+        count: null,
+      }
+    }
+
+    const list = Array.isArray(body.users) ? body.users : []
     return {
       success: true,
-      data: user ? [user] : [],
+      data: list,
       error: null,
-      count: user ? 1 : 0,
+      count: list.length,
     }
   } catch (error) {
     console.error('Error inesperado al obtener usuarios:', error)
@@ -463,19 +607,64 @@ export async function createUser(email, password) {
 }
 
 /**
- * Elimina un usuario
- * Nota: Sin backend, no podemos eliminar usuarios directamente
- * Usa el dashboard de Supabase para eliminar usuarios
+ * Elimina un usuario de Auth vía Edge Function `admin-users`. No permite borrar la cuenta en sesión (también validado en servidor).
  * @param {string} userId - ID del usuario a eliminar
  * @returns {Promise<{success: boolean, error: string|null}>}
  */
 export async function deleteUser(userId) {
-  // Sin backend, no podemos eliminar usuarios desde el frontend
-  // Esta operación requiere permisos de administrador que solo están disponibles con service_role key
-  return {
-    success: false,
-    error:
-      'No se puede eliminar usuarios desde el frontend por seguridad. Usa el dashboard de Supabase (Authentication → Users) para eliminar usuarios.',
+  try {
+    if (!userId) {
+      return { success: false, error: 'Falta el identificador del usuario.' }
+    }
+
+    const {
+      data: { user: current },
+    } = await supabase.auth.getUser()
+    if (current?.id === userId) {
+      return { success: false, error: 'No puedes eliminar tu propia cuenta.' }
+    }
+
+    const { token, error: tokenError } = await getAdminSessionToken()
+    if (!token) {
+      return { success: false, error: tokenError || 'Sesión no válida' }
+    }
+
+    const fnUrl = adminUsersFunctionUrl()
+    const anonKey = adminUsersAnonKey()
+    if (!fnUrl || !anonKey) {
+      return { success: false, error: 'Faltan VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY.' }
+    }
+
+    const res = await fetch(fnUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: anonKey,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userId }),
+    })
+
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      const msg =
+        body?.error ||
+        (res.status === 404
+          ? 'La función admin-users no está desplegada. Ejecuta: supabase functions deploy admin-users'
+          : `Error al eliminar (${res.status})`)
+      return {
+        success: false,
+        error: typeof msg === 'string' ? msg : 'Error al eliminar el usuario',
+      }
+    }
+
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('Error inesperado al eliminar usuario:', error)
+    return {
+      success: false,
+      error: error.message || 'Error inesperado al eliminar el usuario',
+    }
   }
 }
 

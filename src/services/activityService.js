@@ -4,7 +4,88 @@
  */
 
 import { supabase } from '@/lib/supabase'
-import { isActivityRegistrationDeadlinePassed } from '@/constants'
+import { isActivityRegistrationDeadlinePassed, MAX_ACTIVITIES_PER_ORGANIZER } from '@/constants'
+
+/** Mensaje si el organizador ya alcanzó el máximo de actividades (trigger BD o comprobación previa). */
+export const ACTIVITIES_MAX_REACHED_MESSAGE =
+  'Este participante ya tiene el máximo de actividades registradas (2). Si necesitas cambiar algo, contacta con la organización.'
+
+/** Mensaje si el email no figura como asistente en registrations (trigger BD o RPC). */
+export const ACTIVITIES_ORGANIZER_NOT_REGISTERED_MESSAGE =
+  'Este correo no coincide con ningún registro de asistente. Debes usar el mismo email con el que te inscribiste al retiro.'
+
+/**
+ * Cuenta actividades existentes para un email de organizador (RPC en Supabase).
+ * @param {string} organizerEmail
+ * @returns {Promise<{ success: boolean, count: number, error: string|null }>}
+ */
+/**
+ * Indica si el correo existe en la tabla registrations (RPC en Supabase).
+ * @param {string} organizerEmail
+ * @returns {Promise<{ success: boolean, registered: boolean, error: string|null }>}
+ */
+export async function isAttendeeEmailRegistered(organizerEmail) {
+  try {
+    const email = (organizerEmail || '').trim().toLowerCase()
+    if (!email) {
+      return { success: false, registered: false, error: 'Email obligatorio' }
+    }
+
+    const { data, error } = await supabase.rpc('is_attendee_email_registered', {
+      p_email: email,
+    })
+
+    if (error) {
+      console.error('Error al comprobar registro de asistente:', error)
+      return {
+        success: false,
+        registered: false,
+        error: error.message || 'No se pudo comprobar el registro',
+      }
+    }
+
+    return { success: true, registered: Boolean(data), error: null }
+  } catch (error) {
+    console.error('Error inesperado al comprobar registro:', error)
+    return {
+      success: false,
+      registered: false,
+      error: error.message || 'Error inesperado al comprobar el registro',
+    }
+  }
+}
+
+export async function countActivitiesForOrganizer(organizerEmail) {
+  try {
+    const email = (organizerEmail || '').trim().toLowerCase()
+    if (!email) {
+      return { success: false, count: 0, error: 'Email obligatorio' }
+    }
+
+    const { data, error } = await supabase.rpc('count_activities_for_organizer', {
+      p_email: email,
+    })
+
+    if (error) {
+      console.error('Error al contar actividades:', error)
+      return {
+        success: false,
+        count: 0,
+        error: error.message || 'No se pudo comprobar el número de actividades',
+      }
+    }
+
+    const count = typeof data === 'number' ? data : Number(data) || 0
+    return { success: true, count, error: null }
+  } catch (error) {
+    console.error('Error inesperado al contar actividades:', error)
+    return {
+      success: false,
+      count: 0,
+      error: error.message || 'Error inesperado al contar actividades',
+    }
+  }
+}
 
 /**
  * Sube un archivo a Supabase Storage
@@ -146,6 +227,41 @@ export async function saveActivities(organizerName, organizerEmail, activities) 
       }
     }
 
+    const emailKey = organizerEmail.trim().toLowerCase()
+
+    const regResult = await isAttendeeEmailRegistered(emailKey)
+    if (!regResult.success) {
+      return {
+        success: false,
+        data: null,
+        error: regResult.error || 'No se pudo comprobar el registro del asistente',
+      }
+    }
+    if (!regResult.registered) {
+      return {
+        success: false,
+        data: null,
+        error: ACTIVITIES_ORGANIZER_NOT_REGISTERED_MESSAGE,
+      }
+    }
+
+    const countResult = await countActivitiesForOrganizer(emailKey)
+    if (!countResult.success) {
+      return {
+        success: false,
+        data: null,
+        error: countResult.error || 'No se pudo comprobar el número de actividades',
+      }
+    }
+
+    if (countResult.count + activities.length > MAX_ACTIVITIES_PER_ORGANIZER) {
+      return {
+        success: false,
+        data: null,
+        error: ACTIVITIES_MAX_REACHED_MESSAGE,
+      }
+    }
+
     // Preparar los datos para insertar en la base de datos
     const dataToInsert = []
 
@@ -197,10 +313,25 @@ export async function saveActivities(organizerName, organizerEmail, activities) 
 
     if (error) {
       console.error('Error al guardar las actividades:', error)
+      const raw = error.message || ''
+      if (raw.includes('ACTIVITIES_ORGANIZER_NOT_REGISTERED')) {
+        return {
+          success: false,
+          data: null,
+          error: ACTIVITIES_ORGANIZER_NOT_REGISTERED_MESSAGE,
+        }
+      }
+      if (raw.includes('ACTIVITIES_MAX_PER_ORGANIZER')) {
+        return {
+          success: false,
+          data: null,
+          error: ACTIVITIES_MAX_REACHED_MESSAGE,
+        }
+      }
       return {
         success: false,
         data: null,
-        error: error.message || 'Error al guardar las actividades en la base de datos',
+        error: raw || 'Error al guardar las actividades en la base de datos',
       }
     }
 

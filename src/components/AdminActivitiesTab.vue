@@ -15,6 +15,15 @@
         <div class="controls-group">
           <button
             type="button"
+            @click="openCreateModal"
+            class="create-button"
+            :disabled="loading"
+            aria-label="Crear actividad de organización"
+          >
+            Crear actividad
+          </button>
+          <button
+            type="button"
             @click="handleDownloadExcel"
             class="download-button"
             :disabled="loading"
@@ -118,6 +127,13 @@
       </div>
     </div>
 
+    <!-- Modal de creación (organización) -->
+    <AdminActivityCreateModal
+      v-if="showCreateModal"
+      @close="closeCreateModal"
+      @saved="handleActivityCreated"
+    />
+
     <!-- Modal de edición -->
     <AdminActivityEditModal
       v-if="selectedActivity"
@@ -132,6 +148,7 @@
 import { onMounted, ref } from 'vue'
 import { getAllActivities } from '@/services/adminService'
 import { ACTIVITY_TYPES, TIME_SLOTS, SPACE_NEEDS } from '@/constants'
+import AdminActivityCreateModal from '@/components/AdminActivityCreateModal.vue'
 import AdminActivityEditModal from '@/components/AdminActivityEditModal.vue'
 import ExcelJS from 'exceljs'
 
@@ -146,6 +163,7 @@ const error = ref('')
 const activities = ref([])
 const totalActivities = ref(0)
 const selectedActivity = ref(null)
+const showCreateModal = ref(false)
 const statusFilter = ref('')
 const sortField = ref('created_at')
 const sortDirection = ref('desc')
@@ -179,6 +197,19 @@ const loadActivities = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const openCreateModal = () => {
+  showCreateModal.value = true
+}
+
+const closeCreateModal = () => {
+  showCreateModal.value = false
+}
+
+const handleActivityCreated = () => {
+  closeCreateModal()
+  loadActivities()
 }
 
 const openEditModal = (activity) => {
@@ -435,6 +466,35 @@ defineExpose({
   align-items: center;
 }
 
+.create-button {
+  background-color: var(--color-white);
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.create-button:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.create-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.create-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .download-button {
   background-color: var(--color-primary);
   color: var(--color-white);
@@ -603,6 +663,7 @@ defineExpose({
     align-items: stretch;
   }
 
+  .create-button,
   .download-button {
     width: 100%;
   }

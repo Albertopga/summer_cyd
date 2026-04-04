@@ -72,7 +72,45 @@ import { Icon } from '@iconify/vue'
       </div>
       <div class="footer-bottom">
         <p class="footer-text">© {{ EVENT_YEAR }} C&D: Retiro Lúdico.</p>
+        <RouterLink
+          to="/admin"
+          class="footer-admin-link"
+          aria-label="Acceso a la administración del sitio"
+        >
+          Administración
+        </RouterLink>
       </div>
     </div>
   </footer>
 </template>
+
+<style scoped>
+.footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm, 0.5rem);
+  margin-top: var(--spacing-md, 1rem);
+  padding-top: var(--spacing-md, 1rem);
+  border-top: 1px solid var(--color-cream-dark, #e8e0d5);
+}
+
+.footer-admin-link {
+  font-size: 0.75rem;
+  color: var(--color-text-light, #6b6b6b);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer-admin-link:hover {
+  color: var(--color-primary, #2d5a4a);
+  text-decoration: underline;
+}
+
+.footer-admin-link:focus-visible {
+  outline: 3px solid var(--color-primary, #2d5a4a);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm, 4px);
+}
+</style>
