@@ -4,9 +4,7 @@
       <!-- Recuperación: nueva contraseña (tras enlace del correo) -->
       <section v-if="showRecoveryPasswordForm" class="admin-login">
         <h1>Establecer nueva contraseña</h1>
-        <p class="admin-login-lead">
-          Elige una contraseña nueva para tu cuenta de administración.
-        </p>
+        <p class="admin-login-lead">Elige una contraseña nueva para tu cuenta de administración.</p>
         <form @submit.prevent="handleRecoveryPasswordSubmit" class="login-form" novalidate>
           <div class="form-group">
             <label for="recovery-password">Nueva contraseña</label>
@@ -237,10 +235,6 @@
           <template #activities>
             <AdminActivitiesTab @update-count="(count) => updateTabCount('activities', count)" />
           </template>
-
-          <template #users>
-            <AdminUsersTab @update-count="(count) => updateTabCount('users', count)" />
-          </template>
         </AdminTabs>
       </section>
     </div>
@@ -260,7 +254,6 @@ import {
 import AdminTabs from '@/components/AdminTabs.vue'
 import AdminRegistrationsTab from '@/components/AdminRegistrationsTab.vue'
 import AdminActivitiesTab from '@/components/AdminActivitiesTab.vue'
-import AdminUsersTab from '@/components/AdminUsersTab.vue'
 
 defineOptions({
   name: 'AdminView',
@@ -274,9 +267,7 @@ const authMode = ref('login')
 
 const isAuthenticated = computed(() => !!sessionRef.value)
 
-const showRecoveryPasswordForm = computed(
-  () => needsRecoveryPassword.value && !!sessionRef.value,
-)
+const showRecoveryPasswordForm = computed(() => needsRecoveryPassword.value && !!sessionRef.value)
 
 const isLoggingIn = ref(false)
 const isSendingReset = ref(false)
@@ -286,7 +277,6 @@ const defaultTab = ref('registrations')
 const tabCounts = reactive({
   registrations: 0,
   activities: 0,
-  users: 0,
 })
 
 const tabs = computed(() => [
@@ -299,11 +289,6 @@ const tabs = computed(() => [
     id: 'activities',
     label: 'Actividades',
     count: tabCounts.activities,
-  },
-  {
-    id: 'users',
-    label: 'Mi panel',
-    count: tabCounts.users,
   },
 ])
 

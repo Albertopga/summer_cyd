@@ -94,7 +94,17 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="activity in activities" :key="activity.id">
+            <tr
+              v-for="activity in activities"
+              :key="activity.id"
+              class="activity-row"
+              role="button"
+              tabindex="0"
+              :aria-label="`Ver detalle de ${activity.name}`"
+              @click="openDetailModal(activity)"
+              @keydown.enter.prevent="openDetailModal(activity)"
+              @keydown.space.prevent="openDetailModal(activity)"
+            >
               <td>{{ activity.organizer_name }}</td>
               <td>{{ activity.organizer_email }}</td>
               <td>{{ getActivityTypeLabel(activity.type) }}</td>
@@ -115,6 +125,7 @@
                 <button
                   type="button"
                   @click="openEditModal(activity)"
+                  @click.stop
                   class="edit-button"
                   :aria-label="`Editar actividad ${activity.name}`"
                 >
@@ -141,11 +152,89 @@
       @close="closeEditModal"
       @saved="handleActivityUpdated"
     />
+
+    <!-- Modal de detalle -->
+    <div
+      v-if="detailActivity"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="activity-detail-title"
+      @click.self="closeDetailModal"
+      @keydown.esc="closeDetailModal"
+    >
+      <div class="modal-content detail-modal">
+        <header class="modal-header">
+          <h2 id="activity-detail-title">{{ detailActivity.name || 'Detalle de actividad' }}</h2>
+          <button type="button" @click="closeDetailModal" class="close-button" aria-label="Cerrar modal">
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+
+        <div class="modal-body detail-modal-body">
+          <div class="detail-grid">
+            <p><strong>Organizador:</strong> {{ detailActivity.organizer_name || '-' }}</p>
+            <p><strong>Email:</strong> {{ detailActivity.organizer_email || '-' }}</p>
+            <p><strong>Tipo:</strong> {{ getActivityTypeLabel(detailActivity.type) }}</p>
+            <p><strong>Estado:</strong> {{ getStatusLabel(detailActivity.status) }}</p>
+            <p>
+              <strong>Participantes:</strong> {{ detailActivity.min_participants || '-' }} -
+              {{ detailActivity.max_participants || '-' }}
+            </p>
+            <p><strong>Franja:</strong> {{ getTimeSlotLabel(detailActivity.preferred_time_slot) }}</p>
+            <p><strong>Duración:</strong> {{ detailActivity.duration || '-' }}</p>
+            <p><strong>Espacio:</strong> {{ getSpaceNeedLabel(detailActivity.space_need) }}</p>
+            <p><strong>Fecha registro:</strong> {{ formatDate(detailActivity.created_at) }}</p>
+            <p><strong>Última actualización:</strong> {{ formatDate(detailActivity.updated_at) }}</p>
+          </div>
+
+          <p><strong>Descripción:</strong></p>
+          <p class="detail-block">{{ detailActivity.description || '-' }}</p>
+
+          <p><strong>Necesidades de los participantes:</strong></p>
+          <p class="detail-block">{{ detailActivity.participant_needs || '-' }}</p>
+
+          <p><strong>Necesidades de la organización:</strong></p>
+          <p class="detail-block">{{ detailActivity.organization_needs || '-' }}</p>
+
+          <p><strong>Puesta en marcha:</strong></p>
+          <p class="detail-block">{{ detailActivity.setup || '-' }}</p>
+
+          <p><strong>Observaciones:</strong></p>
+          <p class="detail-block">{{ detailActivity.observations || '-' }}</p>
+
+          <p><strong>Notas de aprobación:</strong></p>
+          <p class="detail-block">{{ detailActivity.approval_notes || '-' }}</p>
+
+          <div class="documents-section">
+            <p><strong>Documentos adjuntos:</strong></p>
+            <ul v-if="normalizedDocuments.length > 0" class="documents-list">
+              <li v-for="(doc, index) in normalizedDocuments" :key="`${doc.url}-${index}`">
+                <a
+                  :href="doc.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  :download="doc.name"
+                  class="download-doc-link"
+                >
+                  Descargar {{ doc.name }}
+                </a>
+              </li>
+            </ul>
+            <p v-else class="no-documents">Sin documentos adjuntos.</p>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" @click="closeDetailModal" class="cancel-button">Cerrar</button>
+        </footer>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { getAllActivities } from '@/services/adminService'
 import { ACTIVITY_TYPES, TIME_SLOTS, SPACE_NEEDS } from '@/constants'
 import AdminActivityCreateModal from '@/components/AdminActivityCreateModal.vue'
@@ -163,6 +252,7 @@ const error = ref('')
 const activities = ref([])
 const totalActivities = ref(0)
 const selectedActivity = ref(null)
+const detailActivity = ref(null)
 const showCreateModal = ref(false)
 const statusFilter = ref('')
 const sortField = ref('created_at')
@@ -214,6 +304,14 @@ const handleActivityCreated = () => {
 
 const openEditModal = (activity) => {
   selectedActivity.value = { ...activity }
+}
+
+const openDetailModal = (activity) => {
+  detailActivity.value = { ...activity }
+}
+
+const closeDetailModal = () => {
+  detailActivity.value = null
 }
 
 const closeEditModal = () => {
@@ -270,6 +368,25 @@ const getSpaceNeedLabel = (value) => {
   const option = SPACE_NEEDS.find((opt) => opt.value === value)
   return option ? option.label : value
 }
+
+const normalizedDocuments = computed(() => {
+  if (!detailActivity.value || !Array.isArray(detailActivity.value.documents)) return []
+
+  return detailActivity.value.documents
+    .map((doc, index) => {
+      if (typeof doc === 'string') {
+        const fallback = `documento-${index + 1}`
+        const nameFromUrl = doc.split('?')[0].split('/').pop()
+        return { url: doc, name: nameFromUrl || fallback }
+      }
+      if (doc && typeof doc === 'object' && typeof doc.url === 'string') {
+        const fallback = `documento-${index + 1}`
+        return { url: doc.url, name: doc.name || doc.url.split('?')[0].split('/').pop() || fallback }
+      }
+      return null
+    })
+    .filter((item) => item && item.url)
+})
 
 const handleDownloadExcel = async () => {
   try {
@@ -583,6 +700,15 @@ defineExpose({
   background-color: var(--color-cream);
 }
 
+.activity-row {
+  cursor: pointer;
+}
+
+.activity-row:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: -3px;
+}
+
 .status-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
@@ -629,6 +755,165 @@ defineExpose({
 .edit-button:focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-md);
+}
+
+.modal-content {
+  background-color: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  max-width: 500px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-cream-dark);
+}
+
+.modal-header h2 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--color-text-light);
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+.close-button:hover {
+  background-color: var(--color-cream);
+}
+
+.close-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.modal-body {
+  padding: var(--spacing-lg);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-top: 1px solid var(--color-cream-dark);
+}
+
+.cancel-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: none;
+  background-color: var(--color-cream-dark);
+  color: var(--color-text);
+}
+
+.cancel-button:hover {
+  background-color: var(--color-cream);
+}
+
+.cancel-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.detail-modal {
+  max-width: 900px;
+}
+
+.detail-modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm) var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.detail-grid p {
+  margin: 0;
+}
+
+.detail-modal-body p {
+  margin-top: 0;
+}
+
+.detail-block {
+  background-color: var(--color-cream);
+  border: 1px solid var(--color-cream-dark);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  white-space: pre-wrap;
+}
+
+.documents-section {
+  margin-top: var(--spacing-md);
+}
+
+.documents-list {
+  margin: var(--spacing-xs) 0 0;
+  padding-left: 1.25rem;
+}
+
+.download-doc-link {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.download-doc-link:hover {
+  color: var(--color-primary-dark);
+}
+
+.download-doc-link:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.no-documents {
+  margin-top: var(--spacing-xs);
+  color: var(--color-text-light);
 }
 
 .spinner {
@@ -686,6 +971,10 @@ defineExpose({
   .activities-table th,
   .activities-table td {
     padding: var(--spacing-sm);
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
