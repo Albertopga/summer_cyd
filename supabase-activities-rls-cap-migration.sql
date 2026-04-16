@@ -9,6 +9,7 @@ DROP POLICY IF EXISTS "allow_select_activities" ON public.activities;
 DROP POLICY IF EXISTS "allow_anon_select_recent_activities" ON public.activities;
 DROP POLICY IF EXISTS "allow_authenticated_select_all_activities" ON public.activities;
 DROP POLICY IF EXISTS "allow_authenticated_update_activities" ON public.activities;
+DROP POLICY IF EXISTS "allow_authenticated_delete_activities" ON public.activities;
 
 -- Público: necesario para que .insert().select() devuelva filas recién creadas
 CREATE POLICY "allow_anon_select_recent_activities"
@@ -33,6 +34,13 @@ CREATE POLICY "allow_authenticated_update_activities"
   TO authenticated
   USING (true)
   WITH CHECK (true);
+
+CREATE POLICY "allow_authenticated_delete_activities"
+  ON public.activities
+  AS PERMISSIVE
+  FOR DELETE
+  TO authenticated
+  USING (true);
 
 -- ---------------------------------------------------------------------------
 -- 2) INSERT: email en registrations + máximo 2 actividades por organizer_email (SECURITY DEFINER)

@@ -5,6 +5,85 @@
 
 import { supabase } from '@/lib/supabase'
 
+const ACTIVITY_DOCUMENT_MAX_SIZE = 10 * 1024 * 1024
+const ACTIVITY_DOCUMENT_ALLOWED_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+]
+
+async function uploadAdminActivityFile(file, organizerEmail, fileIndex) {
+  const timestamp = Date.now()
+  const sanitizedEmail = organizerEmail.replace(/[^a-zA-Z0-9]/g, '_')
+  const extension = file.name.split('.').pop()
+  const fileName = `${sanitizedEmail}_admin_activity_file${fileIndex}_${timestamp}.${extension}`
+  const filePath = `activities/${sanitizedEmail}/${fileName}`
+
+  const { error } = await supabase.storage.from('activity-documents').upload(filePath, file, {
+    cacheControl: '3600',
+    upsert: false,
+  })
+
+  if (error) {
+    return { success: false, doc: null, error: error.message || 'Error al subir archivo' }
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('activity-documents').getPublicUrl(filePath)
+
+  return {
+    success: true,
+    doc: {
+      name: file.name,
+      url: publicUrl,
+      path: filePath,
+      size: file.size,
+      type: file.type,
+    },
+    error: null,
+  }
+}
+
+async function uploadAdminActivityDocuments(files, organizerEmail) {
+  const list = Array.isArray(files) ? files : []
+  if (list.length === 0) return { success: true, data: [], error: null }
+
+  const uploaded = []
+  for (let i = 0; i < list.length; i += 1) {
+    const file = list[i]
+    if (!ACTIVITY_DOCUMENT_ALLOWED_TYPES.includes(file.type)) {
+      return {
+        success: false,
+        data: null,
+        error: `El archivo ${file.name} no tiene un formato permitido.`,
+      }
+    }
+    if (file.size > ACTIVITY_DOCUMENT_MAX_SIZE) {
+      return {
+        success: false,
+        data: null,
+        error: `El archivo ${file.name} supera el tamaño máximo de 10MB.`,
+      }
+    }
+
+    const result = await uploadAdminActivityFile(file, organizerEmail, i)
+    if (!result.success) {
+      return {
+        success: false,
+        data: null,
+        error: `Error al subir ${file.name}: ${result.error}`,
+      }
+    }
+    uploaded.push(result.doc)
+  }
+
+  return { success: true, data: uploaded, error: null }
+}
+
 /**
  * Obtiene todos los registros de asistentes
  * @param {Object} options - Opciones de consulta
@@ -363,6 +442,68 @@ export async function updateActivity(id, updates, allowedFields = []) {
 }
 
 /**
+ * Elimina una actividad por ID
+ * @param {string} id - ID de la actividad
+ * @returns {Promise<{success: boolean, error: string|null}>}
+ */
+export async function deleteActivity(id) {
+  try {
+    if (!id) {
+      return {
+        success: false,
+        error: 'Falta el identificador de la actividad.',
+      }
+    }
+
+    const {
+      data: { user: currentUser },
+      error: userError,
+    } = await supabase.auth.getUser()
+    if (userError) {
+      console.error('Error obteniendo usuario autenticado:', userError)
+    }
+
+    // Con RLS, Supabase puede devolver error=null aunque no borre filas.
+    // Pedimos retorno de filas borradas para confirmar eliminación real.
+    const { data, error } = await supabase.from('activities').delete().eq('id', id).select('id')
+    if (error) {
+      console.error('Error al eliminar actividad:', error)
+      return {
+        success: false,
+        error: error.message || 'Error al eliminar la actividad',
+      }
+    }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      const { data: existsData, error: existsError } = await supabase
+        .from('activities')
+        .select('id, organizer_email, status')
+        .eq('id', id)
+        .maybeSingle()
+      if (existsError) {
+        console.error('Error al verificar existencia tras delete:', existsError)
+      }
+      return {
+        success: false,
+        error:
+          'No se pudo borrar la actividad. Puede que no exista o que tu usuario no tenga permisos de borrado (RLS).',
+      }
+    }
+
+    return {
+      success: true,
+      error: null,
+    }
+  } catch (error) {
+    console.error('Error inesperado al eliminar actividad:', error)
+    return {
+      success: false,
+      error: error.message || 'Error inesperado al eliminar la actividad',
+    }
+  }
+}
+
+/**
  * Crea una actividad desde el panel admin (sesión autenticada).
  * No aplica el límite de 2 por email ni la exigencia de estar en registrations (lo controla el trigger en BD).
  * @param {Object} payload - Campos de la actividad (snake_case como en la tabla)
@@ -370,10 +511,21 @@ export async function updateActivity(id, updates, allowedFields = []) {
  */
 export async function createActivityAdmin(payload) {
   try {
+    const organizerEmail = String(payload.organizer_email || '')
+      .trim()
+      .toLowerCase()
+
+    const uploadResult = await uploadAdminActivityDocuments(payload.documents, organizerEmail)
+    if (!uploadResult.success) {
+      return {
+        success: false,
+        data: null,
+        error: uploadResult.error || 'No se pudieron subir los documentos.',
+      }
+    }
+
     const row = {
-      organizer_email: String(payload.organizer_email || '')
-        .trim()
-        .toLowerCase(),
+      organizer_email: organizerEmail,
       organizer_name: String(payload.organizer_name || '').trim(),
       type: payload.type,
       name: String(payload.name || '').trim(),
@@ -387,7 +539,7 @@ export async function createActivityAdmin(payload) {
       space_need: payload.space_need?.trim() || null,
       setup: payload.setup?.trim() || null,
       observations: payload.observations?.trim() || null,
-      documents: Array.isArray(payload.documents) ? payload.documents : [],
+      documents: uploadResult.data,
       status: payload.status || 'approved',
     }
 

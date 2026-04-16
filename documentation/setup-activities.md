@@ -56,10 +56,10 @@ Si ya ejecutaste una versión antigua de `supabase-activities-schema.sql` (por e
 
 ### Políticas RLS resumidas
 
-| Rol | INSERT | SELECT | UPDATE |
-|-----|--------|--------|--------|
-| `anon` | Sí | Solo filas con `created_at` en el último minuto (útil para `insert().select()` del formulario) | No |
-| `authenticated` | Sí | Todas las filas | Sí (edición desde el panel admin) |
+| Rol | INSERT | SELECT | UPDATE | DELETE |
+|-----|--------|--------|--------|--------|
+| `anon` | Sí | Solo filas con `created_at` en el último minuto (útil para `insert().select()` del formulario) | No | No |
+| `authenticated` | Sí | Todas las filas | Sí (edición desde el panel admin) | Sí (borrado desde el panel admin) |
 
 ## Paso 2: Configurar Storage para Documentos
 
@@ -92,6 +92,7 @@ Cada actividad se guarda como una fila separada con los siguientes campos:
     {
       "name": "archivo.pdf",
       "url": "https://...",
+      "path": "activities/email_activity0_file0_1710000000000.pdf",
       "size": 12345,
       "type": "application/pdf"
     }

@@ -131,6 +131,15 @@
                 >
                   Editar
                 </button>
+                <button
+                  type="button"
+                  @click.stop="confirmDelete(activity)"
+                  class="delete-icon-button"
+                  :aria-label="`Borrar actividad ${activity.name}`"
+                  title="Borrar actividad"
+                >
+                  <span aria-hidden="true">🗑️</span>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -249,12 +258,52 @@
         </footer>
       </div>
     </div>
+
+    <div
+      v-if="activityToDelete"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-activity-title"
+      @click.self="cancelDelete"
+      @keydown.esc="cancelDelete"
+    >
+      <div class="modal-content delete-modal">
+        <header class="modal-header">
+          <h2 id="delete-activity-title">Confirmar borrado</h2>
+          <button
+            type="button"
+            @click="cancelDelete"
+            class="close-button"
+            aria-label="Cerrar modal"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+        <div class="modal-body">
+          <p>
+            ¿Seguro que quieres borrar la actividad
+            <strong>{{ activityToDelete.name }}</strong
+            >?
+          </p>
+          <p class="warning-text">Esta acción no se puede deshacer.</p>
+          <p v-if="deleteError" class="download-error" role="alert">{{ deleteError }}</p>
+        </div>
+        <footer class="modal-footer">
+          <button type="button" @click="cancelDelete" class="cancel-button">Cancelar</button>
+          <button type="button" @click="executeDelete" class="delete-button" :disabled="isDeleting">
+            <span v-if="!isDeleting">Borrar</span>
+            <span v-else><span class="spinner" aria-hidden="true"></span>Borrando...</span>
+          </button>
+        </footer>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { getAllActivities } from '@/services/adminService'
+import { getAllActivities, deleteActivity } from '@/services/adminService'
 import { supabase } from '@/lib/supabase'
 import { ACTIVITY_TYPES, TIME_SLOTS, SPACE_NEEDS } from '@/constants'
 import AdminActivityCreateModal from '@/components/AdminActivityCreateModal.vue'
@@ -273,8 +322,11 @@ const activities = ref([])
 const totalActivities = ref(0)
 const selectedActivity = ref(null)
 const detailActivity = ref(null)
+const activityToDelete = ref(null)
 const showCreateModal = ref(false)
+const isDeleting = ref(false)
 const downloadingDocumentUrl = ref('')
+const deleteError = ref('')
 const downloadError = ref('')
 const statusFilter = ref('')
 const sortField = ref('created_at')
@@ -338,6 +390,37 @@ const closeDetailModal = () => {
   downloadError.value = ''
   downloadingDocumentUrl.value = ''
   detailActivity.value = null
+}
+
+const confirmDelete = (activity) => {
+  deleteError.value = ''
+  activityToDelete.value = activity
+}
+
+const cancelDelete = () => {
+  deleteError.value = ''
+  activityToDelete.value = null
+}
+
+const executeDelete = async () => {
+  if (!activityToDelete.value?.id) return
+
+  isDeleting.value = true
+  deleteError.value = ''
+  const deletingId = activityToDelete.value.id
+  const result = await deleteActivity(deletingId)
+  isDeleting.value = false
+
+  if (result.success) {
+    cancelDelete()
+    if (detailActivity.value?.id === deletingId) {
+      closeDetailModal()
+    }
+    await loadActivities()
+    return
+  }
+
+  deleteError.value = result.error || 'Error al borrar la actividad'
 }
 
 const closeEditModal = () => {
@@ -745,26 +828,29 @@ defineExpose({
 }
 
 .create-button {
-  background-color: var(--color-white);
-  color: var(--color-primary);
-  border: 2px solid var(--color-primary);
+  background: linear-gradient(135deg, var(--color-accent) 0%, #d96a3c 100%);
+  color: var(--color-white);
+  border: 2px solid transparent;
   border-radius: var(--radius-md);
-  padding: 0.5rem 1rem;
-  font-weight: 600;
+  padding: 0.6rem 1.15rem;
+  font-weight: 700;
   cursor: pointer;
   transition:
     background-color 0.2s ease,
-    color 0.2s ease;
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
   font-size: 0.875rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
 }
 
 .create-button:hover:not(:disabled) {
-  background-color: var(--color-primary);
-  color: var(--color-white);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
+  background: linear-gradient(135deg, #de7a4f 0%, #c95e34 100%);
 }
 
 .create-button:focus-visible {
-  outline: 3px solid var(--color-primary);
+  outline: 3px solid var(--color-accent);
   outline-offset: 2px;
 }
 
@@ -918,6 +1004,60 @@ defineExpose({
   outline-offset: 2px;
 }
 
+.delete-button {
+  background-color: var(--color-accent);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-left: var(--spacing-xs);
+}
+
+.delete-button:hover:not(:disabled) {
+  background-color: #b64729;
+}
+
+.delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.delete-button:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.delete-icon-button {
+  border: none;
+  background: transparent;
+  color: #dc3545;
+  border-radius: var(--radius-sm);
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: var(--spacing-xs);
+  transition:
+    color 0.2s ease,
+    transform 0.15s ease;
+  font-size: 1.1rem;
+}
+
+.delete-icon-button:hover {
+  color: #b8323f;
+  transform: translateY(-1px);
+}
+
+.delete-icon-button:focus-visible {
+  outline: 3px solid #dc3545;
+  outline-offset: 2px;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -984,6 +1124,11 @@ defineExpose({
 
 .modal-body {
   padding: var(--spacing-lg);
+}
+
+.warning-text {
+  color: var(--color-accent);
+  font-weight: 600;
 }
 
 .modal-footer {
@@ -1185,6 +1330,15 @@ defineExpose({
   .activities-table th,
   .activities-table td {
     padding: var(--spacing-sm);
+  }
+
+  .edit-button,
+  .delete-button,
+  .delete-icon-button {
+    display: block;
+    width: 100%;
+    margin: 0 0 var(--spacing-xs);
+    height: auto;
   }
 
   .detail-grid {

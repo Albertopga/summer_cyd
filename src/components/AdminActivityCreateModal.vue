@@ -88,6 +88,39 @@
             </select>
             <span v-if="errors[field.key]" class="form-error" role="alert">{{ errors[field.key] }}</span>
           </div>
+
+          <div class="form-group">
+            <label for="create-documents">Documentos adjuntos (opcional)</label>
+            <input
+              id="create-documents"
+              ref="documentsInputRef"
+              class="sr-only-file-input"
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              @change="handleFileChange"
+            />
+            <button type="button" class="select-files-button" @click="openFilePicker">
+              Seleccionar archivos
+            </button>
+            <p class="form-help">
+              Formatos permitidos: PDF, Word e imágenes (JPG, PNG). Máximo 10MB por archivo.
+            </p>
+            <ul v-if="selectedFiles.length > 0" class="file-list">
+              <li v-for="(file, index) in selectedFiles" :key="`${file.name}-${index}`" class="file-item">
+                <span>{{ file.name }}</span>
+                <button
+                  type="button"
+                  class="remove-file-button"
+                  :aria-label="`Eliminar archivo ${file.name}`"
+                  @click="removeFile(index)"
+                >
+                  Eliminar
+                </button>
+              </li>
+            </ul>
+            <span v-if="errors.documents" class="form-error" role="alert">{{ errors.documents }}</span>
+          </div>
         </div>
 
         <div v-if="status.message" class="form-status" :class="`form-status--${status.type}`">
@@ -123,6 +156,7 @@ const emit = defineEmits(['close', 'saved'])
 const isOpen = ref(true)
 const isSaving = ref(false)
 const modalRef = ref(null)
+const documentsInputRef = ref(null)
 let previousFocus = null
 
 const emailPattern = VALIDATION_PATTERNS.email
@@ -146,6 +180,7 @@ const formData = reactive({
 })
 
 const errors = reactive({})
+const selectedFiles = ref([])
 
 const status = reactive({
   message: '',
@@ -244,7 +279,43 @@ const validateForm = () => {
     ok = false
   }
 
+  if (selectedFiles.value.some((file) => file.size > 10 * 1024 * 1024)) {
+    errors.documents = 'Hay archivos que superan el tamaño máximo de 10MB.'
+    ok = false
+  }
+
   return ok
+}
+
+const handleFileChange = (event) => {
+  const incoming = Array.from(event.target.files || [])
+  const allowedTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+  ]
+
+  const valid = incoming.filter((file) => allowedTypes.includes(file.type))
+  if (valid.length !== incoming.length) {
+    errors.documents = 'Algunos archivos no tienen un formato permitido.'
+  } else if (errors.documents) {
+    errors.documents = ''
+  }
+  selectedFiles.value = [...selectedFiles.value, ...valid]
+}
+
+const removeFile = (index) => {
+  selectedFiles.value.splice(index, 1)
+  if (documentsInputRef.value) {
+    documentsInputRef.value.value = ''
+  }
+}
+
+const openFilePicker = () => {
+  documentsInputRef.value?.click()
 }
 
 const handleSave = async () => {
@@ -274,7 +345,7 @@ const handleSave = async () => {
     space_need: formData.space_need || null,
     setup: formData.setup || null,
     observations: formData.observations || null,
-    documents: [],
+    documents: selectedFiles.value,
   })
 
   if (result.success) {
@@ -391,6 +462,37 @@ const handleSave = async () => {
   font-family: inherit;
 }
 
+.sr-only-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.select-files-button {
+  justify-self: start;
+  border: 2px solid var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.select-files-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.select-files-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .form-group input:focus-visible,
 .form-group textarea:focus-visible,
 .form-group select:focus-visible {
@@ -402,6 +504,33 @@ const handleSave = async () => {
 .form-error {
   font-size: 0.875rem;
   color: var(--color-accent);
+}
+
+.form-help {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.file-list {
+  margin: var(--spacing-xs) 0 0;
+  padding-left: 1.25rem;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.remove-file-button {
+  border: none;
+  background: transparent;
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
 }
 
 .form-status {
