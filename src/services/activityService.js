@@ -93,7 +93,7 @@ export async function countActivitiesForOrganizer(organizerEmail) {
  * @param {string} organizerEmail - Email del organizador (para organizar en carpetas)
  * @param {number} activityIndex - Índice de la actividad (para organizar archivos)
  * @param {number} fileIndex - Índice del archivo dentro de la actividad
- * @returns {Promise<{success: boolean, url: string|null, error: string|null}>}
+ * @returns {Promise<{success: boolean, url: string|null, path: string|null, error: string|null}>}
  */
 async function uploadFile(file, organizerEmail, activityIndex, fileIndex) {
   try {
@@ -117,6 +117,7 @@ async function uploadFile(file, organizerEmail, activityIndex, fileIndex) {
       return {
         success: false,
         url: null,
+        path: null,
         error: error.message || 'Error al subir el archivo',
       }
     }
@@ -129,6 +130,7 @@ async function uploadFile(file, organizerEmail, activityIndex, fileIndex) {
     return {
       success: true,
       url: publicUrl,
+      path: filePath,
       error: null,
     }
   } catch (error) {
@@ -136,6 +138,7 @@ async function uploadFile(file, organizerEmail, activityIndex, fileIndex) {
     return {
       success: false,
       url: null,
+      path: null,
       error: error.message || 'Error inesperado al subir el archivo',
     }
   }
@@ -174,6 +177,7 @@ async function uploadActivityDocuments(files, organizerEmail, activityIndex) {
     uploadedDocuments.push({
       name: file.name,
       url: result.url,
+      path: result.path,
       size: file.size,
       type: file.type,
     })

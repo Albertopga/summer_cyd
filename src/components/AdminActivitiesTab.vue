@@ -166,7 +166,12 @@
       <div class="modal-content detail-modal">
         <header class="modal-header">
           <h2 id="activity-detail-title">{{ detailActivity.name || 'Detalle de actividad' }}</h2>
-          <button type="button" @click="closeDetailModal" class="close-button" aria-label="Cerrar modal">
+          <button
+            type="button"
+            @click="closeDetailModal"
+            class="close-button"
+            aria-label="Cerrar modal"
+          >
             <span aria-hidden="true">×</span>
           </button>
         </header>
@@ -181,11 +186,15 @@
               <strong>Participantes:</strong> {{ detailActivity.min_participants || '-' }} -
               {{ detailActivity.max_participants || '-' }}
             </p>
-            <p><strong>Franja:</strong> {{ getTimeSlotLabel(detailActivity.preferred_time_slot) }}</p>
+            <p>
+              <strong>Franja:</strong> {{ getTimeSlotLabel(detailActivity.preferred_time_slot) }}
+            </p>
             <p><strong>Duración:</strong> {{ detailActivity.duration || '-' }}</p>
             <p><strong>Espacio:</strong> {{ getSpaceNeedLabel(detailActivity.space_need) }}</p>
             <p><strong>Fecha registro:</strong> {{ formatDate(detailActivity.created_at) }}</p>
-            <p><strong>Última actualización:</strong> {{ formatDate(detailActivity.updated_at) }}</p>
+            <p>
+              <strong>Última actualización:</strong> {{ formatDate(detailActivity.updated_at) }}
+            </p>
           </div>
 
           <p><strong>Descripción:</strong></p>
@@ -208,20 +217,30 @@
 
           <div class="documents-section">
             <p><strong>Documentos adjuntos:</strong></p>
-            <ul v-if="normalizedDocuments.length > 0" class="documents-list">
-              <li v-for="(doc, index) in normalizedDocuments" :key="`${doc.url}-${index}`">
-                <a
-                  :href="doc.url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  :download="doc.name"
-                  class="download-doc-link"
-                >
-                  Descargar {{ doc.name }}
-                </a>
-              </li>
-            </ul>
+            <div v-if="groupedDocuments.length > 0" class="documents-groups">
+              <section v-for="group in groupedDocuments" :key="group.key" class="documents-group">
+                <h3 class="documents-group-title">{{ group.label }} ({{ group.items.length }})</h3>
+                <ul class="documents-list">
+                  <li v-for="(doc, index) in group.items" :key="`${doc.url}-${index}`">
+                    <span class="doc-type-chip">{{ doc.badge }}</span>
+                    <button
+                      type="button"
+                      class="download-doc-link"
+                      :disabled="downloadingDocumentUrl === doc.url"
+                      @click="downloadDocument(doc)"
+                    >
+                      {{
+                        downloadingDocumentUrl === doc.url
+                          ? `Descargando ${doc.name}...`
+                          : `Descargar ${doc.name}`
+                      }}
+                    </button>
+                  </li>
+                </ul>
+              </section>
+            </div>
             <p v-else class="no-documents">Sin documentos adjuntos.</p>
+            <p v-if="downloadError" class="download-error" role="alert">{{ downloadError }}</p>
           </div>
         </div>
 
@@ -236,6 +255,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { getAllActivities } from '@/services/adminService'
+import { supabase } from '@/lib/supabase'
 import { ACTIVITY_TYPES, TIME_SLOTS, SPACE_NEEDS } from '@/constants'
 import AdminActivityCreateModal from '@/components/AdminActivityCreateModal.vue'
 import AdminActivityEditModal from '@/components/AdminActivityEditModal.vue'
@@ -254,6 +274,8 @@ const totalActivities = ref(0)
 const selectedActivity = ref(null)
 const detailActivity = ref(null)
 const showCreateModal = ref(false)
+const downloadingDocumentUrl = ref('')
+const downloadError = ref('')
 const statusFilter = ref('')
 const sortField = ref('created_at')
 const sortDirection = ref('desc')
@@ -307,10 +329,14 @@ const openEditModal = (activity) => {
 }
 
 const openDetailModal = (activity) => {
+  downloadError.value = ''
+  downloadingDocumentUrl.value = ''
   detailActivity.value = { ...activity }
 }
 
 const closeDetailModal = () => {
+  downloadError.value = ''
+  downloadingDocumentUrl.value = ''
   detailActivity.value = null
 }
 
@@ -377,16 +403,151 @@ const normalizedDocuments = computed(() => {
       if (typeof doc === 'string') {
         const fallback = `documento-${index + 1}`
         const nameFromUrl = doc.split('?')[0].split('/').pop()
-        return { url: doc, name: nameFromUrl || fallback }
+        const fileName = nameFromUrl || fallback
+        return {
+          url: doc,
+          path: extractStoragePathFromPublicUrl(doc),
+          name: fileName,
+          type: '',
+          category: getDocumentCategory(fileName, ''),
+        }
       }
       if (doc && typeof doc === 'object' && typeof doc.url === 'string') {
         const fallback = `documento-${index + 1}`
-        return { url: doc.url, name: doc.name || doc.url.split('?')[0].split('/').pop() || fallback }
+        const fileName = doc.name || doc.url.split('?')[0].split('/').pop() || fallback
+        const fileType = typeof doc.type === 'string' ? doc.type : ''
+        const filePath =
+          typeof doc.path === 'string' && doc.path.trim().length > 0
+            ? doc.path
+            : extractStoragePathFromPublicUrl(doc.url)
+        return {
+          url: doc.url,
+          path: filePath,
+          name: fileName,
+          type: fileType,
+          category: getDocumentCategory(fileName, fileType),
+        }
       }
       return null
     })
     .filter((item) => item && item.url)
 })
+
+const DOCUMENT_CATEGORY_META = {
+  pdf: { key: 'pdf', label: 'PDF', badge: 'PDF' },
+  word: { key: 'word', label: 'Word', badge: 'DOC' },
+  image: { key: 'image', label: 'Imagen', badge: 'IMG' },
+  other: { key: 'other', label: 'Otros', badge: 'FILE' },
+}
+
+const getExtension = (name) => {
+  const clean = String(name || '').split('?')[0]
+  const dot = clean.lastIndexOf('.')
+  return dot >= 0 ? clean.slice(dot + 1).toLowerCase() : ''
+}
+
+const getDocumentCategory = (name, type) => {
+  const extension = getExtension(name)
+  const mime = String(type || '').toLowerCase()
+
+  if (mime.includes('pdf') || extension === 'pdf') return 'pdf'
+  if (
+    mime.includes('msword') ||
+    mime.includes('wordprocessingml') ||
+    extension === 'doc' ||
+    extension === 'docx'
+  ) {
+    return 'word'
+  }
+  if (mime.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(extension)) {
+    return 'image'
+  }
+  return 'other'
+}
+
+const groupedDocuments = computed(() => {
+  if (normalizedDocuments.value.length === 0) return []
+
+  const map = new Map()
+  normalizedDocuments.value.forEach((doc) => {
+    const categoryKey = doc.category || 'other'
+    if (!map.has(categoryKey)) {
+      const meta = DOCUMENT_CATEGORY_META[categoryKey] || DOCUMENT_CATEGORY_META.other
+      map.set(categoryKey, { ...meta, items: [] })
+    }
+    const group = map.get(categoryKey)
+    group.items.push({
+      ...doc,
+      badge: (DOCUMENT_CATEGORY_META[categoryKey] || DOCUMENT_CATEGORY_META.other).badge,
+    })
+  })
+
+  const order = ['pdf', 'word', 'image', 'other']
+  return order.filter((k) => map.has(k)).map((k) => map.get(k))
+})
+
+const fallbackOpenDocument = (url) => {
+  const link = document.createElement('a')
+  link.href = url
+  link.target = '_blank'
+  link.rel = 'noopener noreferrer'
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+}
+
+const extractStoragePathFromPublicUrl = (url) => {
+  try {
+    const u = new URL(url)
+    const marker = '/storage/v1/object/public/activity-documents/'
+    const idx = u.pathname.indexOf(marker)
+    if (idx === -1) return ''
+    const path = u.pathname.slice(idx + marker.length)
+    return decodeURIComponent(path)
+  } catch {
+    return ''
+  }
+}
+
+const downloadDocument = async (doc) => {
+  const downloadRef = doc?.path || doc?.url || ''
+  if (!downloadRef) return
+  downloadingDocumentUrl.value = downloadRef
+  downloadError.value = ''
+
+  try {
+    const storagePath = doc.path || extractStoragePathFromPublicUrl(doc.url)
+    if (!storagePath) {
+      throw new Error('No se encontró la ruta interna del documento en Storage.')
+    }
+
+    const { data, error: sdkError } = await supabase.storage
+      .from('activity-documents')
+      .download(storagePath)
+    if (sdkError || !data) {
+      throw sdkError || new Error('No se pudo recuperar el documento desde Storage.')
+    }
+
+    const objectUrl = window.URL.createObjectURL(data)
+    const link = document.createElement('a')
+    link.href = objectUrl
+    link.download = doc.name || storagePath.split('/').pop() || 'documento'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(objectUrl)
+  } catch (err) {
+    console.error('Error al descargar documento:', err)
+    if (doc?.url) {
+      fallbackOpenDocument(doc.url)
+      downloadError.value = 'No se pudo descargar automáticamente. Se abrió en otra pestaña.'
+    } else {
+      downloadError.value = 'No se pudo descargar el documento.'
+    }
+  } finally {
+    downloadingDocumentUrl.value = ''
+  }
+}
 
 const handleDownloadExcel = async () => {
   try {
@@ -891,15 +1052,62 @@ defineExpose({
   margin-top: var(--spacing-md);
 }
 
+.documents-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.documents-group {
+  background-color: var(--color-cream);
+  border: 1px solid var(--color-cream-dark);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.documents-group-title {
+  margin: 0 0 var(--spacing-xs);
+  font-size: 0.95rem;
+  color: var(--color-primary);
+}
+
 .documents-list {
   margin: var(--spacing-xs) 0 0;
   padding-left: 1.25rem;
 }
 
+.documents-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.documents-list li + li {
+  margin-top: var(--spacing-xs);
+}
+
+.doc-type-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .download-doc-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
   color: var(--color-primary);
   font-weight: 600;
   text-decoration: underline;
+  font: inherit;
 }
 
 .download-doc-link:hover {
@@ -914,6 +1122,12 @@ defineExpose({
 .no-documents {
   margin-top: var(--spacing-xs);
   color: var(--color-text-light);
+}
+
+.download-error {
+  margin-top: var(--spacing-sm);
+  color: var(--color-accent);
+  font-size: 0.9rem;
 }
 
 .spinner {
