@@ -69,7 +69,13 @@
             <h3>¿Tienes dudas?</h3>
             <p>
               Consulta nuestras
-              <RouterLink to="/faqs" class="summary-link">preguntas frecuentes</RouterLink>
+              <button
+                type="button"
+                class="summary-link summary-link-button"
+                @click="openContentModal('/faqs')"
+              >
+                preguntas frecuentes
+              </button>
               o escríbenos a
               <a :href="`mailto:${CONTACT_INFO.email}`" class="summary-link">{{
                 CONTACT_INFO.email
@@ -559,9 +565,13 @@
                 />
                 <span>
                   Acepto la
-                  <RouterLink to="/politica-privacidad" class="privacy-link"
-                    >política de privacidad</RouterLink
+                  <button
+                    type="button"
+                    class="privacy-link privacy-link-button"
+                    @click="openContentModal('/politica-privacidad')"
                   >
+                    política de privacidad
+                  </button>
                   y autorizo el tratamiento de mis datos para la gestión de mi inscripción al
                   evento.
                 </span>
@@ -588,15 +598,19 @@
                   <strong>Opcional:</strong> autorizo la captación y el uso de mi imagen (fotografía
                   y/o vídeo) para su publicación con fines informativos o promocionales del evento,
                   según lo descrito en la
-                  <RouterLink to="/politica-privacidad" class="privacy-link"
-                    >política de privacidad</RouterLink
+                  <button
+                    type="button"
+                    class="privacy-link privacy-link-button"
+                    @click="openContentModal('/politica-privacidad')"
                   >
+                    política de privacidad
+                  </button>
                   (apartados 2, 3 y 7).
                 </span>
               </label>
               <p id="imageConsent-help" class="form-help" style="margin-top: 0.25rem">
-                Si no marcas esta casilla, podrás inscribirte igualmente; la organización no usará tu
-                imagen para difusión con base en este consentimiento.
+                Si no marcas esta casilla, podrás inscribirte igualmente; la organización no usará
+                tu imagen para difusión con base en este consentimiento.
               </p>
 
               <label class="checkbox-consent">
@@ -613,7 +627,13 @@
                 />
                 <span>
                   Declaro haber leído y aceptado las
-                  <RouterLink to="/normas" class="privacy-link">normas</RouterLink>
+                  <button
+                    type="button"
+                    class="privacy-link privacy-link-button"
+                    @click="openContentModal('/normas')"
+                  >
+                    normas
+                  </button>
                   del evento.
                 </span>
               </label>
@@ -663,9 +683,14 @@
                 <p class="form-status-success-copy">
                   ¡Gracias por tu interés! Hemos recibido tu solicitud correctamente. Te
                   contactaremos en las próximas horas. Si quieres organizar actividades, usa el
-                  <RouterLink to="/actividades" class="privacy-link"
-                    >formulario de registro de actividades</RouterLink
-                  >.
+                  <button
+                    type="button"
+                    class="privacy-link privacy-link-button"
+                    @click="openContentModal('/actividades')"
+                  >
+                    formulario de registro de actividades
+                  </button>
+                  .
                 </p>
               </template>
               <template v-else>
@@ -674,6 +699,38 @@
             </div>
           </fieldset>
         </form>
+      </div>
+    </div>
+
+    <div
+      v-if="isContentModalOpen"
+      class="content-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="content-modal-title"
+      @click.self="closeContentModal"
+      @keydown.esc="closeContentModal"
+    >
+      <div class="content-modal">
+        <header class="content-modal-header">
+          <h2 id="content-modal-title">{{ contentModalTitle }}</h2>
+          <button
+            type="button"
+            class="content-modal-close"
+            @click="closeContentModal"
+            aria-label="Cerrar modal"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+        <div class="content-modal-body">
+          <iframe
+            v-if="contentModalPath"
+            :src="contentModalPath"
+            class="content-modal-iframe"
+            :title="contentModalTitle"
+          />
+        </div>
       </div>
     </div>
   </section>
@@ -754,11 +811,33 @@ const status = reactive({
 
 const isSubmitting = ref(false)
 const showTelegramTooltip = ref(false)
+const isContentModalOpen = ref(false)
+const contentModalPath = ref('')
 
 const registrationClosed = computed(() => isRegistrationDeadlinePassed())
 const registrationDeadlineLabel = computed(() =>
   formatDeadlineLabelEs(getRegistrationLastValidDate()),
 )
+
+const contentModalTitle = computed(() => {
+  const map = {
+    '/faqs': 'Preguntas frecuentes',
+    '/politica-privacidad': 'Política de privacidad',
+    '/normas': 'Normas del evento',
+    '/actividades': 'Registro de actividades',
+  }
+  return map[contentModalPath.value] || 'Contenido'
+})
+
+const openContentModal = (path) => {
+  contentModalPath.value = path
+  isContentModalOpen.value = true
+}
+
+const closeContentModal = () => {
+  isContentModalOpen.value = false
+  contentModalPath.value = ''
+}
 
 const toggleTelegramTooltip = () => {
   showTelegramTooltip.value = !showTelegramTooltip.value
@@ -1733,6 +1812,15 @@ watch(
   border-radius: 2px;
 }
 
+.privacy-link-button,
+.summary-link-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
 .form-actions {
   display: grid;
   gap: var(--spacing-sm);
@@ -1780,6 +1868,61 @@ watch(
 .form-status--error {
   background-color: #fce8e6;
   color: var(--color-accent);
+}
+
+.content-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+}
+
+.content-modal {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  width: min(1100px, 96vw);
+  height: min(85vh, 860px);
+  display: flex;
+  flex-direction: column;
+}
+
+.content-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-cream-dark);
+}
+
+.content-modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--color-primary);
+}
+
+.content-modal-close {
+  border: none;
+  background: transparent;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-light);
+}
+
+.content-modal-body {
+  flex: 1;
+}
+
+.content-modal-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
 }
 
 .spinner {
