@@ -347,7 +347,7 @@ body {
 }
 
 .footer-links .footer-link::before {
-  content: '→';
+  content: '';
   display: inline-block;
   margin-right: var(--spacing-xs);
   opacity: 0.6;

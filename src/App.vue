@@ -1,21 +1,19 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { RouterView } from 'vue-router'
+import GlobalPageHeader from './components/GlobalPageHeader.vue'
 import TheFooter from './components/TheFooter.vue'
+
+const route = useRoute()
+const showGlobalHeader = computed(() => route.name !== 'home')
 </script>
 
 <template>
   <div>
     <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
-    <header role="banner">
-      <nav role="navigation" aria-label="Menú principal" class="sr-only">
-        <ul>
-          <li>
-            <RouterLink to="/">Inicio</RouterLink>
-          </li>
-        </ul>
-      </nav>
-    </header>
+    <GlobalPageHeader v-if="showGlobalHeader" />
 
     <main id="main-content" role="main">
       <RouterView />
