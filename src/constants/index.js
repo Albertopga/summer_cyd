@@ -377,6 +377,12 @@ export const SPONSORS_AND_COLLABORATORS = [
     logo: 'https://distritozero.es/img/distrito-zero-logo-1609318083.jpg',
     url: 'https://distritozero.es/',
   },
+  {
+    id: 4,
+    name: 'Multiverso',
+    logo: getImageUrl('logo_multiverso.jpg'),
+    url: 'https://www.facebook.com/Multiverso.Libreria.Friki/?locale=es_LA',
+  },
   // {
   //   id: 2,
   //   name: '2 Tomatoes Games',
