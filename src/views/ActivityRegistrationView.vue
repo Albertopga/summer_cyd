@@ -908,7 +908,9 @@ const handleSubmit = async () => {
   if (attendeeRegistered.value === false) {
     status.type = 'error'
     status.message = ACTIVITIES_ORGANIZER_NOT_REGISTERED_MESSAGE
-    document.getElementById('organizerEmail')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    document
+      .getElementById('organizerEmail')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     return
   }
   if (attendeeRegistered.value === null) {
