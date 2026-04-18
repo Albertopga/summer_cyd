@@ -672,8 +672,13 @@
             >
               <template v-if="status.type === 'success'">
                 <p class="form-status-success-copy">
-                  ¡Gracias por tu interés! Hemos recibido tu solicitud correctamente. Te
-                  contactaremos en las próximas horas. Si quieres organizar actividades, usa el
+                  ¡Gracias por tu interés! Hemos recibido tu solicitud correctamente.
+                  <template v-if="registrationConfirmationEmailEnabled">
+                    En breve recibirás un correo de confirmación en la dirección que nos has
+                    facilitado.
+                  </template>
+                  <template v-else> Te contactaremos en las próximas horas. </template>
+                  Si quieres organizar actividades, usa el
                   <button
                     type="button"
                     class="privacy-link privacy-link-button"
@@ -754,6 +759,11 @@ import { saveRegistration } from '@/services/registrationService'
 defineOptions({
   name: 'RegistrationView',
 })
+
+/** Alineado con REGISTRATION_CONFIRMATION_EMAIL_ENABLED en Vercel (API). */
+const registrationConfirmationEmailEnabled = /^(true|1|yes)$/i.test(
+  String(import.meta.env.VITE_REGISTRATION_CONFIRMATION_EMAIL_ENABLED ?? '').trim(),
+)
 
 const form = reactive({
   firstName: '',
