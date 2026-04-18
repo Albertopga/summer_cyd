@@ -15,6 +15,19 @@
         <div class="controls-group">
           <button
             type="button"
+            @click="handleSendPaymentReminders"
+            class="reminder-button"
+            :disabled="loading || isSendingReminders"
+            aria-label="Enviar recordatorios de pago pendientes"
+          >
+            <span v-if="!isSendingReminders">Enviar recordatorios de pago</span>
+            <span v-else>
+              <span class="spinner" aria-hidden="true"></span>
+              Enviando recordatorios...
+            </span>
+          </button>
+          <button
+            type="button"
             @click="handleDownloadExcel"
             class="download-button"
             :disabled="loading"
@@ -59,6 +72,19 @@
           </div>
         </div>
       </div>
+
+      <p
+        v-if="remindersFeedback.message"
+        class="reminder-feedback"
+        :class="{
+          'reminder-feedback--success': remindersFeedback.type === 'success',
+          'reminder-feedback--error': remindersFeedback.type === 'error',
+        }"
+        :role="remindersFeedback.type === 'error' ? 'alert' : 'status'"
+        aria-live="polite"
+      >
+        {{ remindersFeedback.message }}
+      </p>
 
       <div v-if="registrations.length === 0" class="empty-state" role="status">
         No hay registros disponibles
@@ -222,6 +248,7 @@ import {
   deleteRegistration,
   deleteRegistrationsBulk,
   getAllRegistrations,
+  triggerPaymentReminders,
 } from '@/services/adminService'
 import { ACCOMMODATION_OPTIONS } from '@/constants'
 import AdminEditModal from '@/components/AdminEditModal.vue'
@@ -242,6 +269,8 @@ const selectedRegistrations = ref(new Set())
 const allRegistrations = ref([])
 const registrationsToDelete = ref([])
 const isDeleting = ref(false)
+const isSendingReminders = ref(false)
+const remindersFeedback = ref({ type: '', message: '' })
 
 // Controles de ordenamiento
 const sortField = ref('accommodation_paid,created_at')
@@ -293,6 +322,30 @@ const handleRegistrationUpdated = () => {
 
 const handleSortChange = () => {
   loadRegistrations()
+}
+
+const handleSendPaymentReminders = async () => {
+  isSendingReminders.value = true
+  remindersFeedback.value = { type: '', message: '' }
+
+  const result = await triggerPaymentReminders()
+  isSendingReminders.value = false
+
+  if (!result.success) {
+    remindersFeedback.value = {
+      type: 'error',
+      message: result.error || 'No se pudieron lanzar los recordatorios.',
+    }
+    return
+  }
+
+  const sent = Number(result.data?.sent || 0)
+  const skipped = Number(result.data?.skipped || 0)
+  const total = Number(result.data?.total || 0)
+  remindersFeedback.value = {
+    type: 'success',
+    message: `Recordatorios ejecutados. Enviados: ${sent}. Omitidos: ${skipped}. Elegibles: ${total}.`,
+  }
 }
 
 const openDeleteModal = (ids = []) => {
@@ -639,6 +692,49 @@ defineExpose({
 .download-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.reminder-button {
+  background-color: #7a3e00;
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.reminder-button:hover:not(:disabled) {
+  background-color: #5c2f00;
+}
+
+.reminder-button:focus-visible {
+  outline: 3px solid #7a3e00;
+  outline-offset: 2px;
+}
+
+.reminder-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reminder-feedback {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+}
+
+.reminder-feedback--success {
+  background-color: #e6f4ea;
+  color: #1f6f43;
+}
+
+.reminder-feedback--error {
+  background-color: #fce8e6;
+  color: #b42318;
 }
 
 .delete-selected-button {

@@ -1,25 +1,30 @@
 /**
- * Vercel Serverless: envío de correo de confirmación tras INSERT en `registrations`.
+ * Vercel Serverless: emails automáticos por cambios en `registrations`.
  *
  * Configuración en Supabase (Database → Webhooks):
  * - Tabla: public.registrations
- * - Evento: INSERT
+ * - Eventos: INSERT y UPDATE (DELETE opcional)
  * - URL: https://<tu-dominio-vercel>/api/registration-confirmation
  * - Método: POST
  * - Cabecera HTTP fija: X-Webhook-Secret = (mismo valor que REGISTRATION_WEBHOOK_SECRET en Vercel)
  *
- * Variables de entorno en Vercel:
+ * Variables de entorno:
  * - REGISTRATION_WEBHOOK_SECRET (obligatoria)
- * - REGISTRATION_CONFIRMATION_EMAIL_ENABLED: "true" | "1" | "yes" (insensible a mayúsculas) para
- *   enviar con Resend; cualquier otro valor o ausencia = no envía (ahorra cuota del tier gratuito).
- * - RESEND_API_KEY, EMAIL_FROM (obligatorias solo si el envío está activado)
- * - opcional: EMAIL_REPLY_TO
- *
- * En el front, para el mismo texto de éxito: VITE_REGISTRATION_CONFIRMATION_EMAIL_ENABLED=true
+ * - REGISTRATION_CONFIRMATION_EMAIL_ENABLED: true|1|yes para activar envíos
+ * - RESEND_API_KEY, EMAIL_FROM (obligatorias solo si envíos activos)
+ * - EMAIL_REPLY_TO (opcional)
  */
 
 import { timingSafeEqual } from 'node:crypto'
 import { Resend } from 'resend'
+import {
+  buildRegistrationCreatedEmail,
+  buildRegistrationUpdatedEmail,
+  detectRegistrationChanges,
+  isValidEmail,
+} from './email-templates/registrationEmails'
+
+const ALLOWED_TYPES = new Set(['INSERT', 'UPDATE'])
 
 function safeHeaderEqual(received, expected) {
   if (typeof received !== 'string' || typeof expected !== 'string') {
@@ -32,35 +37,6 @@ function safeHeaderEqual(received, expected) {
   }
   return timingSafeEqual(a, b)
 }
-
-function escapeHtml(value) {
-  if (value == null) {
-    return ''
-  }
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
-
-function buildConfirmationEmailHtml({ firstName, lastName }) {
-  const name = [firstName, lastName].filter(Boolean).join(' ').trim()
-  const greeting = name ? `Hola, ${escapeHtml(name)}:` : 'Hola:'
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
-<body style="font-family: system-ui, sans-serif; line-height: 1.5; color: #222;">
-  <p>${greeting}</p>
-  <p>Hemos recibido correctamente tu inscripción al <strong>Retiro Lúdico Castilla y Dragón</strong>.</p>
-  <p>Guarda este correo como confirmación. Si necesitas corregir algún dato, responde a este mensaje.</p>
-  <p style="margin-top: 2rem; color: #555; font-size: 0.9rem;">— El equipo del retiro</p>
-</body>
-</html>`
-}
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function isConfirmationEmailEnabled() {
   const raw = process.env.REGISTRATION_CONFIRMATION_EMAIL_ENABLED
@@ -102,8 +78,8 @@ export default async function handler(req, res) {
     return
   }
 
-  if (body.type !== 'INSERT' || body.table !== 'registrations' || body.schema !== 'public') {
-    res.status(200).json({ ok: true, skipped: true })
+  if (body.table !== 'registrations' || body.schema !== 'public' || !ALLOWED_TYPES.has(body.type)) {
+    res.status(200).json({ ok: true, skipped: 'unsupported_event' })
     return
   }
 
@@ -114,7 +90,7 @@ export default async function handler(req, res) {
   }
 
   const to = record.email
-  if (typeof to !== 'string' || !EMAIL_RE.test(to.trim())) {
+  if (!isValidEmail(to)) {
     res.status(400).json({ error: 'Invalid recipient' })
     return
   }
@@ -131,21 +107,30 @@ export default async function handler(req, res) {
     return
   }
 
-  const firstName = record.first_name
-  const lastName = record.last_name
-  const html = buildConfirmationEmailHtml({
-    firstName: typeof firstName === 'string' ? firstName : '',
-    lastName: typeof lastName === 'string' ? lastName : '',
-  })
+  const firstName = typeof record.first_name === 'string' ? record.first_name : ''
+  const lastName = typeof record.last_name === 'string' ? record.last_name : ''
+  let message
+
+  if (body.type === 'INSERT') {
+    message = buildRegistrationCreatedEmail({ firstName, lastName })
+  } else {
+    const oldRecord = body.old_record
+    const changes = detectRegistrationChanges(record, oldRecord)
+    if (changes.length === 0) {
+      res.status(200).json({ ok: true, skipped: 'no_relevant_changes' })
+      return
+    }
+    message = buildRegistrationUpdatedEmail({ firstName, lastName, changes })
+  }
 
   const resend = new Resend(apiKey)
   const replyTo = process.env.EMAIL_REPLY_TO
   const { data, error } = await resend.emails.send({
     from,
     to: to.trim().toLowerCase(),
-    subject: 'Confirmación de inscripción – Retiro Lúdico Castilla y Dragón',
-    html,
-    ...(replyTo && typeof replyTo === 'string' && EMAIL_RE.test(replyTo.trim())
+    subject: message.subject,
+    html: message.html,
+    ...(replyTo && isValidEmail(replyTo)
       ? { replyTo: replyTo.trim() }
       : {}),
   })

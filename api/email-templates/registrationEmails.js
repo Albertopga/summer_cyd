@@ -1,0 +1,204 @@
+/**
+ * Plantillas de email para inscripciones y recordatorios.
+ * Mantener estilos y copy aquí para facilitar edición independiente.
+ */
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+const FIELD_LABELS = {
+  first_name: 'Nombre',
+  last_name: 'Apellidos',
+  nickname: 'Alias',
+  email: 'Correo electrónico',
+  phone: 'Teléfono',
+  birth_date: 'Fecha de nacimiento',
+  is_minor: 'Menor de edad',
+  emergency_contact_name: 'Contacto de emergencia (nombre)',
+  emergency_contact_phone: 'Contacto de emergencia (teléfono)',
+  arrival_date: 'Fecha de llegada',
+  departure_date: 'Fecha de salida',
+  accommodation: 'Alojamiento',
+  diet: 'Dieta',
+  comments: 'Comentarios',
+  diet_comments: 'Comentarios dieta',
+  terms_accepted: 'Aceptación de términos',
+  image_consent_accepted: 'Consentimiento de imagen',
+  accommodation_paid: 'Pago de alojamiento',
+}
+
+const ACCOMMODATION_LABELS = {
+  albergue: 'Albergue',
+  chozos: 'Chozos compartidos',
+  'chozo-individual': 'Chozo individual',
+  especial: 'Necesidad especial',
+}
+
+function escapeHtml(value) {
+  if (value == null) {
+    return ''
+  }
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function formatDate(value) {
+  if (typeof value !== 'string' || !value) {
+    return null
+  }
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) {
+    return value
+  }
+  return new Intl.DateTimeFormat('es-ES', {
+    dateStyle: 'medium',
+    timeStyle: value.includes('T') ? 'short' : undefined,
+  }).format(d)
+}
+
+function formatValue(field, value) {
+  if (value == null || value === '') {
+    return '—'
+  }
+  if (Array.isArray(value)) {
+    return value.length ? value.map((item) => String(item)).join(', ') : '—'
+  }
+  if (field === 'accommodation') {
+    return ACCOMMODATION_LABELS[value] || String(value)
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'Sí' : 'No'
+  }
+  if (field.endsWith('_date') || field.includes('date')) {
+    return formatDate(value) || String(value)
+  }
+  return String(value)
+}
+
+function buildLayout({ title, introHtml, bodyHtml, footerHtml }) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body style="margin:0;padding:24px;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+    <tr>
+      <td style="background:#111827;color:#ffffff;padding:20px 24px;">
+        <h1 style="margin:0;font-size:20px;line-height:1.3;">${escapeHtml(title)}</h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:24px;line-height:1.6;font-size:15px;">
+        ${introHtml}
+        ${bodyHtml}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 24px 24px 24px;color:#6b7280;font-size:13px;">
+        ${footerHtml}
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+export function isValidEmail(value) {
+  return typeof value === 'string' && EMAIL_RE.test(value.trim())
+}
+
+export function buildRegistrationCreatedEmail({ firstName, lastName }) {
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim()
+  const greeting = fullName ? `<p>Hola, <strong>${escapeHtml(fullName)}</strong>:</p>` : '<p>Hola:</p>'
+
+  return {
+    subject: 'Confirmación de inscripción - Retiro Lúdico Castilla y Dragón',
+    html: buildLayout({
+      title: 'Inscripción recibida',
+      introHtml: greeting,
+      bodyHtml: `
+        <p>Hemos recibido correctamente tu inscripción al <strong>Retiro Lúdico Castilla y Dragón</strong>.</p>
+        <p>Guarda este correo como confirmación. Si necesitas corregir algún dato, responde a este mensaje.</p>
+      `,
+      footerHtml: '<p>- El equipo del retiro</p>',
+    }),
+  }
+}
+
+export function buildRegistrationUpdatedEmail({ firstName, lastName, changes }) {
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim()
+  const greeting = fullName ? `<p>Hola, <strong>${escapeHtml(fullName)}</strong>:</p>` : '<p>Hola:</p>'
+
+  const rows = changes
+    .map((change) => {
+      return `<tr>
+        <td style="padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;"><strong>${escapeHtml(change.label)}</strong></td>
+        <td style="padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;color:#6b7280;">${escapeHtml(change.previous)}</td>
+        <td style="padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;">${escapeHtml(change.current)}</td>
+      </tr>`
+    })
+    .join('')
+
+  return {
+    subject: 'Actualización de tu inscripción - Retiro Lúdico Castilla y Dragón',
+    html: buildLayout({
+      title: 'Inscripción actualizada',
+      introHtml: greeting,
+      bodyHtml: `
+        <p>Hemos actualizado tu inscripción. Estos son los cambios registrados:</p>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e5e7eb;border-collapse:collapse;margin-top:12px;">
+          <thead>
+            <tr>
+              <th align="left" style="padding:10px;background:#f9fafb;border-bottom:1px solid #e5e7eb;">Campo</th>
+              <th align="left" style="padding:10px;background:#f9fafb;border-bottom:1px solid #e5e7eb;">Antes</th>
+              <th align="left" style="padding:10px;background:#f9fafb;border-bottom:1px solid #e5e7eb;">Ahora</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || '<tr><td colspan="3" style="padding:10px;">No se detectaron cambios relevantes.</td></tr>'}
+          </tbody>
+        </table>
+      `,
+      footerHtml:
+        '<p>Si no reconoces esta modificación, responde a este correo para revisarlo.</p><p>- El equipo del retiro</p>',
+    }),
+  }
+}
+
+export function buildPaymentReminderEmail({ firstName, lastName }) {
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim()
+  const greeting = fullName ? `<p>Hola, <strong>${escapeHtml(fullName)}</strong>:</p>` : '<p>Hola:</p>'
+
+  return {
+    subject: 'Recordatorio de pago pendiente - Retiro Lúdico Castilla y Dragón',
+    html: buildLayout({
+      title: 'Pago pendiente para confirmar tu plaza',
+      introHtml: greeting,
+      bodyHtml: `
+        <p>Tu inscripción está registrada, pero todavía no consta el pago de la reserva de plaza.</p>
+        <p>Para garantizar tu asistencia, realiza el pago cuanto antes y responde a este correo si necesitas ayuda.</p>
+      `,
+      footerHtml: '<p>Gracias por tu interés.<br/>- El equipo del retiro</p>',
+    }),
+  }
+}
+
+export function detectRegistrationChanges(currentRecord, previousRecord) {
+  if (!currentRecord || !previousRecord) {
+    return []
+  }
+
+  return Object.keys(FIELD_LABELS)
+    .filter((field) => currentRecord[field] !== previousRecord[field])
+    .map((field) => ({
+      field,
+      label: FIELD_LABELS[field] || field,
+      previous: formatValue(field, previousRecord[field]),
+      current: formatValue(field, currentRecord[field]),
+    }))
+}

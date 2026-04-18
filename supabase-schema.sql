@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS public.registrations (
   
   -- Estado de pago
   accommodation_paid BOOLEAN NOT NULL DEFAULT false,
+  last_payment_reminder_sent_at TIMESTAMPTZ,
+  payment_reminder_count INTEGER NOT NULL DEFAULT 0,
   
   -- Metadatos
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
@@ -49,6 +51,10 @@ CREATE INDEX IF NOT EXISTS registrations_accommodation_idx ON public.registratio
 
 -- Crear índice en accommodation_paid para consultas rápidas por estado de pago
 CREATE INDEX IF NOT EXISTS registrations_accommodation_paid_idx ON public.registrations(accommodation_paid);
+
+-- Índice para controlar cadencia de recordatorios de pago
+CREATE INDEX IF NOT EXISTS registrations_last_payment_reminder_sent_at_idx
+  ON public.registrations(last_payment_reminder_sent_at DESC);
 
 -- Función para actualizar updated_at automáticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -128,6 +134,8 @@ COMMENT ON COLUMN public.registrations.diet_comments IS 'Comentarios adicionales
 COMMENT ON COLUMN public.registrations.terms_accepted IS 'Indica si se aceptaron los términos y condiciones';
 COMMENT ON COLUMN public.registrations.image_consent_accepted IS 'Consentimiento específico para tratamiento de imagen (difusión) según política de privacidad';
 COMMENT ON COLUMN public.registrations.accommodation_paid IS 'Indica si el alojamiento está pagado';
+COMMENT ON COLUMN public.registrations.last_payment_reminder_sent_at IS 'Fecha/hora del último email de recordatorio de pago enviado al asistente';
+COMMENT ON COLUMN public.registrations.payment_reminder_count IS 'Número de emails de recordatorio de pago enviados';
 COMMENT ON COLUMN public.registrations.created_at IS 'Fecha y hora de creación del registro';
 COMMENT ON COLUMN public.registrations.updated_at IS 'Fecha y hora de última actualización';
 

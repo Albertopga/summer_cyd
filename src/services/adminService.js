@@ -15,6 +15,65 @@ const ACTIVITY_DOCUMENT_ALLOWED_TYPES = [
   'image/png',
 ]
 
+/**
+ * Lanza el proceso de recordatorios de pago desde el panel admin.
+ * Requiere sesión autenticada (Bearer token) y endpoint desplegado en Vercel.
+ * @returns {Promise<{success: boolean, data: Object|null, error: string|null}>}
+ */
+export async function triggerPaymentReminders() {
+  try {
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
+    if (sessionError || !session?.access_token) {
+      return {
+        success: false,
+        data: null,
+        error: 'No hay sesión activa de administrador.',
+      }
+    }
+
+    const response = await fetch('/api/payment-reminders', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ source: 'admin_panel' }),
+    })
+
+    let payload = null
+    try {
+      payload = await response.json()
+    } catch {
+      payload = null
+    }
+
+    if (!response.ok) {
+      return {
+        success: false,
+        data: payload,
+        error: payload?.error || `Error al lanzar recordatorios (${response.status})`,
+      }
+    }
+
+    return {
+      success: true,
+      data: payload,
+      error: null,
+    }
+  } catch (error) {
+    console.error('Error inesperado al lanzar recordatorios:', error)
+    return {
+      success: false,
+      data: null,
+      error: error.message || 'Error inesperado al lanzar recordatorios',
+    }
+  }
+}
+
 async function uploadAdminActivityFile(file, organizerEmail, fileIndex) {
   const timestamp = Date.now()
   const sanitizedEmail = organizerEmail.replace(/[^a-zA-Z0-9]/g, '_')
