@@ -258,6 +258,115 @@ export async function getRegistrationById(id) {
 }
 
 /**
+ * Elimina un registro por su ID
+ * @param {string} id - ID del registro (UUID)
+ * @returns {Promise<{success: boolean, error: string|null}>}
+ */
+export async function deleteRegistration(id) {
+  try {
+    if (!id) {
+      return {
+        success: false,
+        error: 'Falta el identificador del registro.',
+      }
+    }
+
+    const { data, error } = await supabase.from('registrations').delete().eq('id', id).select('id')
+
+    if (error) {
+      console.error('Error al eliminar registro:', error)
+      return {
+        success: false,
+        error: error.message || 'Error al eliminar el registro',
+      }
+    }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      return {
+        success: false,
+        error:
+          'No se pudo borrar el registro. Puede que no exista o que tu usuario no tenga permisos de borrado (RLS).',
+      }
+    }
+
+    return {
+      success: true,
+      error: null,
+    }
+  } catch (error) {
+    console.error('Error inesperado al eliminar registro:', error)
+    return {
+      success: false,
+      error: error.message || 'Error inesperado al eliminar el registro',
+    }
+  }
+}
+
+/**
+ * Elimina múltiples registros por sus IDs
+ * @param {Array<string>} ids - IDs de los registros
+ * @returns {Promise<{success: boolean, deletedCount: number, error: string|null}>}
+ */
+export async function deleteRegistrationsBulk(ids = []) {
+  try {
+    const cleanIds = Array.isArray(ids) ? ids.filter(Boolean) : []
+    if (cleanIds.length === 0) {
+      return {
+        success: false,
+        deletedCount: 0,
+        error: 'No hay registros seleccionados para borrar.',
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('registrations')
+      .delete()
+      .in('id', cleanIds)
+      .select('id')
+
+    if (error) {
+      console.error('Error al eliminar registros en bloque:', error)
+      return {
+        success: false,
+        deletedCount: 0,
+        error: error.message || 'Error al eliminar los registros seleccionados',
+      }
+    }
+
+    const deletedCount = Array.isArray(data) ? data.length : 0
+    if (deletedCount === 0) {
+      return {
+        success: false,
+        deletedCount: 0,
+        error:
+          'No se pudo borrar ningún registro. Revisa permisos de borrado (RLS) o si los registros todavía existen.',
+      }
+    }
+
+    if (deletedCount < cleanIds.length) {
+      return {
+        success: false,
+        deletedCount,
+        error: `Solo se eliminaron ${deletedCount} de ${cleanIds.length} registros seleccionados.`,
+      }
+    }
+
+    return {
+      success: true,
+      deletedCount,
+      error: null,
+    }
+  } catch (error) {
+    console.error('Error inesperado al eliminar registros en bloque:', error)
+    return {
+      success: false,
+      deletedCount: 0,
+      error: error.message || 'Error inesperado al eliminar los registros seleccionados',
+    }
+  }
+}
+
+/**
  * Obtiene todas las actividades propuestas
  * @param {Object} options - Opciones de consulta
  * @param {number} options.limit - Límite de registros

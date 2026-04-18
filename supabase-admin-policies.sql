@@ -18,6 +18,14 @@ CREATE POLICY "allow_admin_update_registrations"
   USING (true)
   WITH CHECK (true);
 
+-- Política: Permitir DELETE de registros para usuarios autenticados (administradores)
+CREATE POLICY "allow_admin_delete_registrations"
+  ON public.registrations
+  AS PERMISSIVE
+  FOR DELETE
+  TO authenticated
+  USING (true);
+
 -- Verificar políticas creadas
 SELECT 
   policyname,

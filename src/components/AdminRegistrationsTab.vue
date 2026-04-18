@@ -22,6 +22,15 @@
           >
             Descargar Excel
           </button>
+          <button
+            type="button"
+            @click="handleDeleteSelected"
+            class="delete-selected-button"
+            :disabled="selectedCount === 0 || isDeleting"
+            :aria-label="`Borrar ${selectedCount} registros seleccionados`"
+          >
+            Borrar seleccionados ({{ selectedCount }})
+          </button>
           <div class="sort-controls">
             <label for="sort-field" class="sr-only">Ordenar por</label>
             <select
@@ -123,6 +132,16 @@
                 >
                   Editar
                 </button>
+                <button
+                  type="button"
+                  @click="handleDeleteOne(registration.id)"
+                  class="delete-icon-button"
+                  :disabled="isDeleting"
+                  :aria-label="`Eliminar registro de ${registration.first_name} ${registration.last_name}`"
+                  title="Eliminar registro"
+                >
+                  <span aria-hidden="true">🗑️</span>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -137,12 +156,73 @@
       @close="closeEditModal"
       @saved="handleRegistrationUpdated"
     />
+
+    <!-- Modal de confirmación de borrado -->
+    <div
+      v-if="registrationsToDelete.length > 0"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-modal-title"
+      @click.self="closeDeleteModal"
+      @keydown.esc="closeDeleteModal"
+    >
+      <div class="modal-content delete-modal">
+        <header class="modal-header">
+          <h2 id="delete-modal-title">Confirmar eliminación</h2>
+          <button
+            type="button"
+            @click="closeDeleteModal"
+            class="close-button"
+            aria-label="Cerrar modal"
+            :disabled="isDeleting"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+        <div class="modal-body">
+          <p v-if="registrationsToDelete.length === 1">
+            Vas a eliminar 1 registro de asistente. Esta acción no se puede deshacer.
+          </p>
+          <p v-else>
+            Vas a eliminar {{ registrationsToDelete.length }} registros de asistentes. Esta acción no
+            se puede deshacer.
+          </p>
+        </div>
+        <footer class="modal-footer">
+          <button
+            type="button"
+            @click="closeDeleteModal"
+            class="cancel-button"
+            :disabled="isDeleting"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            @click="executeDelete"
+            class="delete-button"
+            :disabled="isDeleting"
+          >
+            <span v-if="!isDeleting">Eliminar</span>
+            <span v-else>
+              <span class="spinner" aria-hidden="true"></span>
+              Eliminando...
+            </span>
+          </button>
+        </footer>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { getAllRegistrations } from '@/services/adminService'
+import {
+  deleteRegistration,
+  deleteRegistrationsBulk,
+  getAllRegistrations,
+} from '@/services/adminService'
 import { ACCOMMODATION_OPTIONS } from '@/constants'
 import AdminEditModal from '@/components/AdminEditModal.vue'
 import ExcelJS from 'exceljs'
@@ -160,6 +240,8 @@ const totalRegistrations = ref(0)
 const selectedRegistration = ref(null)
 const selectedRegistrations = ref(new Set())
 const allRegistrations = ref([])
+const registrationsToDelete = ref([])
+const isDeleting = ref(false)
 
 // Controles de ordenamiento
 const sortField = ref('accommodation_paid,created_at')
@@ -213,6 +295,55 @@ const handleSortChange = () => {
   loadRegistrations()
 }
 
+const openDeleteModal = (ids = []) => {
+  const cleanIds = Array.isArray(ids) ? ids.filter(Boolean) : []
+  if (cleanIds.length === 0) return
+  registrationsToDelete.value = cleanIds
+}
+
+const closeDeleteModal = () => {
+  if (isDeleting.value) return
+  registrationsToDelete.value = []
+}
+
+const handleDeleteOne = (registrationId) => {
+  openDeleteModal([registrationId])
+}
+
+const handleDeleteSelected = () => {
+  openDeleteModal(Array.from(selectedRegistrations.value))
+}
+
+const executeDelete = async () => {
+  const ids = [...registrationsToDelete.value]
+  if (ids.length === 0) return
+
+  isDeleting.value = true
+  error.value = ''
+
+  let result
+  if (ids.length === 1) {
+    result = await deleteRegistration(ids[0])
+  } else {
+    result = await deleteRegistrationsBulk(ids)
+  }
+
+  isDeleting.value = false
+
+  if (result.success) {
+    registrationsToDelete.value = []
+    await loadRegistrations()
+    return
+  }
+
+  if (result.deletedCount > 0) {
+    registrationsToDelete.value = []
+    await loadRegistrations()
+  }
+
+  error.value = result.error || 'No se pudieron eliminar los registros seleccionados'
+}
+
 const getAccommodationLabel = (value) => {
   const option = ACCOMMODATION_OPTIONS.find((opt) => opt.value === value)
   if (!option) return value
@@ -232,11 +363,13 @@ const formatDate = (dateString) => {
 }
 
 const handleSelectRegistration = (id, checked) => {
+  const updatedSelection = new Set(selectedRegistrations.value)
   if (checked) {
-    selectedRegistrations.value.add(id)
+    updatedSelection.add(id)
   } else {
-    selectedRegistrations.value.delete(id)
+    updatedSelection.delete(id)
   }
+  selectedRegistrations.value = updatedSelection
 }
 
 const handleSelectAll = async (event) => {
@@ -257,8 +390,10 @@ const handleSelectAll = async (event) => {
     allRegistrations.value.forEach((reg) => {
       selectedRegistrations.value.add(reg.id)
     })
+    selectedRegistrations.value = new Set(selectedRegistrations.value)
   } else {
     selectedRegistrations.value.clear()
+    selectedRegistrations.value = new Set()
   }
 }
 
@@ -273,6 +408,8 @@ const isIndeterminate = computed(() => {
     selectedRegistrations.value.size < totalRegistrations.value
   )
 })
+
+const selectedCount = computed(() => selectedRegistrations.value.size)
 
 const handleDownloadExcel = async () => {
   try {
@@ -504,6 +641,32 @@ defineExpose({
   cursor: not-allowed;
 }
 
+.delete-selected-button {
+  background-color: var(--color-accent);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.delete-selected-button:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+}
+
+.delete-selected-button:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.delete-selected-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .sort-select {
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-md);
@@ -621,15 +784,20 @@ defineExpose({
   background-color: var(--color-cream);
 }
 
-.edit-button {
-  background-color: var(--color-primary);
-  color: var(--color-white);
+.edit-button,
+.delete-button {
   border: none;
   border-radius: var(--radius-md);
   padding: 0.5rem 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s ease;
+}
+
+.edit-button {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  margin-right: var(--spacing-xs);
 }
 
 .edit-button:hover {
@@ -639,6 +807,58 @@ defineExpose({
 .edit-button:focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.delete-button {
+  background-color: var(--color-accent);
+  color: var(--color-white);
+}
+
+.delete-button:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+}
+
+.delete-button:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.delete-icon-button {
+  border: none;
+  background: transparent;
+  color: #dc3545;
+  border-radius: var(--radius-sm);
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: var(--spacing-xs);
+  transition:
+    color 0.2s ease,
+    transform 0.15s ease;
+  font-size: 1.1rem;
+}
+
+.delete-icon-button:hover:not(:disabled) {
+  color: #b8323f;
+  transform: translateY(-1px);
+}
+
+.delete-icon-button:focus-visible {
+  outline: 3px solid #dc3545;
+  outline-offset: 2px;
+}
+
+.delete-icon-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .payment-status {
@@ -670,6 +890,112 @@ defineExpose({
   animation: spinner 0.8s linear infinite;
 }
 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-md);
+}
+
+.modal-content {
+  background-color: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  max-width: 500px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-cream-dark);
+}
+
+.modal-header h2 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--color-text-light);
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+.close-button:hover:not(:disabled) {
+  background-color: var(--color-cream);
+}
+
+.close-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.close-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal-body {
+  padding: var(--spacing-lg);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-top: 1px solid var(--color-cream-dark);
+}
+
+.cancel-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: none;
+  background-color: var(--color-cream-dark);
+  color: var(--color-text);
+}
+
+.cancel-button:hover:not(:disabled) {
+  background-color: var(--color-cream);
+}
+
+.cancel-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @keyframes spinner {
   from {
     transform: rotate(0deg);
@@ -695,6 +1021,10 @@ defineExpose({
     width: 100%;
   }
 
+  .delete-selected-button {
+    width: 100%;
+  }
+
   .sort-controls {
     width: 100%;
     flex-direction: column;
@@ -711,6 +1041,14 @@ defineExpose({
   .registrations-table th,
   .registrations-table td {
     padding: var(--spacing-sm);
+  }
+
+  .edit-button,
+  .delete-icon-button {
+    display: block;
+    width: 100%;
+    margin-bottom: var(--spacing-xs);
+    height: auto;
   }
 }
 </style>

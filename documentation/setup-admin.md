@@ -20,6 +20,7 @@ Esta guía te ayudará a configurar el panel de administración para gestionar l
 3. Esto creará las políticas necesarias para que los usuarios autenticados puedan:
    - Leer todos los registros (SELECT)
    - Actualizar registros (UPDATE)
+   - Eliminar registros (DELETE)
 
 ## Paso 3: Configurar Variables de Entorno (si es necesario)
 
@@ -112,6 +113,7 @@ Simplemente añade o elimina campos del array según tus necesidades.
 - El panel requiere autenticación mediante Supabase Auth
 - Solo usuarios autenticados pueden acceder a los datos
 - Las políticas RLS garantizan que solo usuarios autenticados puedan leer y actualizar registros
+- Las políticas RLS de admin también permiten eliminar registros desde la pestaña de asistentes
 - Los usuarios anónimos solo pueden crear registros (INSERT), no leerlos ni modificarlos
 
 ## Solución de Problemas
