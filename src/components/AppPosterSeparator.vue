@@ -83,7 +83,7 @@ onUnmounted(() => {
 .poster-separator {
   position: relative;
   width: 100%;
-  padding: calc(var(--spacing-lg) + 24px) var(--spacing-md) var(--spacing-lg);
+  padding: calc(var(--spacing-lg) + 24px) var(--spacing-sm) var(--spacing-lg);
   background: linear-gradient(
     135deg,
     var(--color-primary-dark) 0%,
@@ -115,7 +115,8 @@ onUnmounted(() => {
 
 .poster-separator__image {
   position: relative;
-  width: min(92vw, 520px);
+  width: 100%;
+  max-width: min(520px, calc(100vw - (var(--spacing-sm) * 2)));
   height: auto;
   opacity: 1;
   filter: none;
