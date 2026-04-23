@@ -170,8 +170,8 @@
           <h2>7. Tratamiento de la imagen: alcance del consentimiento</h2>
           <p>
             Si marca la casilla específica en el formulario de inscripción, usted
-            <strong>autoriza</strong> a la Asociación cultural Castilla y Dragón a captar su imagen
-            (fotografía y/o vídeo) durante el desarrollo del evento y a
+            <strong>autoriza</strong> a la asociación cultural Castilla y Dragón a usar su imagen
+            (fotografía y/o vídeo) durante el desarrollo del evento y para
             <strong>reproducirla, distribuirla y comunicarla públicamente</strong>, sin contraprestación
             económica, a través de medios propios o de colaboradores, incluidos de forma enunciativa:
             página web, boletines, redes sociales (por ejemplo, Facebook, Instagram, Bluesky,
