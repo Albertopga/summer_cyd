@@ -109,6 +109,8 @@
               <th scope="col">Email</th>
               <th scope="col">Teléfono</th>
               <th scope="col">Alojamiento</th>
+              <th scope="col">Tirolina</th>
+              <th scope="col">Tirolina pagada</th>
               <th scope="col">Pagado</th>
               <th scope="col">Fecha registro</th>
               <th scope="col">Acciones</th>
@@ -133,6 +135,26 @@
               <td>{{ registration.email }}</td>
               <td>{{ registration.phone }}</td>
               <td>{{ getAccommodationLabel(registration.accommodation) }}</td>
+              <td>
+                <span
+                  class="payment-status"
+                  :class="
+                    registration.zipline_requested ? 'payment-status--paid' : 'payment-status--unpaid'
+                  "
+                  :aria-label="registration.zipline_requested ? 'Tirolina solicitada' : 'Tirolina no solicitada'"
+                >
+                  {{ registration.zipline_requested ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span
+                  class="payment-status"
+                  :class="registration.zipline_paid ? 'payment-status--paid' : 'payment-status--unpaid'"
+                  :aria-label="registration.zipline_paid ? 'Tirolina pagada' : 'Tirolina no pagada'"
+                >
+                  {{ registration.zipline_paid ? 'Sí' : 'No' }}
+                </span>
+              </td>
               <td>
                 <span
                   class="payment-status"
@@ -515,6 +537,8 @@ const handleDownloadExcel = async () => {
       { header: 'Fecha llegada', key: 'fechaLlegada', width: 20 },
       { header: 'Fecha salida', key: 'fechaSalida', width: 20 },
       { header: 'Alojamiento', key: 'alojamiento', width: 30 },
+      { header: 'Tirolina', key: 'tirolina', width: 12 },
+      { header: 'Tirolina pagada', key: 'tirolinaPagada', width: 16 },
       { header: 'Restricciones alimentarias', key: 'restriccionesAlimentarias', width: 25 },
       { header: 'Comentarios', key: 'comentarios', width: 30 },
       { header: 'Comentarios dieta', key: 'comentariosDieta', width: 20 },
@@ -564,6 +588,8 @@ const handleDownloadExcel = async () => {
             })
           : '',
         alojamiento: getAccommodationLabel(reg.accommodation),
+        tirolina: reg.zipline_requested ? 'Sí' : 'No',
+        tirolinaPagada: reg.zipline_paid ? 'Sí' : 'No',
         restriccionesAlimentarias: Array.isArray(reg.diet) ? reg.diet.join(', ') : '',
         comentarios: reg.comments || '',
         comentariosDieta: reg.diet_comments || '',

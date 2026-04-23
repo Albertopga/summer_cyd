@@ -181,6 +181,18 @@ const status = reactive({
 // Configuración de campos con sus tipos, opciones y si son editables
 const editableFieldsConfig = computed(() => {
   const config = {
+    accommodation_paid: {
+      key: 'accommodation_paid',
+      label: 'Alojamiento pagado',
+      type: 'checkbox',
+      isEditable: true,
+    },
+    zipline_paid: {
+      key: 'zipline_paid',
+      label: 'Tirolina pagada',
+      type: 'checkbox',
+      isEditable: true,
+    },
     first_name: {
       key: 'first_name',
       label: 'Nombre',
@@ -257,6 +269,12 @@ const editableFieldsConfig = computed(() => {
         label: opt.fullLabel ?? opt.label,
       })),
     },
+    zipline_requested: {
+      key: 'zipline_requested',
+      label: 'Quiere tirolina',
+      type: 'checkbox',
+      isEditable: true,
+    },
     diet: {
       key: 'diet',
       label: 'Restricciones alimentarias',
@@ -288,12 +306,7 @@ const editableFieldsConfig = computed(() => {
       type: 'checkbox',
       isEditable: true,
     },
-    accommodation_paid: {
-      key: 'accommodation_paid',
-      label: 'Alojamiento pagado',
-      type: 'checkbox',
-      isEditable: true,
-    },
+
   }
 
   // Filtrar solo los campos editables
@@ -343,6 +356,8 @@ watch(
         // Manejar booleanos (is_minor, terms_accepted, image_consent_accepted)
         else if (
           fieldKey === 'is_minor' ||
+          fieldKey === 'zipline_requested' ||
+          fieldKey === 'zipline_paid' ||
           fieldKey === 'terms_accepted' ||
           fieldKey === 'image_consent_accepted'
         ) {
@@ -463,6 +478,8 @@ const handleSave = async () => {
       }
     } else if (
       fieldKey === 'is_minor' ||
+      fieldKey === 'zipline_requested' ||
+      fieldKey === 'zipline_paid' ||
       fieldKey === 'terms_accepted' ||
       fieldKey === 'image_consent_accepted'
     ) {
@@ -485,6 +502,8 @@ const handleSave = async () => {
       }
     } else if (
       fieldKey === 'is_minor' ||
+      fieldKey === 'zipline_requested' ||
+      fieldKey === 'zipline_paid' ||
       fieldKey === 'terms_accepted' ||
       fieldKey === 'image_consent_accepted'
     ) {

@@ -198,7 +198,7 @@
               </div>
 
               <div class="form-row">
-                <label for="phone">Teléfono de contacto *</label>
+                <label for="phone">Teléfono de contacto</label>
                 <input
                   id="phone"
                   v-model.trim="form.phone"
@@ -206,8 +206,7 @@
                   name="phone"
                   autocomplete="tel"
                   inputmode="tel"
-                  required
-                  aria-required="true"
+                  aria-required="false"
                   :aria-invalid="errors.phone ? 'true' : 'false'"
                   :aria-describedby="describedByFor('phone')"
                   @blur="() => validateField('phone')"
@@ -539,6 +538,21 @@
                   </p>
                 </div>
               </fieldset>
+
+              <fieldset class="form-subfieldset">
+                <legend>Extras</legend>
+                <div class="option-list option-list--checkbox">
+                  <div class="option-item">
+                    <input
+                      id="ziplineRequested"
+                      v-model="form.ziplineRequested"
+                      type="checkbox"
+                      name="ziplineRequested"
+                    />
+                    <label for="ziplineRequested">Quiero tirolina (12€)</label>
+                  </div>
+                </div>
+              </fieldset>
             </fieldset>
 
             <div class="form-consent">
@@ -777,6 +791,7 @@ const form = reactive({
   departureDate: '',
   accommodation: '',
   diet: [],
+  ziplineRequested: false,
   comments: '',
   dietComments: '',
   emergencyContactName: '',
@@ -1060,11 +1075,7 @@ const validateField = (field) => {
       return true
 
     case 'phone':
-      if (!form.phone.trim()) {
-        errors.phone = 'Indica un teléfono de contacto.'
-        return false
-      }
-      if (!phonePattern.test(form.phone)) {
+      if (form.phone.trim() && !phonePattern.test(form.phone)) {
         errors.phone = 'El teléfono debe tener al menos 9 dígitos.'
         return false
       }
@@ -1205,7 +1216,6 @@ const fieldsToValidate = [
   'firstName',
   'lastName',
   'email',
-  'phone',
   'birthDate',
   'arrivalDate',
   'departureDate',
@@ -1249,6 +1259,7 @@ const resetForm = () => {
   form.departureDate = ''
   form.accommodation = ''
   form.diet = []
+  form.ziplineRequested = false
   form.comments = ''
   form.dietComments = ''
   form.emergencyContactName = ''
