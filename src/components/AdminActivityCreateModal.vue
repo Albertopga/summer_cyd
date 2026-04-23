@@ -67,6 +67,23 @@
               :min="field.min"
               :aria-invalid="errors[field.key] ? 'true' : 'false'"
             />
+            <input
+              v-else-if="field.type === 'date'"
+              :id="`create-${field.key}`"
+              v-model="formData[field.key]"
+              type="date"
+              :min="eventDateMin"
+              :max="eventDateMax"
+              :aria-invalid="errors[field.key] ? 'true' : 'false'"
+            />
+            <input
+              v-else-if="field.type === 'time'"
+              :id="`create-${field.key}`"
+              v-model="formData[field.key]"
+              type="time"
+              step="900"
+              :aria-invalid="errors[field.key] ? 'true' : 'false'"
+            />
             <textarea
               v-else-if="field.type === 'textarea'"
               :id="`create-${field.key}`"
@@ -87,6 +104,13 @@
             <span v-if="errors[field.key]" class="form-error" role="alert">{{
               errors[field.key]
             }}</span>
+            <p
+              v-if="field.key === 'preferred_time_slot'"
+              class="form-help"
+              title="Preferencia del organizador; el horario final lo asigna la organización"
+            >
+              Preferencia del organizador; el horario final lo asigna la organización.
+            </p>
           </div>
 
           <div class="form-group">
@@ -150,7 +174,15 @@
 <script setup>
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { createActivityAdmin } from '@/services/adminService'
-import { ACTIVITY_TYPES, TIME_SLOTS, SPACE_NEEDS, VALIDATION_PATTERNS } from '@/constants'
+import {
+  ACTIVITY_TYPES,
+  EVENT_DATES,
+  SLOT_TIME_RANGES,
+  TIME_SLOTS,
+  SPACE_NEEDS,
+  VALIDATION_PATTERNS,
+  parseEventDateLocal,
+} from '@/constants'
 
 defineOptions({
   name: 'AdminActivityCreateModal',
@@ -165,6 +197,10 @@ const documentsInputRef = ref(null)
 let previousFocus = null
 
 const emailPattern = VALIDATION_PATTERNS.email
+const eventDateMin = EVENT_DATES.start
+const eventDateMax = EVENT_DATES.end
+
+const normalizeTime = (timeValue) => String(timeValue || '').slice(0, 5)
 
 const formData = reactive({
   organizer_name: '',
@@ -176,6 +212,8 @@ const formData = reactive({
   min_participants: 1,
   max_participants: 12,
   preferred_time_slot: TIME_SLOTS[0]?.value || 'sabado-tarde',
+  activity_date: '',
+  activity_time: '',
   duration: '',
   participant_needs: '',
   organization_needs: '',
@@ -200,10 +238,12 @@ const coreFields = [
   { key: 'max_participants', label: 'Máximo de participantes', type: 'number', min: 1 },
   {
     key: 'preferred_time_slot',
-    label: 'Franja horaria preferida',
+    label: 'Preferencia (día/franja)',
     type: 'select',
     options: TIME_SLOTS,
   },
+  { key: 'activity_date', label: 'Fecha de actividad', type: 'date' },
+  { key: 'activity_time', label: 'Hora de actividad', type: 'time' },
   { key: 'duration', label: 'Duración (texto libre, ej. 2 horas)', type: 'text' },
   { key: 'participant_needs', label: 'Necesidades de los participantes', type: 'textarea' },
   { key: 'organization_needs', label: 'Necesidades de la organización', type: 'textarea' },
@@ -268,6 +308,38 @@ const validateForm = () => {
   if (!formData.duration.trim()) {
     errors.duration = 'Obligatorio'
     ok = false
+  }
+  if (!formData.activity_date) {
+    errors.activity_date = 'Obligatorio'
+    ok = false
+  }
+  if (!formData.activity_time) {
+    errors.activity_time = 'Obligatorio'
+    ok = false
+  }
+  if (formData.activity_date) {
+    const selectedDate = parseEventDateLocal(formData.activity_date)
+    const startDate = parseEventDateLocal(EVENT_DATES.start)
+    const endDate = parseEventDateLocal(EVENT_DATES.end)
+    if (selectedDate < startDate || selectedDate > endDate) {
+      errors.activity_date = 'La fecha debe estar dentro de las fechas del evento'
+      ok = false
+    }
+  }
+  const selectedSlot = SLOT_TIME_RANGES[formData.preferred_time_slot]
+  const normalizedTime = normalizeTime(formData.activity_time)
+  if (selectedSlot && formData.activity_date) {
+    const selectedDate = parseEventDateLocal(formData.activity_date)
+    if (selectedDate.getDay() !== selectedSlot.day) {
+      errors.activity_date = 'La fecha no coincide con la franja horaria seleccionada'
+      ok = false
+    }
+  }
+  if (selectedSlot && normalizedTime) {
+    if (normalizedTime < selectedSlot.start || normalizedTime > selectedSlot.end) {
+      errors.activity_time = `La hora debe estar entre ${selectedSlot.start} y ${selectedSlot.end}`
+      ok = false
+    }
   }
   const min = Number(formData.min_participants)
   const max = Number(formData.max_participants)
@@ -344,6 +416,8 @@ const handleSave = async () => {
     min_participants: formData.min_participants,
     max_participants: formData.max_participants,
     preferred_time_slot: formData.preferred_time_slot,
+    activity_date: formData.activity_date,
+    activity_time: formData.activity_time,
     duration: formData.duration,
     participant_needs: formData.participant_needs || null,
     organization_needs: formData.organization_needs || null,

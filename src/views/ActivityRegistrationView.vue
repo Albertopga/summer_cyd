@@ -287,9 +287,11 @@
 
               <div class="form-row">
                 <label :for="`activityPreferredTimeSlot-${index}`"
-                  >Franja horaria preferida *
+                  >Preferencia (día/franja) *
                   <span class="legend-note"
-                    >(La organización intentará respetar tus preferencias)</span
+                    title="Es una preferencia; la organización asigna el horario final"
+                    >(La organización intentará respetar tus preferencias; el horario final lo
+                    asigna la organización)</span
                   ></label
                 >
                 <select

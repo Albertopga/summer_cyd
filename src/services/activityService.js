@@ -353,3 +353,42 @@ export async function saveActivities(organizerName, organizerEmail, activities) 
     }
   }
 }
+
+/**
+ * Obtiene actividades aprobadas para mostrarlas en Home (público).
+ * Se ordenan por fecha y hora de actividad.
+ * @returns {Promise<{success: boolean, data: Array|null, error: string|null}>}
+ */
+export async function getApprovedActivitiesForPublic() {
+  try {
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('status', 'approved')
+      .order('activity_date', { ascending: true, nullsFirst: false })
+      .order('activity_time', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error('Error al obtener actividades públicas:', error)
+      return {
+        success: false,
+        data: null,
+        error: error.message || 'No se pudieron cargar las actividades públicas',
+      }
+    }
+
+    return {
+      success: true,
+      data: data || [],
+      error: null,
+    }
+  } catch (error) {
+    console.error('Error inesperado al obtener actividades públicas:', error)
+    return {
+      success: false,
+      data: null,
+      error: error.message || 'Error inesperado al obtener actividades públicas',
+    }
+  }
+}

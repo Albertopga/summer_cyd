@@ -87,7 +87,14 @@
               <th scope="col">Tipo</th>
               <th scope="col">Nombre</th>
               <th scope="col">Participantes</th>
-              <th scope="col">Horario</th>
+              <th scope="col">Fecha actividad</th>
+              <th scope="col">Hora actividad</th>
+              <th
+                scope="col"
+                title="Preferencia del organizador; el horario final lo asigna la organización"
+              >
+                Preferencia (día/franja)
+              </th>
               <th scope="col">Estado</th>
               <th scope="col">Fecha registro</th>
               <th scope="col">Acciones</th>
@@ -112,7 +119,11 @@
               <td data-label="Participantes">
                 {{ activity.min_participants }}-{{ activity.max_participants }}
               </td>
-              <td data-label="Horario">{{ getTimeSlotLabel(activity.preferred_time_slot) }}</td>
+              <td data-label="Fecha actividad">{{ formatActivityDate(activity.activity_date) }}</td>
+              <td data-label="Hora actividad">{{ formatActivityTime(activity.activity_time) }}</td>
+              <td data-label="Preferencia (día/franja)">
+                {{ getTimeSlotLabel(activity.preferred_time_slot) }}
+              </td>
               <td data-label="Estado">
                 <span
                   class="status-badge"
@@ -198,7 +209,8 @@
               {{ detailActivity.max_participants || '-' }}
             </p>
             <p>
-              <strong>Franja:</strong> {{ getTimeSlotLabel(detailActivity.preferred_time_slot) }}
+              <strong>Preferencia (día/franja):</strong>
+              {{ getTimeSlotLabel(detailActivity.preferred_time_slot) }}
             </p>
             <p><strong>Duración:</strong> {{ detailActivity.duration || '-' }}</p>
             <p><strong>Espacio:</strong> {{ getSpaceNeedLabel(detailActivity.space_need) }}</p>
@@ -474,6 +486,21 @@ const formatDate = (dateString) => {
   })
 }
 
+const formatActivityDate = (dateString) => {
+  if (!dateString) return '-'
+  const date = new Date(`${dateString}T00:00:00`)
+  return date.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+}
+
+const formatActivityTime = (timeString) => {
+  if (!timeString) return '-'
+  return String(timeString).slice(0, 5)
+}
+
 const getSpaceNeedLabel = (value) => {
   if (!value) return '-'
   const option = SPACE_NEEDS.find((opt) => opt.value === value)
@@ -679,7 +706,7 @@ const handleDownloadExcel = async () => {
       { header: 'Descripción', key: 'descripcion', width: 40 },
       { header: 'Mín. participantes', key: 'minParticipantes', width: 15 },
       { header: 'Máx. participantes', key: 'maxParticipantes', width: 15 },
-      { header: 'Franja horaria', key: 'franjaHoraria', width: 25 },
+      { header: 'Preferencia (día/franja)', key: 'franjaHoraria', width: 25 },
       { header: 'Duración', key: 'duracion', width: 15 },
       { header: 'Necesidades participantes', key: 'necesidadesParticipantes', width: 30 },
       { header: 'Necesidades organización', key: 'necesidadesOrganizacion', width: 30 },

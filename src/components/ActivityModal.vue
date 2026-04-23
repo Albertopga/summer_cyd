@@ -37,6 +37,40 @@
               }}
             </p>
 
+            <div v-if="isActivitiesCard" class="public-activities-section">
+              <p v-if="publicActivitiesLoading" class="public-activities-status" role="status">
+                Cargando actividades...
+              </p>
+              <p v-else-if="publicActivitiesError" class="public-activities-status" role="alert">
+                {{ publicActivitiesError }}
+              </p>
+              <p
+                v-else-if="publicActivities.length === 0"
+                class="public-activities-status"
+                role="status"
+              >
+                Aún no hay actividades aprobadas publicadas.
+              </p>
+              <ul v-else class="public-activities-list">
+                <li
+                  v-for="publicActivity in publicActivities"
+                  :key="publicActivity.id"
+                  class="public-activities-item"
+                >
+                  <p class="public-activities-name">{{ publicActivity.name }}</p>
+                  <p class="public-activities-meta">
+                    {{ formatPublicActivityDateTime(publicActivity) }}
+                  </p>
+                  <p class="public-activities-meta">
+                    {{ publicActivity.organizer_name }} · {{ publicActivity.duration }}
+                  </p>
+                  <p class="public-activities-description">
+                    {{ publicActivity.description }}
+                  </p>
+                </li>
+              </ul>
+            </div>
+
             <p v-if="activity.accommodations" class="accommodation-outlets-note">
               {{ ACCOMMODATION_OUTLETS_NOTE }}
             </p>
@@ -244,6 +278,7 @@ import {
   ACCOMMODATION_OUTLETS_NOTE,
   groupAccommodationOptions,
 } from '@/constants'
+import { getApprovedActivitiesForPublic } from '@/services/activityService'
 
 const props = defineProps({
   isOpen: {
@@ -263,6 +298,11 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close'])
+const isActivitiesCard = computed(() => props.activity?.title === 'Actividades')
+
+const publicActivitiesLoading = ref(false)
+const publicActivitiesError = ref('')
+const publicActivities = ref([])
 
 const groupedAccommodations = computed(() => {
   if (!props.activity.accommodations?.length) return []
@@ -276,6 +316,39 @@ const blockKey = (block, index) => {
 
 const closeModal = () => {
   emit('close')
+}
+
+const formatPublicActivityDateTime = (activity) => {
+  const hasDate = Boolean(activity.activity_date)
+  const hasTime = Boolean(activity.activity_time)
+  if (!hasDate && !hasTime) return 'Fecha/hora pendiente'
+
+  const dateLabel = hasDate
+    ? new Date(`${activity.activity_date}T00:00:00`).toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+    : 'Fecha pendiente'
+  const timeLabel = hasTime ? activity.activity_time.slice(0, 5) : 'Hora pendiente'
+  return `${dateLabel} · ${timeLabel}`
+}
+
+const loadPublicActivities = async () => {
+  publicActivitiesLoading.value = true
+  publicActivitiesError.value = ''
+  publicActivities.value = []
+
+  const result = await getApprovedActivitiesForPublic()
+  if (!result.success) {
+    publicActivitiesError.value = result.error || 'No se pudieron cargar las actividades.'
+    publicActivitiesLoading.value = false
+    return
+  }
+
+  publicActivities.value = result.data || []
+  publicActivitiesLoading.value = false
 }
 
 // Estado para el modal de imagen ampliada
@@ -330,6 +403,10 @@ watch(
   (newValue) => {
     if (!newValue) {
       closeImageModal()
+      return
+    }
+    if (isActivitiesCard.value) {
+      loadPublicActivities()
     }
   },
 )
@@ -480,6 +557,48 @@ onUnmounted(() => {
   color: var(--color-text-light);
   line-height: 1.8;
   margin-bottom: var(--spacing-lg);
+}
+
+.public-activities-section {
+  margin-top: var(--spacing-md);
+}
+
+.public-activities-status {
+  margin: 0;
+  color: var(--color-text-light);
+}
+
+.public-activities-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.public-activities-item {
+  background-color: var(--color-cream);
+  border: 1px solid var(--color-cream-dark);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  text-align: left;
+}
+
+.public-activities-name {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.public-activities-meta {
+  margin: 0.2rem 0 0;
+  color: var(--color-text-light);
+  font-size: 0.92rem;
+}
+
+.public-activities-description {
+  margin: 0.4rem 0 0;
+  line-height: 1.5;
 }
 
 .accommodation-outlets-note {

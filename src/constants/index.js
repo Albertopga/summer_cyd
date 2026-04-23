@@ -216,8 +216,19 @@ export const TIME_SLOTS = [
   { value: 'sabado-tarde', label: 'Sábado tarde (14:00-20:00)' },
   { value: 'sabado-noche', label: 'Sábado noche (20:00-24:00)' },
   { value: 'domingo-manana', label: 'Domingo mañana (09:00-14:00)' },
-  { value: 'domingo-tarde', label: 'Domingo tarde (14:00-20:00)' },
+  { value: 'domingo-tarde', label: 'Domingo tarde (14:00-19:00)' },
 ]
+
+// Rangos de día/hora válidos por franja (para validaciones de agenda)
+export const SLOT_TIME_RANGES = {
+  'viernes-tarde': { day: 5, start: '17:00', end: '20:00' },
+  'viernes-noche': { day: 5, start: '20:00', end: '23:59' },
+  'sabado-manana': { day: 6, start: '09:00', end: '14:00' },
+  'sabado-tarde': { day: 6, start: '14:00', end: '20:00' },
+  'sabado-noche': { day: 6, start: '20:00', end: '23:59' },
+  'domingo-manana': { day: 0, start: '09:00', end: '14:00' },
+  'domingo-tarde': { day: 0, start: '14:00', end: '19:00' },
+}
 
 // Necesidades de espacio
 export const SPACE_NEEDS = [

@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/lib/supabase'
+import { EVENT_DATES, parseEventDateLocal, SLOT_TIME_RANGES } from '@/constants'
 
 const ACTIVITY_DOCUMENT_MAX_SIZE = 10 * 1024 * 1024
 const ACTIVITY_DOCUMENT_ALLOWED_TYPES = [
@@ -14,6 +15,41 @@ const ACTIVITY_DOCUMENT_ALLOWED_TYPES = [
   'image/jpg',
   'image/png',
 ]
+
+const normalizeTime = (timeValue) => String(timeValue || '').slice(0, 5)
+
+function validateActivityDateTime(activityDate, activityTime, preferredTimeSlot) {
+  if (!activityDate || !activityTime || !preferredTimeSlot) {
+    return { valid: false, error: 'Franja horaria, fecha y hora son obligatorias.' }
+  }
+
+  const selectedDate = parseEventDateLocal(activityDate)
+  const startDate = parseEventDateLocal(EVENT_DATES.start)
+  const endDate = parseEventDateLocal(EVENT_DATES.end)
+
+  if (selectedDate < startDate || selectedDate > endDate) {
+    return { valid: false, error: 'La fecha de actividad está fuera de las fechas del evento.' }
+  }
+
+  const slot = SLOT_TIME_RANGES[preferredTimeSlot]
+  if (!slot) {
+    return { valid: false, error: 'Franja horaria no válida.' }
+  }
+
+  if (selectedDate.getDay() !== slot.day) {
+    return { valid: false, error: 'La fecha no coincide con la franja horaria seleccionada.' }
+  }
+
+  const normalized = normalizeTime(activityTime)
+  if (normalized < slot.start || normalized > slot.end) {
+    return {
+      valid: false,
+      error: `La hora debe estar entre ${slot.start} y ${slot.end} para la franja seleccionada.`,
+    }
+  }
+
+  return { valid: true, error: null }
+}
 
 /**
  * Lanza el proceso de recordatorios de pago desde el panel admin.
@@ -572,6 +608,28 @@ export async function updateActivity(id, updates, allowedFields = []) {
     const incomingDocuments = Array.isArray(filteredUpdates.documents)
       ? filteredUpdates.documents
       : []
+    const scheduleFieldsChanged =
+      Object.prototype.hasOwnProperty.call(filteredUpdates, 'activity_date') ||
+      Object.prototype.hasOwnProperty.call(filteredUpdates, 'activity_time') ||
+      Object.prototype.hasOwnProperty.call(filteredUpdates, 'preferred_time_slot')
+
+    let currentActivitySchedule = null
+    if (scheduleFieldsChanged) {
+      const { data: scheduleRow, error: scheduleError } = await supabase
+        .from('activities')
+        .select('activity_date, activity_time, preferred_time_slot')
+        .eq('id', id)
+        .single()
+
+      if (scheduleError) {
+        return {
+          success: false,
+          data: null,
+          error: scheduleError.message || 'No se pudo validar fecha/hora de la actividad',
+        }
+      }
+      currentActivitySchedule = scheduleRow
+    }
     if (incomingDocuments.length > 0) {
       const { data: currentActivity, error: currentActivityError } = await supabase
         .from('activities')
@@ -607,6 +665,21 @@ export async function updateActivity(id, updates, allowedFields = []) {
         ? currentActivity.documents
         : []
       filteredUpdates.documents = [...currentDocuments, ...uploadResult.data]
+    }
+
+    if (scheduleFieldsChanged) {
+      const effectiveDate = filteredUpdates.activity_date ?? currentActivitySchedule?.activity_date
+      const effectiveTime = filteredUpdates.activity_time ?? currentActivitySchedule?.activity_time
+      const effectiveSlot =
+        filteredUpdates.preferred_time_slot ?? currentActivitySchedule?.preferred_time_slot
+      const scheduleValidation = validateActivityDateTime(effectiveDate, effectiveTime, effectiveSlot)
+      if (!scheduleValidation.valid) {
+        return {
+          success: false,
+          data: null,
+          error: scheduleValidation.error,
+        }
+      }
     }
 
     if (Object.keys(filteredUpdates).length === 0) {
@@ -741,6 +814,8 @@ export async function createActivityAdmin(payload) {
       min_participants: Number(payload.min_participants),
       max_participants: Number(payload.max_participants),
       preferred_time_slot: payload.preferred_time_slot,
+      activity_date: payload.activity_date || null,
+      activity_time: payload.activity_time || null,
       duration: String(payload.duration || '').trim(),
       participant_needs: payload.participant_needs?.trim() || null,
       organization_needs: payload.organization_needs?.trim() || null,
@@ -773,11 +848,24 @@ export async function createActivityAdmin(payload) {
       }
     }
 
-    if (!row.preferred_time_slot || !row.duration) {
+    if (!row.preferred_time_slot || !row.duration || !row.activity_date || !row.activity_time) {
       return {
         success: false,
         data: null,
-        error: 'Franja horaria y duración son obligatorias.',
+        error: 'Franja horaria, fecha, hora y duración son obligatorias.',
+      }
+    }
+
+    const scheduleValidation = validateActivityDateTime(
+      row.activity_date,
+      row.activity_time,
+      row.preferred_time_slot,
+    )
+    if (!scheduleValidation.valid) {
+      return {
+        success: false,
+        data: null,
+        error: scheduleValidation.error,
       }
     }
 

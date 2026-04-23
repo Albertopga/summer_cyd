@@ -41,6 +41,27 @@
               :aria-invalid="errors[field.key] ? 'true' : 'false'"
             />
 
+            <input
+              v-else-if="field.type === 'date'"
+              :id="`field-${field.key}`"
+              v-model="formData[field.key]"
+              type="date"
+              :min="eventDateMin"
+              :max="eventDateMax"
+              :aria-describedby="errors[field.key] ? `${field.key}-error` : undefined"
+              :aria-invalid="errors[field.key] ? 'true' : 'false'"
+            />
+
+            <input
+              v-else-if="field.type === 'time'"
+              :id="`field-${field.key}`"
+              v-model="formData[field.key]"
+              type="time"
+              step="900"
+              :aria-describedby="errors[field.key] ? `${field.key}-error` : undefined"
+              :aria-invalid="errors[field.key] ? 'true' : 'false'"
+            />
+
             <!-- Campo de texto largo -->
             <textarea
               v-else-if="field.type === 'textarea'"
@@ -73,6 +94,13 @@
             >
               {{ errors[field.key] }}
             </span>
+            <p
+              v-if="field.key === 'preferred_time_slot'"
+              class="form-help"
+              title="Preferencia del organizador; el horario final lo asigna la organización"
+            >
+              Preferencia del organizador; el horario final lo asigna la organización.
+            </p>
           </div>
 
           <div class="form-group">
@@ -136,7 +164,15 @@
 <script setup>
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { updateActivity } from '@/services/adminService'
-import { ACTIVITY_TYPES, TIME_SLOTS, SPACE_NEEDS, VALIDATION_PATTERNS } from '@/constants'
+import {
+  ACTIVITY_TYPES,
+  EVENT_DATES,
+  SLOT_TIME_RANGES,
+  TIME_SLOTS,
+  SPACE_NEEDS,
+  VALIDATION_PATTERNS,
+  parseEventDateLocal,
+} from '@/constants'
 
 const props = defineProps({
   activity: {
@@ -153,6 +189,10 @@ const modalRef = ref(null)
 const documentsInputRef = ref(null)
 let previousFocus = null
 const emailPattern = VALIDATION_PATTERNS.email
+const eventDateMin = EVENT_DATES.start
+const eventDateMax = EVENT_DATES.end
+
+const normalizeTime = (timeValue) => String(timeValue || '').slice(0, 5)
 
 const formData = reactive({})
 const errors = reactive({})
@@ -225,10 +265,22 @@ const editableFieldsConfig = computed(() => {
     },
     preferred_time_slot: {
       key: 'preferred_time_slot',
-      label: 'Franja horaria preferida',
+      label: 'Preferencia (día/franja)',
       type: 'select',
       isEditable: true,
       options: TIME_SLOTS,
+    },
+    activity_date: {
+      key: 'activity_date',
+      label: 'Fecha de actividad',
+      type: 'date',
+      isEditable: true,
+    },
+    activity_time: {
+      key: 'activity_time',
+      label: 'Hora de actividad',
+      type: 'time',
+      isEditable: true,
     },
     duration: {
       key: 'duration',
@@ -353,6 +405,38 @@ const validateForm = () => {
   } else if (!emailPattern.test(String(formData.organizer_email))) {
     errors.organizer_email = 'Formato de correo no válido'
     isValid = false
+  }
+  if (!String(formData.activity_date || '').trim()) {
+    errors.activity_date = 'Obligatorio'
+    isValid = false
+  }
+  if (!String(formData.activity_time || '').trim()) {
+    errors.activity_time = 'Obligatorio'
+    isValid = false
+  }
+  if (formData.activity_date) {
+    const selectedDate = parseEventDateLocal(formData.activity_date)
+    const startDate = parseEventDateLocal(EVENT_DATES.start)
+    const endDate = parseEventDateLocal(EVENT_DATES.end)
+    if (selectedDate < startDate || selectedDate > endDate) {
+      errors.activity_date = 'La fecha debe estar dentro de las fechas del evento'
+      isValid = false
+    }
+  }
+  const selectedSlot = SLOT_TIME_RANGES[formData.preferred_time_slot]
+  const normalizedTime = normalizeTime(formData.activity_time)
+  if (selectedSlot && formData.activity_date) {
+    const selectedDate = parseEventDateLocal(formData.activity_date)
+    if (selectedDate.getDay() !== selectedSlot.day) {
+      errors.activity_date = 'La fecha no coincide con la franja horaria seleccionada'
+      isValid = false
+    }
+  }
+  if (selectedSlot && normalizedTime) {
+    if (normalizedTime < selectedSlot.start || normalizedTime > selectedSlot.end) {
+      errors.activity_time = `La hora debe estar entre ${selectedSlot.start} y ${selectedSlot.end}`
+      isValid = false
+    }
   }
 
   // Validar min_participants y max_participants
