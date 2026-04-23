@@ -5,8 +5,6 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="create-modal-title"
-    @click.self="handleClose"
-    @keydown.esc="handleClose"
   >
     <div class="modal-content" ref="modalRef">
       <header class="modal-header">
@@ -24,7 +22,7 @@
       <form @submit.prevent="handleSave" class="edit-form" novalidate>
         <div class="form-fields">
           <div class="form-group">
-            <label for="create-organizer-name">Nombre a mostrar (organización o responsable) *</label>
+            <label for="create-organizer-name">Organizador *</label>
             <input
               id="create-organizer-name"
               v-model.trim="formData.organizer_name"
@@ -86,7 +84,9 @@
                 {{ opt.label }}
               </option>
             </select>
-            <span v-if="errors[field.key]" class="form-error" role="alert">{{ errors[field.key] }}</span>
+            <span v-if="errors[field.key]" class="form-error" role="alert">{{
+              errors[field.key]
+            }}</span>
           </div>
 
           <div class="form-group">
@@ -107,7 +107,11 @@
               Formatos permitidos: PDF, Word e imágenes (JPG, PNG). Máximo 10MB por archivo.
             </p>
             <ul v-if="selectedFiles.length > 0" class="file-list">
-              <li v-for="(file, index) in selectedFiles" :key="`${file.name}-${index}`" class="file-item">
+              <li
+                v-for="(file, index) in selectedFiles"
+                :key="`${file.name}-${index}`"
+                class="file-item"
+              >
                 <span>{{ file.name }}</span>
                 <button
                   type="button"
@@ -119,7 +123,9 @@
                 </button>
               </li>
             </ul>
-            <span v-if="errors.documents" class="form-error" role="alert">{{ errors.documents }}</span>
+            <span v-if="errors.documents" class="form-error" role="alert">{{
+              errors.documents
+            }}</span>
           </div>
         </div>
 
@@ -128,7 +134,6 @@
         </div>
 
         <footer class="modal-footer">
-          <button type="button" @click="handleClose" class="cancel-button">Cancelar</button>
           <button type="submit" class="save-button" :disabled="isSaving">
             <span v-if="!isSaving">Crear actividad</span>
             <span v-else>
@@ -164,9 +169,9 @@ const emailPattern = VALIDATION_PATTERNS.email
 const formData = reactive({
   organizer_name: '',
   organizer_email: '',
+  name: '',
   status: 'approved',
   type: ACTIVITY_TYPES[0]?.value || 'otra',
-  name: '',
   description: '',
   min_participants: 1,
   max_participants: 12,
@@ -188,19 +193,8 @@ const status = reactive({
 })
 
 const coreFields = [
-  {
-    key: 'status',
-    label: 'Estado',
-    type: 'select',
-    options: [
-      { value: 'pending', label: 'Pendiente' },
-      { value: 'approved', label: 'Aprobada' },
-      { value: 'rejected', label: 'Rechazada' },
-      { value: 'cancelled', label: 'Cancelada' },
-    ],
-  },
-  { key: 'type', label: 'Tipo de actividad', type: 'select', options: ACTIVITY_TYPES },
   { key: 'name', label: 'Nombre de la actividad', type: 'text' },
+  { key: 'type', label: 'Tipo de actividad', type: 'select', options: ACTIVITY_TYPES },
   { key: 'description', label: 'Descripción', type: 'textarea' },
   { key: 'min_participants', label: 'Mínimo de participantes', type: 'number', min: 1 },
   { key: 'max_participants', label: 'Máximo de participantes', type: 'number', min: 1 },
@@ -216,6 +210,17 @@ const coreFields = [
   { key: 'space_need', label: 'Necesidad de espacio', type: 'select', options: SPACE_NEEDS },
   { key: 'setup', label: 'Puesta en marcha', type: 'textarea' },
   { key: 'observations', label: 'Observaciones', type: 'textarea' },
+  {
+    key: 'status',
+    label: 'Estado',
+    type: 'select',
+    options: [
+      { value: 'pending', label: 'Pendiente' },
+      { value: 'approved', label: 'Aprobada' },
+      { value: 'rejected', label: 'Rechazada' },
+      { value: 'cancelled', label: 'Cancelada' },
+    ],
+  },
 ]
 
 onMounted(() => {
@@ -332,9 +337,9 @@ const handleSave = async () => {
   const result = await createActivityAdmin({
     organizer_name: formData.organizer_name,
     organizer_email: formData.organizer_email,
+    name: formData.name,
     status: formData.status,
     type: formData.type,
-    name: formData.name,
     description: formData.description,
     min_participants: formData.min_participants,
     max_participants: formData.max_participants,
@@ -558,18 +563,12 @@ const handleSave = async () => {
   border-top: 1px solid var(--color-cream-dark);
 }
 
-.cancel-button,
 .save-button {
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
   border: none;
-}
-
-.cancel-button {
-  background-color: var(--color-cream-dark);
-  color: var(--color-text);
 }
 
 .save-button {
@@ -582,8 +581,7 @@ const handleSave = async () => {
   cursor: not-allowed;
 }
 
-.save-button:focus-visible,
-.cancel-button:focus-visible {
+.save-button:focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }

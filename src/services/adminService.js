@@ -569,6 +569,46 @@ export async function updateActivity(id, updates, allowedFields = []) {
     delete filteredUpdates.id
     delete filteredUpdates.created_at
 
+    const incomingDocuments = Array.isArray(filteredUpdates.documents)
+      ? filteredUpdates.documents
+      : []
+    if (incomingDocuments.length > 0) {
+      const { data: currentActivity, error: currentActivityError } = await supabase
+        .from('activities')
+        .select('documents, organizer_email')
+        .eq('id', id)
+        .single()
+
+      if (currentActivityError) {
+        console.error('Error al obtener documentos actuales de la actividad:', currentActivityError)
+        return {
+          success: false,
+          data: null,
+          error: currentActivityError.message || 'No se pudieron preparar los documentos para guardar',
+        }
+      }
+
+      const organizerEmail = String(
+        filteredUpdates.organizer_email || currentActivity?.organizer_email || '',
+      )
+        .trim()
+        .toLowerCase()
+
+      const uploadResult = await uploadAdminActivityDocuments(incomingDocuments, organizerEmail)
+      if (!uploadResult.success) {
+        return {
+          success: false,
+          data: null,
+          error: uploadResult.error || 'No se pudieron subir los documentos.',
+        }
+      }
+
+      const currentDocuments = Array.isArray(currentActivity?.documents)
+        ? currentActivity.documents
+        : []
+      filteredUpdates.documents = [...currentDocuments, ...uploadResult.data]
+    }
+
     if (Object.keys(filteredUpdates).length === 0) {
       return {
         success: false,

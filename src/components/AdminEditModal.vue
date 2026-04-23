@@ -5,8 +5,6 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="modal-title"
-    @click.self="handleClose"
-    @keydown.esc="handleClose"
   >
     <div class="modal-content" ref="modalRef">
       <header class="modal-header">
@@ -140,7 +138,6 @@
         </div>
 
         <footer class="modal-footer">
-          <button type="button" @click="handleClose" class="cancel-button">Cancelar</button>
           <button type="submit" class="save-button" :disabled="isSaving">
             <span v-if="!isSaving">Guardar cambios</span>
             <span v-else>

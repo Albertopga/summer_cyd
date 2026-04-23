@@ -5,8 +5,6 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="modal-title"
-    @click.self="handleClose"
-    @keydown.esc="handleClose"
   >
     <div class="modal-content" ref="modalRef">
       <header class="modal-header">
@@ -76,6 +74,45 @@
               {{ errors[field.key] }}
             </span>
           </div>
+
+          <div class="form-group">
+            <label for="edit-documents">Documentos adjuntos (opcional)</label>
+            <input
+              id="edit-documents"
+              ref="documentsInputRef"
+              class="sr-only-file-input"
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              @change="handleFileChange"
+            />
+            <button type="button" class="select-files-button" @click="openFilePicker">
+              Seleccionar archivos
+            </button>
+            <p class="form-help">
+              Formatos permitidos: PDF, Word e imágenes (JPG, PNG). Máximo 10MB por archivo.
+            </p>
+            <ul v-if="selectedFiles.length > 0" class="file-list">
+              <li
+                v-for="(file, index) in selectedFiles"
+                :key="`${file.name}-${index}`"
+                class="file-item"
+              >
+                <span>{{ file.name }}</span>
+                <button
+                  type="button"
+                  class="remove-file-button"
+                  :aria-label="`Eliminar archivo ${file.name}`"
+                  @click="removeFile(index)"
+                >
+                  Eliminar
+                </button>
+              </li>
+            </ul>
+            <span v-if="errors.documents" id="documents-error" class="form-error" role="alert">
+              {{ errors.documents }}
+            </span>
+          </div>
         </div>
 
         <div v-if="status.message" class="form-status" :class="`form-status--${status.type}`">
@@ -83,7 +120,6 @@
         </div>
 
         <footer class="modal-footer">
-          <button type="button" @click="handleClose" class="cancel-button">Cancelar</button>
           <button type="submit" class="save-button" :disabled="isSaving">
             <span v-if="!isSaving">Guardar cambios</span>
             <span v-else>
@@ -100,7 +136,7 @@
 <script setup>
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { updateActivity } from '@/services/adminService'
-import { ACTIVITY_TYPES, TIME_SLOTS, SPACE_NEEDS } from '@/constants'
+import { ACTIVITY_TYPES, TIME_SLOTS, SPACE_NEEDS, VALIDATION_PATTERNS } from '@/constants'
 
 const props = defineProps({
   activity: {
@@ -114,10 +150,13 @@ const emit = defineEmits(['close', 'saved'])
 const isOpen = ref(false)
 const isSaving = ref(false)
 const modalRef = ref(null)
+const documentsInputRef = ref(null)
 let previousFocus = null
+const emailPattern = VALIDATION_PATTERNS.email
 
 const formData = reactive({})
 const errors = reactive({})
+const selectedFiles = ref([])
 
 const status = reactive({
   message: '',
@@ -139,18 +178,30 @@ const editableFieldsConfig = computed(() => {
         { value: 'cancelled', label: 'Cancelada' },
       ],
     },
+    name: {
+      key: 'name',
+      label: 'Nombre de la actividad',
+      type: 'text',
+      isEditable: true,
+    },
+    organizer_name: {
+      key: 'organizer_name',
+      label: 'Organizador',
+      type: 'text',
+      isEditable: true,
+    },
+    organizer_email: {
+      key: 'organizer_email',
+      label: 'Email de contacto',
+      type: 'text',
+      isEditable: true,
+    },
     type: {
       key: 'type',
       label: 'Tipo de actividad',
       type: 'select',
       isEditable: true,
       options: ACTIVITY_TYPES,
-    },
-    name: {
-      key: 'name',
-      label: 'Nombre de la actividad',
-      type: 'text',
-      isEditable: true,
     },
     description: {
       key: 'description',
@@ -274,6 +325,10 @@ const focusFirstField = () => {
 
 const handleClose = () => {
   isOpen.value = false
+  selectedFiles.value = []
+  if (documentsInputRef.value) {
+    documentsInputRef.value.value = ''
+  }
   if (previousFocus) {
     previousFocus.focus()
     previousFocus = null
@@ -288,6 +343,18 @@ const validateForm = () => {
 
   let isValid = true
 
+  if (!String(formData.organizer_name || '').trim()) {
+    errors.organizer_name = 'Obligatorio'
+    isValid = false
+  }
+  if (!String(formData.organizer_email || '').trim()) {
+    errors.organizer_email = 'Obligatorio'
+    isValid = false
+  } else if (!emailPattern.test(String(formData.organizer_email))) {
+    errors.organizer_email = 'Formato de correo no válido'
+    isValid = false
+  }
+
   // Validar min_participants y max_participants
   if (formData.min_participants && formData.max_participants) {
     if (Number(formData.min_participants) > Number(formData.max_participants)) {
@@ -295,8 +362,43 @@ const validateForm = () => {
       isValid = false
     }
   }
+  if (selectedFiles.value.some((file) => file.size > 10 * 1024 * 1024)) {
+    errors.documents = 'Hay archivos que superan el tamaño máximo de 10MB.'
+    isValid = false
+  }
 
   return isValid
+}
+
+const handleFileChange = (event) => {
+  const incoming = Array.from(event.target.files || [])
+  const allowedTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+  ]
+
+  const valid = incoming.filter((file) => allowedTypes.includes(file.type))
+  if (valid.length !== incoming.length) {
+    errors.documents = 'Algunos archivos no tienen un formato permitido.'
+  } else if (errors.documents) {
+    errors.documents = ''
+  }
+  selectedFiles.value = [...selectedFiles.value, ...valid]
+}
+
+const removeFile = (index) => {
+  selectedFiles.value.splice(index, 1)
+  if (documentsInputRef.value) {
+    documentsInputRef.value.value = ''
+  }
+}
+
+const openFilePicker = () => {
+  documentsInputRef.value?.click()
 }
 
 const handleSave = async () => {
@@ -330,6 +432,10 @@ const handleSave = async () => {
     }
   })
 
+  if (selectedFiles.value.length > 0) {
+    updates.documents = selectedFiles.value
+  }
+
   if (Object.keys(updates).length === 0) {
     status.type = 'idle'
     status.message = 'No hay cambios para guardar'
@@ -338,7 +444,7 @@ const handleSave = async () => {
   }
 
   // Obtener lista de campos editables
-  const editableFieldKeys = editableFieldsConfig.value.map((field) => field.key)
+  const editableFieldKeys = [...editableFieldsConfig.value.map((field) => field.key), 'documents']
   const result = await updateActivity(props.activity.id, updates, editableFieldKeys)
 
   if (result.success) {
@@ -458,6 +564,37 @@ const handleSave = async () => {
   font-family: inherit;
 }
 
+.sr-only-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.select-files-button {
+  justify-self: start;
+  border: 2px solid var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.select-files-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.select-files-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .form-group input:focus-visible,
 .form-group textarea:focus-visible,
 .form-group select:focus-visible {
@@ -474,6 +611,33 @@ const handleSave = async () => {
 .form-error {
   font-size: 0.875rem;
   color: var(--color-accent);
+}
+
+.form-help {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.file-list {
+  margin: var(--spacing-xs) 0 0;
+  padding-left: 1.25rem;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.remove-file-button {
+  border: none;
+  background: transparent;
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
 }
 
 .form-status {
@@ -501,7 +665,6 @@ const handleSave = async () => {
   border-top: 1px solid var(--color-cream-dark);
 }
 
-.cancel-button,
 .save-button {
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-md);
@@ -509,20 +672,6 @@ const handleSave = async () => {
   cursor: pointer;
   transition: background-color 0.2s ease;
   border: none;
-}
-
-.cancel-button {
-  background-color: var(--color-cream-dark);
-  color: var(--color-text);
-}
-
-.cancel-button:hover {
-  background-color: var(--color-cream);
-}
-
-.cancel-button:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
 }
 
 .save-button {
