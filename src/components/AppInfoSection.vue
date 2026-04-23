@@ -1,5 +1,5 @@
 <template>
-  <section class="section">
+  <section class="section app-info-section">
     <div class="container">
       <AppSectionHeader label="El Evento" title="Una Experiencia Única" />
       <div class="content-grid">
@@ -64,6 +64,10 @@ const openMapModal = () => {
 </script>
 
 <style scoped>
+.app-info-section {
+  padding-top: 0;
+}
+
 .text-link {
   background: none;
   border: none;

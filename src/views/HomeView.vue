@@ -2,6 +2,7 @@
   <div class="app">
     <AppHeader />
     <AppInfoSection />
+    <AppPosterSeparator />
     <AppGallerySection />
     <AppActivitiesSection />
     <AppSponsorsSection />
@@ -22,6 +23,7 @@
 <script setup>
 import AppHeader from '../components/AppHeader.vue'
 import AppInfoSection from '../components/AppInfoSection.vue'
+import AppPosterSeparator from '../components/AppPosterSeparator.vue'
 import AppGallerySection from '../components/AppGallerySection.vue'
 import AppActivitiesSection from '../components/AppActivitiesSection.vue'
 import AppSponsorsSection from '../components/AppSponsorsSection.vue'

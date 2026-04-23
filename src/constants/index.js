@@ -115,6 +115,14 @@ export function formatDeadlineLabelEs(date) {
 export const ACCOMMODATION_OUTLETS_NOTE =
   'En todos los alojamientos hay enchufes, aunque se recomienda traer regletas o alargador.'
 
+// Precios (EUR) para poder reutilizarlos en cálculos
+export const ZIPLINE_PRICE_EUR = 12
+export const ACCOMMODATION_PRICES_EUR = {
+  albergue: 130,
+  chozos: 150,
+  'chozo-individual': 300,
+}
+
 /**
  * Agrupa opciones con el mismo `groupKey` consecutivo (p. ej. Chozo compartido / individual).
  * @returns {Array<{ type: 'single', option: object } | { type: 'group', groupKey: string, title: string, options: object[] }>}
@@ -146,15 +154,17 @@ export function groupAccommodationOptions(options) {
 export const ACCOMMODATION_OPTIONS = [
   {
     value: 'albergue',
-    label: 'Albergue compartido (130€ por persona)',
+    price: ACCOMMODATION_PRICES_EUR.albergue,
+    label: `Albergue compartido (${ACCOMMODATION_PRICES_EUR.albergue}€ por persona)`,
     images: albergueImages,
     description:
       'Alojamiento en el albergue compartido. Se comparten las habitaciones y los baños.',
   },
   {
     value: 'chozos',
-    label: 'Compartido (2 personas, 150€ por persona)',
-    fullLabel: 'Chozo — Compartido (2 personas, 150€ por persona)',
+    price: ACCOMMODATION_PRICES_EUR.chozos,
+    label: `Compartido (2 personas, ${ACCOMMODATION_PRICES_EUR.chozos}€ por persona)`,
+    fullLabel: `Chozo — Compartido (2 personas, ${ACCOMMODATION_PRICES_EUR.chozos}€ por persona)`,
     groupKey: 'chozo',
     groupTitle: 'Chozo.',
     images: chozosImages,
@@ -162,8 +172,9 @@ export const ACCOMMODATION_OPTIONS = [
   },
   {
     value: 'chozo-individual',
-    label: 'Individual (si quieres intimidad, el Chozo para ti solo son 300€)',
-    fullLabel: 'Chozo — Individual (300€)',
+    price: ACCOMMODATION_PRICES_EUR['chozo-individual'],
+    label: `Individual (si quieres intimidad, el Chozo para ti solo son ${ACCOMMODATION_PRICES_EUR['chozo-individual']}€)`,
+    fullLabel: `Chozo — Individual (${ACCOMMODATION_PRICES_EUR['chozo-individual']}€)`,
     groupKey: 'chozo',
     groupTitle: 'Chozo.',
     images: chozosImages,

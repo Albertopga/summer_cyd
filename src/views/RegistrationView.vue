@@ -478,20 +478,36 @@
                     </div>
                   </template>
                 </div>
-                <div class="form-row" v-if="form.accommodation === 'especial'">
-                  <label for="comments">Comentarios adicionales</label>
+                <div class="form-row">
+                  <label for="comments">
+                    Comentarios adicionales de alojamiento
+                    {{ isAccommodationCommentsRequired ? '*' : '' }}
+                  </label>
                   <textarea
                     id="comments"
                     v-model.trim="form.comments"
                     name="comments"
                     rows="4"
+                    :required="isAccommodationCommentsRequired"
+                    :aria-required="isAccommodationCommentsRequired"
+                    :aria-invalid="errors.comments ? 'true' : 'false'"
                     :aria-describedby="describedByFor('comments')"
                     maxlength="600"
+                    @blur="() => validateField('comments')"
                   ></textarea>
                   <p id="comments-help" class="form-help">
-                    Cuéntanos tu caso particular, o dudas que tengas para que podamos ayudarte
-                    mejor.
+                    Cuéntanos con quién quieres compartir chozo y/o cualquier necesidad especial de
+                    alojamiento para que podamos ayudarte mejor.
                   </p>
+                  <span
+                    id="comments-error"
+                    class="form-error"
+                    :class="{ 'form-error-hidden': !errors.comments }"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {{ errors.comments || '&nbsp;' }}
+                  </span>
                 </div>
                 <span
                   id="accommodation-error"
@@ -523,19 +539,34 @@
                   </div>
                 </div>
                 <div class="form-row">
-                  <label for="dietComments">Comentarios adicionales</label>
+                  <label for="dietComments">
+                    Comentarios adicionales {{ isDietCommentsRequired ? '*' : '' }}
+                  </label>
                   <textarea
                     id="dietComments"
                     v-model.trim="form.dietComments"
                     name="dietComments"
                     rows="4"
+                    :required="isDietCommentsRequired"
+                    :aria-required="isDietCommentsRequired"
+                    :aria-invalid="errors.dietComments ? 'true' : 'false'"
                     :aria-describedby="describedByFor('dietComments')"
                     maxlength="600"
+                    @blur="() => validateField('dietComments')"
                   ></textarea>
                   <p id="dietComments-help" class="form-help">
                     Cuéntanos tus restricciones alimentarias para que podamos organizar la comida
                     adecuadamente.
                   </p>
+                  <span
+                    id="dietComments-error"
+                    class="form-error"
+                    :class="{ 'form-error-hidden': !errors.dietComments }"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {{ errors.dietComments || '&nbsp;' }}
+                  </span>
                 </div>
               </fieldset>
 
@@ -549,7 +580,7 @@
                       type="checkbox"
                       name="ziplineRequested"
                     />
-                    <label for="ziplineRequested">Quiero tirolina (12€)</label>
+                    <label for="ziplineRequested">Quiero tirolina ({{ ZIPLINE_PRICE_EUR }}€)</label>
                   </div>
                 </div>
               </fieldset>
@@ -766,6 +797,7 @@ import {
   isRegistrationDeadlinePassed,
   parseEventDateLocal,
   TELEGRAM_TOOLTIP,
+  ZIPLINE_PRICE_EUR,
   VALIDATION_PATTERNS,
 } from '@/constants'
 import { saveRegistration } from '@/services/registrationService'
@@ -812,6 +844,8 @@ const errors = reactive({
   arrivalDate: '',
   departureDate: '',
   accommodation: '',
+  comments: '',
+  dietComments: '',
   emergencyContactName: '',
   emergencyContactPhone: '',
   terms: '',
@@ -999,6 +1033,11 @@ const isMinor = computed(() => {
   return eighteenthBirthday > eventStart
 })
 
+const isAccommodationCommentsRequired = computed(
+  () => form.accommodation === 'especial' || isMinor.value,
+)
+const isDietCommentsRequired = computed(() => form.diet.includes('alergias'))
+
 const emailPattern = VALIDATION_PATTERNS.email
 const phonePattern = VALIDATION_PATTERNS.phone
 
@@ -1019,6 +1058,7 @@ const describedByFor = (field) => {
     arrivalDate: 'arrivalDate-help',
     departureDate: 'departureDate-help',
     comments: 'comments-help',
+    dietComments: 'dietComments-help',
     emergencyContactPhone: 'emergency-contact-phone-help',
   }
 
@@ -1191,6 +1231,23 @@ const validateField = (field) => {
       errors.emergencyContactPhone = ''
       return true
 
+    case 'comments':
+      if (isAccommodationCommentsRequired.value && !form.comments.trim()) {
+        errors.comments =
+          'Este campo es obligatorio cuando marcas "Antes necesito comentarlo con vosotros" o si eres menor.'
+        return false
+      }
+      errors.comments = ''
+      return true
+
+    case 'dietComments':
+      if (isDietCommentsRequired.value && !form.dietComments.trim()) {
+        errors.dietComments = 'Este campo es obligatorio si marcas alergias.'
+        return false
+      }
+      errors.dietComments = ''
+      return true
+
     case 'terms':
       if (!form.terms) {
         errors.terms = 'Debes aceptar la política de privacidad.'
@@ -1220,6 +1277,8 @@ const fieldsToValidate = [
   'arrivalDate',
   'departureDate',
   'accommodation',
+  'comments',
+  'dietComments',
   'emergencyContactName',
   'emergencyContactPhone',
   'terms',
@@ -1386,6 +1445,7 @@ watch(isMinor, (value) => {
     form.guardianFullName = ''
     errors.guardianFullName = ''
   }
+  validateField('comments')
 })
 
 watch(
@@ -1395,6 +1455,25 @@ watch(
       validateField('departureDate')
     }
   },
+)
+
+watch(
+  () => form.accommodation,
+  () => {
+    if (errors.comments) {
+      validateField('comments')
+    }
+  },
+)
+
+watch(
+  () => form.diet,
+  () => {
+    if (errors.dietComments) {
+      validateField('dietComments')
+    }
+  },
+  { deep: true },
 )
 
 watch(
