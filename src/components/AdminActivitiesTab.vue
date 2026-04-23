@@ -105,13 +105,15 @@
               @keydown.enter.prevent="openDetailModal(activity)"
               @keydown.space.prevent="openDetailModal(activity)"
             >
-              <td>{{ activity.organizer_name }}</td>
-              <td>{{ activity.organizer_email }}</td>
-              <td>{{ getActivityTypeLabel(activity.type) }}</td>
-              <td>{{ activity.name }}</td>
-              <td>{{ activity.min_participants }}-{{ activity.max_participants }}</td>
-              <td>{{ getTimeSlotLabel(activity.preferred_time_slot) }}</td>
-              <td>
+              <td data-label="Organizador">{{ activity.organizer_name }}</td>
+              <td data-label="Email">{{ activity.organizer_email }}</td>
+              <td data-label="Tipo">{{ getActivityTypeLabel(activity.type) }}</td>
+              <td data-label="Nombre">{{ activity.name }}</td>
+              <td data-label="Participantes">
+                {{ activity.min_participants }}-{{ activity.max_participants }}
+              </td>
+              <td data-label="Horario">{{ getTimeSlotLabel(activity.preferred_time_slot) }}</td>
+              <td data-label="Estado">
                 <span
                   class="status-badge"
                   :class="`status-badge--${activity.status}`"
@@ -120,8 +122,8 @@
                   {{ getStatusLabel(activity.status) }}
                 </span>
               </td>
-              <td>{{ formatDate(activity.created_at) }}</td>
-              <td>
+              <td data-label="Fecha registro">{{ formatDate(activity.created_at) }}</td>
+              <td data-label="Acciones">
                 <button
                   type="button"
                   @click="openEditModal(activity)"
@@ -1323,13 +1325,52 @@ defineExpose({
     width: 100%;
   }
 
+  .activities-table-wrapper {
+    overflow-x: visible;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .activities-table,
+  .activities-table thead,
+  .activities-table tbody,
+  .activities-table tr,
+  .activities-table th,
+  .activities-table td {
+    display: block;
+  }
+
   .activities-table {
     font-size: 0.875rem;
   }
 
-  .activities-table th,
-  .activities-table td {
+  .activities-table thead {
+    display: none;
+  }
+
+  .activities-table tbody {
+    display: grid;
+    gap: var(--spacing-sm);
+  }
+
+  .activities-table tbody tr {
+    background-color: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
     padding: var(--spacing-sm);
+  }
+
+  .activities-table td {
+    border-bottom: none;
+    padding: var(--spacing-xs) 0;
+  }
+
+  .activities-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 0.2rem;
   }
 
   .edit-button,

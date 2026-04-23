@@ -118,7 +118,7 @@
           </thead>
           <tbody>
             <tr v-for="registration in registrations" :key="registration.id">
-              <td class="checkbox-column">
+              <td class="checkbox-column" data-label="Seleccionar">
                 <label :for="`select-${registration.id}`" class="sr-only">
                   Seleccionar registro de {{ registration.first_name }}
                   {{ registration.last_name }}
@@ -131,11 +131,11 @@
                   :aria-label="`Seleccionar registro de ${registration.first_name} ${registration.last_name}`"
                 />
               </td>
-              <td>{{ registration.first_name }} {{ registration.last_name }}</td>
-              <td>{{ registration.email }}</td>
-              <td>{{ registration.phone }}</td>
-              <td>{{ getAccommodationLabel(registration.accommodation) }}</td>
-              <td>
+              <td data-label="Nombre">{{ registration.first_name }} {{ registration.last_name }}</td>
+              <td data-label="Email">{{ registration.email }}</td>
+              <td data-label="Teléfono">{{ registration.phone }}</td>
+              <td data-label="Alojamiento">{{ getAccommodationLabel(registration.accommodation) }}</td>
+              <td data-label="Tirolina">
                 <span
                   class="payment-status"
                   :class="
@@ -146,7 +146,7 @@
                   {{ registration.zipline_requested ? 'Sí' : 'No' }}
                 </span>
               </td>
-              <td>
+              <td data-label="Tirolina pagada">
                 <span
                   class="payment-status"
                   :class="registration.zipline_paid ? 'payment-status--paid' : 'payment-status--unpaid'"
@@ -155,7 +155,7 @@
                   {{ registration.zipline_paid ? 'Sí' : 'No' }}
                 </span>
               </td>
-              <td>
+              <td data-label="Pagado">
                 <span
                   class="payment-status"
                   :class="
@@ -170,8 +170,8 @@
                   {{ registration.accommodation_paid ? 'Sí' : 'No' }}
                 </span>
               </td>
-              <td>{{ formatDate(registration.created_at) }}</td>
-              <td>
+              <td data-label="Fecha registro">{{ formatDate(registration.created_at) }}</td>
+              <td data-label="Acciones">
                 <button
                   type="button"
                   @click="openEditModal(registration)"
@@ -1156,13 +1156,57 @@ defineExpose({
     width: 100%;
   }
 
+  .registrations-table-wrapper {
+    overflow-x: visible;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .registrations-table,
+  .registrations-table thead,
+  .registrations-table tbody,
+  .registrations-table tr,
+  .registrations-table th,
+  .registrations-table td {
+    display: block;
+  }
+
   .registrations-table {
     font-size: 0.875rem;
   }
 
-  .registrations-table th,
-  .registrations-table td {
+  .registrations-table thead {
+    display: none;
+  }
+
+  .registrations-table tbody {
+    display: grid;
+    gap: var(--spacing-sm);
+  }
+
+  .registrations-table tbody tr {
+    background-color: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
     padding: var(--spacing-sm);
+  }
+
+  .registrations-table td {
+    border-bottom: none;
+    padding: var(--spacing-xs) 0;
+  }
+
+  .registrations-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 0.2rem;
+  }
+
+  .checkbox-column {
+    width: auto;
+    text-align: left;
   }
 
   .edit-button,

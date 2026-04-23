@@ -522,7 +522,7 @@ const updateTabCount = (tabId, count) => {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--spacing-md);
+  padding: 0 var(--spacing-xs);
 }
 
 /* Login */
@@ -697,6 +697,10 @@ const updateTabCount = (tabId, count) => {
 .admin-panel {
   display: grid;
   gap: var(--spacing-lg);
+  width: 100%;
+  min-width: 0;
+  padding-inline: var(--spacing-sm);
+  justify-items: stretch;
 }
 
 .admin-tab-content .empty-state {
@@ -746,7 +750,25 @@ const updateTabCount = (tabId, count) => {
   outline-offset: 2px;
 }
 
+/* Asegura que los paneles del admin no generen desbordes horizontales */
+.admin-panel :deep(.admin-tabs),
+.admin-panel :deep(.tab-panel),
+.admin-panel :deep(.admin-tab-content) {
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-panel :deep(.list-header),
+.admin-panel :deep(.controls-group) {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 768px) {
+  .admin-panel {
+    padding-inline: var(--spacing-xs);
+  }
+
   .admin-header {
     flex-direction: column;
     align-items: flex-start;

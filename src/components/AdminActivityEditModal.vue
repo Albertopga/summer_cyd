@@ -629,6 +629,11 @@ const handleSave = async () => {
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.file-item span {
+  overflow-wrap: anywhere;
 }
 
 .remove-file-button {
@@ -710,6 +715,45 @@ const handleSave = async () => {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    align-items: flex-start;
+    padding: var(--spacing-sm);
+  }
+
+  .modal-content {
+    border-radius: var(--radius-lg);
+    max-height: calc(100vh - (var(--spacing-sm) * 2));
+  }
+
+  .modal-header {
+    padding: var(--spacing-md);
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .form-fields,
+  .modal-footer {
+    padding: var(--spacing-md);
+  }
+
+  .form-status {
+    margin: 0 var(--spacing-md);
+  }
+
+  .modal-footer {
+    justify-content: stretch;
+  }
+
+  .save-button {
+    width: 100%;
   }
 }
 </style>

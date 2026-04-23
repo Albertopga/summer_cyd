@@ -41,8 +41,8 @@
           </thead>
           <tbody>
             <tr v-for="user in users" :key="user.id">
-              <td>{{ user.email }}</td>
-              <td>
+              <td data-label="Email">{{ user.email }}</td>
+              <td data-label="Email confirmado">
                 <span
                   class="status-badge"
                   :class="
@@ -55,9 +55,9 @@
                   {{ user.email_confirmed_at ? 'Sí' : 'No' }}
                 </span>
               </td>
-              <td>{{ formatDate(user.last_sign_in_at) }}</td>
-              <td>{{ formatDate(user.created_at) }}</td>
-              <td>
+              <td data-label="Última sesión">{{ formatDate(user.last_sign_in_at) }}</td>
+              <td data-label="Fecha creación">{{ formatDate(user.created_at) }}</td>
+              <td data-label="Acciones">
                 <button
                   type="button"
                   @click="openEditModal(user)"
@@ -633,13 +633,52 @@ defineExpose({
     width: 100%;
   }
 
+  .users-table-wrapper {
+    overflow-x: visible;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .users-table,
+  .users-table thead,
+  .users-table tbody,
+  .users-table tr,
+  .users-table th,
+  .users-table td {
+    display: block;
+  }
+
   .users-table {
     font-size: 0.875rem;
   }
 
-  .users-table th,
-  .users-table td {
+  .users-table thead {
+    display: none;
+  }
+
+  .users-table tbody {
+    display: grid;
+    gap: var(--spacing-sm);
+  }
+
+  .users-table tbody tr {
+    background-color: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
     padding: var(--spacing-sm);
+  }
+
+  .users-table td {
+    border-bottom: none;
+    padding: var(--spacing-xs) 0;
+  }
+
+  .users-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 0.2rem;
   }
 
   .edit-button,
