@@ -419,6 +419,20 @@ export async function getAllRegistrations(options = {}) {
  */
 export async function updateRegistration(id, updates, allowedFields = []) {
   try {
+    const { data: currentRegistration, error: currentRegistrationError } = await supabase
+      .from('registrations')
+      .select('family_group_id, family_role')
+      .eq('id', id)
+      .single()
+
+    if (currentRegistrationError) {
+      return {
+        success: false,
+        data: null,
+        error: currentRegistrationError.message || 'No se pudo validar el estado familiar del registro',
+      }
+    }
+
     // Filtrar solo los campos permitidos
     const filteredUpdates = {}
     if (allowedFields.length > 0) {
@@ -435,6 +449,18 @@ export async function updateRegistration(id, updates, allowedFields = []) {
     // No permitir actualizar campos críticos como id, created_at
     delete filteredUpdates.id
     delete filteredUpdates.created_at
+
+    const role = String(currentRegistration?.family_role || '').trim()
+    const belongsToFamily = Boolean(currentRegistration?.family_group_id) && role.length > 0
+    const isFamilyNonHolder = belongsToFamily && role !== 'holder'
+    if (isFamilyNonHolder && Object.prototype.hasOwnProperty.call(filteredUpdates, 'accommodation_paid')) {
+      return {
+        success: false,
+        data: null,
+        error:
+          'El estado de pago de alojamiento de familiares se gestiona automáticamente desde el titular.',
+      }
+    }
 
     if (Object.keys(filteredUpdates).length === 0) {
       return {

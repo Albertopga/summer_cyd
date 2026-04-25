@@ -104,6 +104,8 @@
           <thead>
             <tr>
               <th scope="col">Nº asistente</th>
+              <th scope="col">Grupo</th>
+              <th scope="col">Rol</th>
               <th scope="col" class="checkbox-column">
                 <label for="select-all" class="sr-only">Seleccionar todos los registros</label>
                 <input
@@ -131,6 +133,8 @@
           <tbody>
             <tr v-for="registration in registrations" :key="registration.id">
               <td data-label="Nº asistente">{{ formatAttendeeNumber(registration.attendee_number) }}</td>
+              <td data-label="Grupo">{{ formatFamilyGroup(registration.family_group_id) }}</td>
+              <td data-label="Rol">{{ formatFamilyRole(registration.family_role) }}</td>
               <td class="checkbox-column" data-label="Seleccionar">
                 <label :for="`select-${registration.id}`" class="sr-only">
                   Seleccionar registro de {{ getRegistrationFullName(registration) }}
@@ -289,7 +293,7 @@ import {
   resetAttendeeNumbers,
   triggerPaymentReminders,
 } from '@/services/adminService'
-import { ACCOMMODATION_OPTIONS, ACCOMMODATION_PRICES_EUR, ZIPLINE_PRICE_EUR } from '@/constants'
+import { ACCOMMODATION_OPTIONS, getRegistrationTotalPriceForMember } from '@/constants'
 import AdminEditModal from '@/components/AdminEditModal.vue'
 import ExcelJS from 'exceljs'
 
@@ -492,10 +496,27 @@ const formatAttendeeNumber = (value) => {
   return String(value).padStart(4, '0')
 }
 
+const formatFamilyGroup = (value) => {
+  const normalized = String(value || '').trim()
+  if (!normalized) return '-'
+  return normalized.slice(0, 8)
+}
+
+const formatFamilyRole = (value) => {
+  if (value === 'holder') return 'Titular'
+  if (value === 'partner') return 'Pareja'
+  if (value === 'child') return 'Hijo/a'
+  return '-'
+}
+
 const getRegistrationTotalAmount = (registration) => {
-  const accommodationPrice = Number(ACCOMMODATION_PRICES_EUR[registration?.accommodation] || 0)
-  const ziplinePrice = registration?.zipline_requested ? ZIPLINE_PRICE_EUR : 0
-  return accommodationPrice + ziplinePrice
+  return getRegistrationTotalPriceForMember({
+    accommodation: registration?.accommodation,
+    birthDate: registration?.birth_date,
+    isChild: registration?.family_role === 'child' || Boolean(registration?.is_minor),
+    childSharesParentChozo: Boolean(registration?.child_shares_parent_chozo),
+    ziplineRequested: Boolean(registration?.zipline_requested),
+  }).totalPrice
 }
 
 const formatTotalAmount = (registration) => {
@@ -616,6 +637,8 @@ const handleDownloadExcel = async () => {
 
     worksheet.columns = [
       { header: 'Nº asistente', key: 'numeroAsistente', width: 14 },
+      { header: 'Grupo familiar', key: 'grupoFamiliar', width: 16 },
+      { header: 'Rol familiar', key: 'rolFamiliar', width: 14 },
       { header: 'Nombre y apellidos', key: 'nombreCompleto', width: 30 },
       { header: 'Mote/Alias', key: 'nickname', width: 15 },
       { header: 'Email', key: 'email', width: 25 },
@@ -651,6 +674,8 @@ const handleDownloadExcel = async () => {
     dataToExport.forEach((reg) => {
       worksheet.addRow({
         numeroAsistente: formatAttendeeNumber(reg.attendee_number),
+        grupoFamiliar: formatFamilyGroup(reg.family_group_id),
+        rolFamiliar: formatFamilyRole(reg.family_role),
         nombreCompleto: getRegistrationFullName(reg),
         nickname: reg.nickname || '',
         email: reg.email,

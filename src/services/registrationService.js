@@ -6,6 +6,79 @@
 import { supabase } from '@/lib/supabase'
 import { isRegistrationDeadlinePassed } from '@/constants'
 
+function normalizeName(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+}
+
+function buildFamilyRows(registrationData, isMinor) {
+  const familyGroupId =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `family-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  const holderEmail = String(registrationData.email || '')
+    .trim()
+    .toLowerCase()
+
+  const baseLogistics = {
+    arrival_date: registrationData.arrivalDate,
+    departure_date: registrationData.departureDate || null,
+    accommodation: registrationData.accommodation,
+    comments: registrationData.comments || null,
+    terms_accepted: Boolean(registrationData.terms),
+  }
+
+  const holderRow = {
+    family_group_id: familyGroupId,
+    family_role: 'holder',
+    family_contact_email: holderEmail,
+    full_name: normalizeName(registrationData.fullName),
+    nickname: registrationData.nickname || null,
+    email: holderEmail,
+    phone: registrationData.phone?.trim() || null,
+    birth_date: registrationData.birthDate,
+    is_minor: isMinor,
+    emergency_contact_name: registrationData.emergencyContactName || null,
+    emergency_contact_phone: registrationData.emergencyContactPhone || null,
+    ...baseLogistics,
+    child_shares_parent_chozo: false,
+    zipline_requested: Boolean(registrationData.ziplineRequested),
+    diet: registrationData.diet || [],
+    diet_comments: registrationData.dietComments || null,
+    image_consent_accepted: Boolean(registrationData.imageConsent),
+  }
+
+  const members = Array.isArray(registrationData.familyMembers) ? registrationData.familyMembers : []
+  const extraRows = members
+    .filter((member) => normalizeName(member?.fullName) && member?.birthDate)
+    .map((member) => {
+      const role = member.role === 'partner' ? 'partner' : 'child'
+      return {
+        family_group_id: familyGroupId,
+        family_role: role,
+        family_contact_email: holderEmail,
+        full_name: normalizeName(member.fullName),
+        nickname: member.nickname?.trim() || null,
+        email: holderEmail,
+        phone: null,
+        birth_date: member.birthDate,
+        is_minor: role === 'child',
+        emergency_contact_name: registrationData.emergencyContactName || null,
+        emergency_contact_phone: registrationData.emergencyContactPhone || null,
+        ...baseLogistics,
+        accommodation: member.accommodation || registrationData.accommodation,
+        zipline_requested: Boolean(member.ziplineRequested),
+        diet: Array.isArray(member.diet) ? member.diet : [],
+        diet_comments: member.dietComments?.trim() || null,
+        image_consent_accepted: Boolean(member.imageConsent),
+        child_shares_parent_chozo: role === 'child' ? Boolean(member.childSharesParentChozo) : false,
+      }
+    })
+
+  return [holderRow, ...extraRows]
+}
+
 /**
  * Guarda un nuevo registro de asistente en la base de datos
  * @param {Object} registrationData - Datos del formulario de registro
@@ -22,33 +95,9 @@ export async function saveRegistration(registrationData, isMinor) {
       }
     }
 
-    const normalizedFullName = String(registrationData.fullName || '')
-      .trim()
-      .replace(/\s+/g, ' ')
-    // Preparar los datos para insertar en la base de datos
-    const dataToInsert = {
-      full_name: normalizedFullName,
-      nickname: registrationData.nickname || null,
-      email: registrationData.email,
-      phone: registrationData.phone?.trim() || null,
-      birth_date: registrationData.birthDate,
-      is_minor: isMinor,
-      emergency_contact_name: registrationData.emergencyContactName || null,
-      emergency_contact_phone: registrationData.emergencyContactPhone || null,
-      arrival_date: registrationData.arrivalDate,
-      departure_date: registrationData.departureDate || null,
-      accommodation: registrationData.accommodation,
-      zipline_requested: Boolean(registrationData.ziplineRequested),
-      diet: registrationData.diet || [],
-      comments: registrationData.comments || null,
-      diet_comments: registrationData.dietComments || null,
-      terms_accepted: registrationData.terms,
-      image_consent_accepted: Boolean(registrationData.imageConsent),
-    }
+    const rowsToInsert = buildFamilyRows(registrationData, isMinor)
 
-    // Insertar en la tabla de registros
-    // Usamos .select() para obtener el registro insertado
-    const { data, error } = await supabase.from('registrations').insert([dataToInsert]).select()
+    const { data, error } = await supabase.from('registrations').insert(rowsToInsert).select()
 
     if (error) {
       console.error('Error al guardar el registro:', error)
@@ -61,7 +110,7 @@ export async function saveRegistration(registrationData, isMinor) {
 
     return {
       success: true,
-      data: data?.[0] || null,
+      data: data || [],
       error: null,
     }
   } catch (error) {

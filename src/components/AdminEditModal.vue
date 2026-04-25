@@ -79,6 +79,7 @@
                 :id="`field-${field.key}`"
                 v-model="formData[field.key]"
                 type="checkbox"
+                :disabled="isFamilyPaymentLockedField(field.key)"
                 :aria-describedby="errors[field.key] ? `${field.key}-error` : undefined"
                 :aria-invalid="errors[field.key] ? 'true' : 'false'"
               />
@@ -86,6 +87,14 @@
                 {{ field.label }}
               </label>
             </div>
+            <p
+              v-if="isFamilyPaymentLockedField(field.key)"
+              class="form-help"
+              role="status"
+              aria-live="polite"
+            >
+              Este estado se gestiona desde el titular de la familia.
+            </p>
 
             <!-- Campo de texto largo -->
             <textarea
@@ -179,6 +188,16 @@ const status = reactive({
   message: '',
   type: 'idle',
 })
+
+const isFamilyMemberNonHolder = computed(
+  () =>
+    Boolean(props.registration?.family_group_id) &&
+    String(props.registration?.family_role || '').trim() !== '' &&
+    String(props.registration?.family_role || '').trim() !== 'holder',
+)
+
+const isFamilyPaymentLockedField = (fieldKey) =>
+  fieldKey === 'accommodation_paid' && isFamilyMemberNonHolder.value
 
 // Configuración de campos con sus tipos, opciones y si son editables
 const editableFieldsConfig = computed(() => {
@@ -359,6 +378,7 @@ watch(
         // Manejar booleanos (is_minor, terms_accepted, image_consent_accepted)
         else if (
           fieldKey === 'is_minor' ||
+          fieldKey === 'accommodation_paid' ||
           fieldKey === 'zipline_requested' ||
           fieldKey === 'zipline_paid' ||
           fieldKey === 'terms_accepted' ||
@@ -499,6 +519,7 @@ const handleSave = async () => {
       }
     } else if (
       fieldKey === 'is_minor' ||
+      fieldKey === 'accommodation_paid' ||
       fieldKey === 'zipline_requested' ||
       fieldKey === 'zipline_paid' ||
       fieldKey === 'terms_accepted' ||
@@ -523,6 +544,7 @@ const handleSave = async () => {
       }
     } else if (
       fieldKey === 'is_minor' ||
+      fieldKey === 'accommodation_paid' ||
       fieldKey === 'zipline_requested' ||
       fieldKey === 'zipline_paid' ||
       fieldKey === 'terms_accepted' ||
@@ -710,6 +732,12 @@ const handleSave = async () => {
   font-weight: normal;
   margin: 0;
   cursor: pointer;
+}
+
+.form-help {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-light);
 }
 
 .form-error {

@@ -4,6 +4,9 @@
 -- Crear la tabla de registros
 CREATE TABLE IF NOT EXISTS public.registrations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  family_group_id UUID DEFAULT gen_random_uuid() NOT NULL,
+  family_role TEXT NOT NULL DEFAULT 'holder' CHECK (family_role IN ('holder', 'partner', 'child')),
+  family_contact_email TEXT,
   
   -- Datos personales
   full_name TEXT NOT NULL,
@@ -21,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.registrations (
   arrival_date TIMESTAMPTZ NOT NULL,
   departure_date TIMESTAMPTZ,
   accommodation TEXT NOT NULL CHECK (accommodation IN ('albergue', 'chozos', 'chozo-individual', 'especial')),
+  child_shares_parent_chozo BOOLEAN NOT NULL DEFAULT false,
   diet TEXT[] DEFAULT '{}',
   comments TEXT,
   diet_comments TEXT,
@@ -46,6 +50,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS registrations_unique_person ON public.registra
 
 -- Crear índice en created_at para consultas ordenadas por fecha
 CREATE INDEX IF NOT EXISTS registrations_created_at_idx ON public.registrations(created_at DESC);
+CREATE INDEX IF NOT EXISTS registrations_family_group_id_idx ON public.registrations(family_group_id);
+CREATE INDEX IF NOT EXISTS registrations_family_role_idx ON public.registrations(family_role);
 
 -- Crear índice en accommodation para filtros
 CREATE INDEX IF NOT EXISTS registrations_accommodation_idx ON public.registrations(accommodation);
@@ -97,6 +103,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Función para propagar pago a miembros de la familia cuando paga el titular
+CREATE OR REPLACE FUNCTION sync_family_payment_from_holder()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.family_role = 'holder'
+     AND NEW.accommodation_paid = true
+     AND (OLD.accommodation_paid IS DISTINCT FROM true)
+     AND NEW.family_group_id IS NOT NULL THEN
+    UPDATE public.registrations
+    SET accommodation_paid = true
+    WHERE family_group_id = NEW.family_group_id
+      AND id <> NEW.id
+      AND accommodation_paid IS DISTINCT FROM true;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Función RPC para resincronizar la secuencia tras reasignaciones manuales
 CREATE OR REPLACE FUNCTION sync_attendee_number_sequence()
 RETURNS VOID AS $$
@@ -121,6 +146,20 @@ BEGIN
       BEFORE UPDATE ON public.registrations
       FOR EACH ROW
       EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END $$;
+
+-- Trigger para sincronizar estado de pago de familia desde titular
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'sync_family_payment_from_holder_trigger'
+  ) THEN
+    CREATE TRIGGER sync_family_payment_from_holder_trigger
+      AFTER UPDATE ON public.registrations
+      FOR EACH ROW
+      EXECUTE FUNCTION sync_family_payment_from_holder();
   END IF;
 END $$;
 
@@ -205,6 +244,9 @@ CREATE POLICY "allow_select_recent_registrations"
 -- Comentarios en la tabla para documentación
 COMMENT ON TABLE public.registrations IS 'Registros de asistentes al Retiro Lúdico de Castilla y Dragón';
 COMMENT ON COLUMN public.registrations.id IS 'Identificador único del registro';
+COMMENT ON COLUMN public.registrations.family_group_id IS 'Identificador del grupo familiar asociado a la inscripción';
+COMMENT ON COLUMN public.registrations.family_role IS 'Rol dentro del grupo familiar: titular, pareja o hijo/a';
+COMMENT ON COLUMN public.registrations.family_contact_email IS 'Email de contacto del titular de la familia';
 COMMENT ON COLUMN public.registrations.full_name IS 'Nombre y apellidos del asistente';
 COMMENT ON COLUMN public.registrations.nickname IS 'Mote/Alias del asistente para el evento';
 COMMENT ON COLUMN public.registrations.email IS 'Correo electrónico (parte de índice único compuesto con full_name y birth_date)';
@@ -216,6 +258,7 @@ COMMENT ON COLUMN public.registrations.emergency_contact_phone IS 'Teléfono del
 COMMENT ON COLUMN public.registrations.arrival_date IS 'Fecha y hora de llegada estimada';
 COMMENT ON COLUMN public.registrations.departure_date IS 'Fecha y hora de salida estimada';
 COMMENT ON COLUMN public.registrations.accommodation IS 'Tipo de alojamiento seleccionado';
+COMMENT ON COLUMN public.registrations.child_shares_parent_chozo IS 'Para menores: indica si comparte chozo con progenitores';
 COMMENT ON COLUMN public.registrations.diet IS 'Array de restricciones alimentarias';
 COMMENT ON COLUMN public.registrations.comments IS 'Comentarios adicionales sobre alojamiento';
 COMMENT ON COLUMN public.registrations.diet_comments IS 'Comentarios adicionales sobre restricciones alimentarias';

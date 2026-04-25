@@ -121,10 +121,54 @@ export const ACCOMMODATION_OUTLETS_NOTE =
 
 // Precios (EUR) para poder reutilizarlos en cálculos
 export const ZIPLINE_PRICE_EUR = 12
+export const CHILD_SHARED_CHOZO_PRICE_EUR = 100
 export const ACCOMMODATION_PRICES_EUR = {
   albergue: 130,
   chozos: 150,
   'chozo-individual': 300,
+}
+
+export function isUnderTwelveAtEventStart(birthDateString) {
+  if (!birthDateString) return false
+  const birth = new Date(birthDateString)
+  const eventStart = parseEventDateLocal(EVENT_DATES.start)
+  if (Number.isNaN(birth.getTime()) || Number.isNaN(eventStart.getTime())) return false
+  const twelfthBirthday = new Date(birth)
+  twelfthBirthday.setFullYear(birth.getFullYear() + 12)
+  return twelfthBirthday > eventStart
+}
+
+export function getAccommodationPriceForMember({
+  accommodation,
+  birthDate,
+  isChild,
+  childSharesParentChozo = false,
+}) {
+  if (isChild && childSharesParentChozo && accommodation === 'chozos' && isUnderTwelveAtEventStart(birthDate)) {
+    return CHILD_SHARED_CHOZO_PRICE_EUR
+  }
+  return Number(ACCOMMODATION_PRICES_EUR[accommodation] || 0)
+}
+
+export function getRegistrationTotalPriceForMember({
+  accommodation,
+  birthDate,
+  isChild,
+  childSharesParentChozo = false,
+  ziplineRequested = false,
+}) {
+  const accommodationPrice = getAccommodationPriceForMember({
+    accommodation,
+    birthDate,
+    isChild,
+    childSharesParentChozo,
+  })
+  const ziplinePrice = ziplineRequested ? ZIPLINE_PRICE_EUR : 0
+  return {
+    accommodationPrice,
+    ziplinePrice,
+    totalPrice: accommodationPrice + ziplinePrice,
+  }
 }
 
 /**
@@ -323,6 +367,7 @@ export const VALIDATION_PATTERNS = {
 // Etiquetas de campos para mensajes de error
 export const FIELD_LABELS = {
   fullName: 'Nombre y apellidos',
+  familyMembers: 'Familiares',
   nickname: 'Mote/Alias',
   email: 'Correo electrónico',
   phone: 'Teléfono',

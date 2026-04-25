@@ -332,6 +332,208 @@
             </fieldset>
 
             <fieldset class="form-fieldset">
+              <legend>Familiares (opcional)</legend>
+              <p class="form-help">
+                Puedes añadir una pareja y hasta 2 hijos en esta misma inscripción. La logística
+                (llegada/salida/alojamiento) se define desde el titular.
+              </p>
+              <p class="form-help" role="status" aria-live="polite">
+                Importante: el estado de pago del alojamiento se gestiona solo para el titular; al
+                marcarse como pagado, se actualiza automáticamente para toda la familia.
+              </p>
+
+              <div class="form-row">
+                <div class="option-item">
+                  <input
+                    id="hasPartner"
+                    :checked="form.hasPartner"
+                    type="checkbox"
+                    name="hasPartner"
+                    @change="(event) => (event.target.checked ? enablePartner() : removePartner())"
+                  />
+                  <label for="hasPartner">Añadir pareja</label>
+                </div>
+              </div>
+
+              <fieldset v-if="form.hasPartner && form.partner" class="form-subfieldset">
+                <legend>Datos de pareja</legend>
+                <div class="form-row">
+                  <label for="partnerFullName">Nombre y apellidos *</label>
+                  <input id="partnerFullName" v-model.trim="form.partner.fullName" type="text" />
+                </div>
+                <div class="form-row">
+                  <label for="partnerNickname">Mote/Alias</label>
+                  <input id="partnerNickname" v-model.trim="form.partner.nickname" type="text" />
+                </div>
+                <div class="form-row">
+                  <label for="partnerBirthDate">Fecha de nacimiento *</label>
+                  <input id="partnerBirthDate" v-model="form.partner.birthDate" type="date" />
+                </div>
+                <div class="form-row">
+                  <label for="partnerAccommodation">Alojamiento *</label>
+                  <select id="partnerAccommodation" v-model="form.partner.accommodation">
+                    <option value="" disabled>Selecciona una opción</option>
+                    <option v-for="option in ACCOMMODATION_OPTIONS" :key="`partner-${option.value}`" :value="option.value">
+                      {{ option.fullLabel ?? option.label }}
+                    </option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label class="option-item" for="partnerZiplineRequested">
+                    <input
+                      id="partnerZiplineRequested"
+                      v-model="form.partner.ziplineRequested"
+                      type="checkbox"
+                    />
+                    <span>Quiere tirolina ({{ ZIPLINE_PRICE_EUR }}€)</span>
+                  </label>
+                </div>
+                <div class="form-row">
+                  <fieldset class="form-subfieldset">
+                    <legend>Restricciones alimentarias (pareja)</legend>
+                    <p class="form-help">
+                      Selecciona todas las opciones que apliquen. Si no hay restricciones, deja sin
+                      marcar.
+                    </p>
+                    <div class="option-list option-list--checkbox">
+                      <div
+                        v-for="option in DIET_OPTIONS"
+                        :key="`partner-diet-${option.value}`"
+                        class="option-item"
+                      >
+                        <input
+                          :id="`partner-diet-${option.value}`"
+                          v-model="form.partner.diet"
+                          type="checkbox"
+                          :value="option.value"
+                        />
+                        <label :for="`partner-diet-${option.value}`">{{ option.label }}</label>
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
+                <div class="form-row">
+                  <label for="partnerDietComments">Comentarios de dieta</label>
+                  <textarea
+                    id="partnerDietComments"
+                    v-model.trim="form.partner.dietComments"
+                    rows="3"
+                  ></textarea>
+                </div>
+                <button type="button" class="form-reset" @click="removePartner">
+                  Eliminar pareja
+                </button>
+              </fieldset>
+
+              <div class="form-row">
+                <button type="button" class="form-reset" :disabled="!canAddChild" @click="addChild">
+                  Añadir hijo/a
+                </button>
+                <p class="form-help">Máximo 2 hijos por inscripción familiar.</p>
+              </div>
+
+              <fieldset
+                v-for="(child, index) in form.children"
+                :key="`child-${index}`"
+                class="form-subfieldset"
+              >
+                <legend>Hijo/a {{ index + 1 }}</legend>
+                <div class="form-row">
+                  <label :for="`childFullName-${index}`">Nombre y apellidos *</label>
+                  <input :id="`childFullName-${index}`" v-model.trim="child.fullName" type="text" />
+                </div>
+                <div class="form-row">
+                  <label :for="`childBirthDate-${index}`">Fecha de nacimiento *</label>
+                  <input :id="`childBirthDate-${index}`" v-model="child.birthDate" type="date" />
+                </div>
+                <div class="form-row">
+                  <label :for="`childAccommodation-${index}`">Alojamiento *</label>
+                  <select :id="`childAccommodation-${index}`" v-model="child.accommodation">
+                    <option value="" disabled>Selecciona una opción</option>
+                    <option
+                      v-for="option in ACCOMMODATION_OPTIONS"
+                      :key="`child-${index}-${option.value}`"
+                      :value="option.value"
+                    >
+                      {{ option.fullLabel ?? option.label }}
+                    </option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label class="option-item" :for="`childZipline-${index}`">
+                    <input :id="`childZipline-${index}`" v-model="child.ziplineRequested" type="checkbox" />
+                    <span>Quiere tirolina ({{ ZIPLINE_PRICE_EUR }}€)</span>
+                  </label>
+                </div>
+                <div v-if="child.accommodation === 'chozos'" class="form-row">
+                  <label class="option-item" :for="`childSharesParentChozo-${index}`">
+                    <input
+                      :id="`childSharesParentChozo-${index}`"
+                      v-model="child.childSharesParentChozo"
+                      type="checkbox"
+                    />
+                    <span
+                      >Comparte chozo con progenitores (menor de 12 años: {{ CHILD_SHARED_CHOZO_PRICE_EUR }}€)</span
+                    >
+                  </label>
+                  <p v-if="!isChildUnderTwelve(child)" class="form-help">
+                    El precio especial de {{ CHILD_SHARED_CHOZO_PRICE_EUR }}€ solo aplica a menores de 12
+                    años.
+                  </p>
+                </div>
+                <p class="form-help">
+                  Precio alojamiento: <strong>{{ getMemberAccommodationPrice(child) }}€</strong>
+                  <template v-if="child.ziplineRequested">
+                    · Total con tirolina: <strong>{{ getMemberTotalPrice(child) }}€</strong>
+                  </template>
+                </p>
+                <div class="form-row">
+                  <fieldset class="form-subfieldset">
+                    <legend>Restricciones alimentarias (hijo/a {{ index + 1 }})</legend>
+                    <p class="form-help">
+                      Selecciona todas las opciones que apliquen. Si no hay restricciones, deja sin
+                      marcar.
+                    </p>
+                    <div class="option-list option-list--checkbox">
+                      <div
+                        v-for="option in DIET_OPTIONS"
+                        :key="`child-${index}-diet-${option.value}`"
+                        class="option-item"
+                      >
+                        <input
+                          :id="`child-${index}-diet-${option.value}`"
+                          v-model="child.diet"
+                          type="checkbox"
+                          :value="option.value"
+                        />
+                        <label :for="`child-${index}-diet-${option.value}`">{{ option.label }}</label>
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
+                <div class="form-row">
+                  <label :for="`childDietComments-${index}`">Comentarios de dieta</label>
+                  <textarea
+                    :id="`childDietComments-${index}`"
+                    v-model.trim="child.dietComments"
+                    rows="3"
+                  ></textarea>
+                </div>
+                <button type="button" class="form-reset" @click="removeChild(index)">Eliminar hijo/a</button>
+              </fieldset>
+
+              <span
+                id="familyMembers-error"
+                class="form-error"
+                :class="{ 'form-error-hidden': !errors.familyMembers }"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errors.familyMembers || '&nbsp;' }}
+              </span>
+            </fieldset>
+
+            <fieldset class="form-fieldset">
               <legend>Logística del retiro</legend>
 
               <div class="form-row">
@@ -736,6 +938,7 @@ import AppCard from '@/components/AppCard.vue'
 import {
   ACCOMMODATION_OPTIONS,
   ACCOMMODATION_OUTLETS_NOTE,
+  CHILD_SHARED_CHOZO_PRICE_EUR,
   CONTACT_INFO,
   DIET_OPTIONS,
   EVENT_DATES_LABEL,
@@ -745,8 +948,10 @@ import {
   EVENT_YEAR,
   FIELD_LABELS,
   formatDeadlineLabelEs,
+  getRegistrationTotalPriceForMember,
   getRegistrationLastValidDate,
   groupAccommodationOptions,
+  isUnderTwelveAtEventStart,
   isRegistrationDeadlinePassed,
   parseEventDateLocal,
   TELEGRAM_TOOLTIP,
@@ -781,6 +986,9 @@ const form = reactive({
   emergencyContactPhone: '',
   terms: false,
   imageConsent: false,
+  hasPartner: false,
+  partner: null,
+  children: [],
 })
 
 const errors = reactive({
@@ -796,6 +1004,7 @@ const errors = reactive({
   dietComments: '',
   emergencyContactName: '',
   emergencyContactPhone: '',
+  familyMembers: '',
   terms: '',
 })
 
@@ -984,6 +1193,7 @@ const isAccommodationCommentsRequired = computed(
   () => form.accommodation === 'especial' || isMinor.value,
 )
 const isDietCommentsRequired = computed(() => form.diet.includes('alergias'))
+const canAddChild = computed(() => form.children.length < 2)
 
 const emailPattern = VALIDATION_PATTERNS.email
 const phonePattern = VALIDATION_PATTERNS.phone
@@ -1182,6 +1392,33 @@ const validateField = (field) => {
       errors.dietComments = ''
       return true
 
+    case 'familyMembers': {
+      const members = []
+      if (form.hasPartner && form.partner) {
+        members.push(form.partner)
+      }
+      form.children.forEach((child) => members.push(child))
+
+      const invalidMember = members.find((member) => {
+        const missingBaseData =
+          !String(member.fullName || '').trim() ||
+          !String(member.birthDate || '').trim() ||
+          !String(member.accommodation || '').trim()
+        if (missingBaseData) return true
+        const hasAlergias = Array.isArray(member.diet) && member.diet.includes('alergias')
+        if (hasAlergias && !String(member.dietComments || '').trim()) return true
+        return false
+      })
+      if (invalidMember) {
+        errors.familyMembers =
+          'Completa nombre/fecha de nacimiento y, si marcas alergias, añade comentarios de dieta en pareja e hijos.'
+        return false
+      }
+
+      errors.familyMembers = ''
+      return true
+    }
+
     case 'terms':
       if (!form.terms) {
         errors.terms = 'Debes aceptar la política de privacidad y las normas del evento.'
@@ -1206,6 +1443,7 @@ const fieldsToValidate = [
   'dietComments',
   'emergencyContactName',
   'emergencyContactPhone',
+  'familyMembers',
   'terms',
 ]
 
@@ -1247,6 +1485,9 @@ const resetForm = () => {
   form.emergencyContactPhone = ''
   form.terms = false
   form.imageConsent = false
+  form.hasPartner = false
+  form.partner = null
+  form.children = []
 
   Object.keys(errors).forEach((key) => {
     errors[key] = ''
@@ -1296,8 +1537,27 @@ const handleSubmit = async () => {
   status.message = ''
 
   try {
+    const familyMembers = []
+    if (form.hasPartner && form.partner) {
+      familyMembers.push({
+        ...form.partner,
+        role: 'partner',
+      })
+    }
+    form.children.forEach((child) => {
+      familyMembers.push({
+        ...child,
+        role: 'child',
+      })
+    })
+
+    const payload = {
+      ...form,
+      familyMembers,
+    }
+
     // Guardar datos en Supabase
-    const result = await saveRegistration(form, isMinor.value)
+    const result = await saveRegistration(payload, isMinor.value)
 
     if (result.success) {
       status.type = 'success'
@@ -1347,6 +1607,62 @@ const handleReset = () => {
       }, 300)
     }
   }
+}
+
+const createFamilyMember = (role) => ({
+  role,
+  fullName: '',
+  nickname: '',
+  birthDate: '',
+  accommodation: '',
+  diet: [],
+  dietComments: '',
+  ziplineRequested: false,
+  imageConsent: false,
+  childSharesParentChozo: false,
+})
+
+const getMemberAccommodationPrice = (member) => {
+  if (!member?.accommodation) return 0
+  return getRegistrationTotalPriceForMember({
+    accommodation: member.accommodation,
+    birthDate: member.birthDate,
+    isChild: member.role === 'child',
+    childSharesParentChozo: Boolean(member.childSharesParentChozo),
+    ziplineRequested: false,
+  }).accommodationPrice
+}
+
+const getMemberTotalPrice = (member) => {
+  if (!member?.accommodation) return 0
+  return getRegistrationTotalPriceForMember({
+    accommodation: member.accommodation,
+    birthDate: member.birthDate,
+    isChild: member.role === 'child',
+    childSharesParentChozo: Boolean(member.childSharesParentChozo),
+    ziplineRequested: Boolean(member.ziplineRequested),
+  }).totalPrice
+}
+
+const isChildUnderTwelve = (child) => isUnderTwelveAtEventStart(child?.birthDate)
+
+const enablePartner = () => {
+  form.hasPartner = true
+  form.partner = createFamilyMember('partner')
+}
+
+const removePartner = () => {
+  form.hasPartner = false
+  form.partner = null
+}
+
+const addChild = () => {
+  if (!canAddChild.value) return
+  form.children.push(createFamilyMember('child'))
+}
+
+const removeChild = (index) => {
+  form.children.splice(index, 1)
 }
 
 watch(

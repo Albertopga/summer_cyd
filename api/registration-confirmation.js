@@ -17,6 +17,7 @@
 
 import { timingSafeEqual } from 'node:crypto'
 import { Resend } from 'resend'
+import { createClient } from '@supabase/supabase-js'
 import {
   buildRegistrationCreatedEmail,
   buildRegistrationUpdatedEmail,
@@ -146,11 +147,48 @@ export default async function handler(req, res) {
     let message
 
     if (body.type === 'INSERT') {
+      if (record.family_group_id && record.family_role && record.family_role !== 'holder') {
+        res.status(200).json({ ok: true, skipped: 'family_member_insert_non_holder' })
+        return
+      }
+
+      let familyMembers = [record]
+      const supabaseUrl = process.env.SUPABASE_URL
+      const supabaseReadKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+      if (record.family_group_id && supabaseUrl && supabaseReadKey) {
+        const serviceClient = createClient(supabaseUrl, supabaseReadKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        })
+        const { data: familyRows, error: familyRowsError } = await serviceClient
+          .from('registrations')
+          .select(
+            'id,created_at,full_name,family_role,is_minor,accommodation,zipline_requested,child_shares_parent_chozo',
+          )
+          .eq('family_group_id', record.family_group_id)
+          .order('created_at', { ascending: true })
+          .order('id', { ascending: true })
+        if (familyRowsError) {
+          console.warn('[registration-confirmation] could not load family rows', {
+            family_group_id: record.family_group_id,
+            error: familyRowsError.message,
+          })
+        } else if (Array.isArray(familyRows) && familyRows.length > 0) {
+          const explicitHolder = familyRows.find((row) => row.family_role === 'holder')
+          const notificationOwner = explicitHolder || familyRows[0]
+          if (notificationOwner?.id && record.id !== notificationOwner.id) {
+            res.status(200).json({ ok: true, skipped: 'family_member_insert_non_owner' })
+            return
+          }
+          familyMembers = familyRows
+        }
+      }
+
       message = buildRegistrationCreatedEmail({
         fullName,
         accommodation: record.accommodation,
         ziplineRequested: Boolean(record.zipline_requested),
         tempAttendeeNumber: record.temp_attendee_number,
+        familyMembers,
       })
     } else {
       const oldRecord = body.old_record

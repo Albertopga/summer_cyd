@@ -133,6 +133,25 @@ function getRegistrationTotalPriceEur({ accommodation, ziplineRequested }) {
   }
 }
 
+function getRegistrationTotalPriceForMember({ accommodation, ziplineRequested, isChild, childSharesParentChozo }) {
+  const usesChildChozoPrice =
+    Boolean(isChild) && Boolean(childSharesParentChozo) && String(accommodation) === 'chozos'
+  const accommodationPrice = usesChildChozoPrice ? 100 : getAccommodationPriceEur(accommodation)
+  const ziplinePrice = ziplineRequested ? ZIPLINE_PRICE_EUR : 0
+  return {
+    accommodationPrice,
+    ziplinePrice,
+    totalPrice: accommodationPrice + ziplinePrice,
+  }
+}
+
+function familyRoleLabel(role) {
+  if (role === 'holder') return 'Titular'
+  if (role === 'partner') return 'Pareja'
+  if (role === 'child') return 'Hijo/a'
+  return 'Asistente'
+}
+
 function formatAttendeeNumber(value) {
   const n = Number(value)
   if (!Number.isInteger(n) || n <= 0) return null
@@ -144,6 +163,7 @@ export function buildRegistrationCreatedEmail({
   accommodation,
   ziplineRequested,
   tempAttendeeNumber,
+  familyMembers = [],
 }) {
   const normalizedName = String(fullName || '').trim()
   const greeting = normalizedName
@@ -155,6 +175,41 @@ export function buildRegistrationCreatedEmail({
   })
   const accommodationLabel = ACCOMMODATION_LABELS[accommodation] || 'Sin definir'
   const formattedTempNumber = formatAttendeeNumber(tempAttendeeNumber)
+  const familyRows = Array.isArray(familyMembers)
+    ? familyMembers
+        .map((member) => {
+          const role = familyRoleLabel(member?.family_role)
+          const memberName = String(member?.full_name || '').trim()
+          const pricing = getRegistrationTotalPriceForMember({
+            accommodation: member?.accommodation,
+            ziplineRequested: Boolean(member?.zipline_requested),
+            isChild: member?.family_role === 'child' || Boolean(member?.is_minor),
+            childSharesParentChozo: Boolean(member?.child_shares_parent_chozo),
+          })
+          return {
+            role,
+            name: memberName || 'Sin nombre',
+            total: pricing.totalPrice,
+          }
+        })
+        .filter((row) => row.name)
+    : []
+  const familyTotal = familyRows.reduce((sum, row) => sum + row.total, 0)
+  const familyBreakdownHtml =
+    familyRows.length > 0
+      ? `
+      <p><strong>Desglose familiar:</strong></p>
+      <ul>
+        ${familyRows
+          .map(
+            (row) =>
+              `<li>${escapeHtml(row.role)} - ${escapeHtml(row.name)}: <strong>${row.total}€</strong></li>`,
+          )
+          .join('')}
+      </ul>
+      <p><strong>Total familiar:</strong> ${familyTotal}€</p>
+    `
+      : ''
 
   return {
     subject: 'Confirmación de inscripción - Retiro Lúdico Castilla y Dragón',
@@ -169,6 +224,7 @@ export function buildRegistrationCreatedEmail({
           <li>Tirolina: <strong>${ziplinePrice}€</strong></li>
           <li>Importe total: <strong>${totalPrice}€</strong></li>
         </ul>
+        ${familyBreakdownHtml}
         <p><strong>IBAN para el pago:</strong> ${escapeHtml(PAYMENT_IBAN)}</p>
         ${
           formattedTempNumber
