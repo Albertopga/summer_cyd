@@ -32,6 +32,13 @@ const ACCOMMODATION_LABELS = {
   especial: 'Necesidad especial',
 }
 
+const ZIPLINE_PRICE_EUR = 12
+const ACCOMMODATION_PRICES_EUR = {
+  albergue: 130,
+  chozos: 150,
+  'chozo-individual': 300,
+}
+
 function escapeHtml(value) {
   if (value == null) {
     return ''
@@ -111,11 +118,30 @@ export function isValidEmail(value) {
   return typeof value === 'string' && EMAIL_RE.test(value.trim())
 }
 
-export function buildRegistrationCreatedEmail({ fullName }) {
+function getAccommodationPriceEur(accommodation) {
+  return Number(ACCOMMODATION_PRICES_EUR[accommodation] || 0)
+}
+
+function getRegistrationTotalPriceEur({ accommodation, ziplineRequested }) {
+  const accommodationPrice = getAccommodationPriceEur(accommodation)
+  const ziplinePrice = ziplineRequested ? ZIPLINE_PRICE_EUR : 0
+  return {
+    accommodationPrice,
+    ziplinePrice,
+    totalPrice: accommodationPrice + ziplinePrice,
+  }
+}
+
+export function buildRegistrationCreatedEmail({ fullName, accommodation, ziplineRequested }) {
   const normalizedName = String(fullName || '').trim()
   const greeting = normalizedName
     ? `<p>Hola, <strong>${escapeHtml(normalizedName)}</strong>:</p>`
     : '<p>Hola:</p>'
+  const { accommodationPrice, ziplinePrice, totalPrice } = getRegistrationTotalPriceEur({
+    accommodation,
+    ziplineRequested: Boolean(ziplineRequested),
+  })
+  const accommodationLabel = ACCOMMODATION_LABELS[accommodation] || 'Sin definir'
 
   return {
     subject: 'Confirmación de inscripción - Retiro Lúdico Castilla y Dragón',
@@ -124,6 +150,12 @@ export function buildRegistrationCreatedEmail({ fullName }) {
       introHtml: greeting,
       bodyHtml: `
         <p>Hemos recibido correctamente tu inscripción al <strong>Retiro Lúdico Castilla y Dragón</strong>.</p>
+        <p><strong>Resumen económico:</strong></p>
+        <ul>
+          <li>Alojamiento (${escapeHtml(accommodationLabel)}): <strong>${accommodationPrice}€</strong></li>
+          <li>Tirolina: <strong>${ziplinePrice}€</strong></li>
+          <li>Importe total: <strong>${totalPrice}€</strong></li>
+        </ul>
         <p>Guarda este correo como confirmación. Si necesitas corregir algún dato, responde a este mensaje.</p>
       `,
       footerHtml: '<p>- El equipo del retiro</p>',

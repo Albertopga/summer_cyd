@@ -109,6 +109,7 @@
               <th scope="col">Email</th>
               <th scope="col">Teléfono</th>
               <th scope="col">Alojamiento</th>
+              <th scope="col">Importe total</th>
               <th scope="col">Pagado</th>
               <th scope="col">Último recordatorio</th>
               <th scope="col">Tirolina</th>
@@ -135,6 +136,25 @@
               <td data-label="Email">{{ registration.email }}</td>
               <td data-label="Teléfono">{{ registration.phone }}</td>
               <td data-label="Alojamiento">{{ getAccommodationLabel(registration.accommodation) }}</td>
+              <td data-label="Importe total">{{ formatTotalAmount(registration) }}</td>
+              <td data-label="Pagado">
+                <span
+                  class="payment-status"
+                  :class="
+                    registration.accommodation_paid
+                      ? 'payment-status--paid'
+                      : 'payment-status--unpaid'
+                  "
+                  :aria-label="
+                    registration.accommodation_paid ? 'Alojamiento pagado' : 'Alojamiento no pagado'
+                  "
+                >
+                  {{ registration.accommodation_paid ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td data-label="Último recordatorio">
+                {{ formatLastContactDate(registration.last_payment_reminder_sent_at) }}
+              </td>
               <td data-label="Tirolina">
                 <span
                   class="payment-status"
@@ -154,24 +174,6 @@
                 >
                   {{ registration.zipline_paid ? 'Sí' : 'No' }}
                 </span>
-              </td>
-              <td data-label="Pagado">
-                <span
-                  class="payment-status"
-                  :class="
-                    registration.accommodation_paid
-                      ? 'payment-status--paid'
-                      : 'payment-status--unpaid'
-                  "
-                  :aria-label="
-                    registration.accommodation_paid ? 'Alojamiento pagado' : 'Alojamiento no pagado'
-                  "
-                >
-                  {{ registration.accommodation_paid ? 'Sí' : 'No' }}
-                </span>
-              </td>
-              <td data-label="Último recordatorio">
-                {{ formatLastContactDate(registration.last_payment_reminder_sent_at) }}
               </td>
               <td data-label="Fecha registro">{{ formatDate(registration.created_at) }}</td>
               <td data-label="Acciones">
@@ -275,7 +277,7 @@ import {
   getAllRegistrations,
   triggerPaymentReminders,
 } from '@/services/adminService'
-import { ACCOMMODATION_OPTIONS } from '@/constants'
+import { ACCOMMODATION_OPTIONS, ACCOMMODATION_PRICES_EUR, ZIPLINE_PRICE_EUR } from '@/constants'
 import AdminEditModal from '@/components/AdminEditModal.vue'
 import ExcelJS from 'exceljs'
 
@@ -431,6 +433,16 @@ const getAccommodationLabel = (value) => {
 const getRegistrationFullName = (registration) => {
   const fullName = String(registration?.full_name || '').trim()
   return fullName || '-'
+}
+
+const getRegistrationTotalAmount = (registration) => {
+  const accommodationPrice = Number(ACCOMMODATION_PRICES_EUR[registration?.accommodation] || 0)
+  const ziplinePrice = registration?.zipline_requested ? ZIPLINE_PRICE_EUR : 0
+  return accommodationPrice + ziplinePrice
+}
+
+const formatTotalAmount = (registration) => {
+  return `${getRegistrationTotalAmount(registration)}€`
 }
 
 const formatDate = (dateString) => {

@@ -146,7 +146,11 @@ export default async function handler(req, res) {
     let message
 
     if (body.type === 'INSERT') {
-      message = buildRegistrationCreatedEmail({ fullName })
+      message = buildRegistrationCreatedEmail({
+        fullName,
+        accommodation: record.accommodation,
+        ziplineRequested: Boolean(record.zipline_requested),
+      })
     } else {
       const oldRecord = body.old_record
       const changes = detectRegistrationChanges(record, oldRecord)
