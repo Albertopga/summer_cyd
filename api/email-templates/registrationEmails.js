@@ -145,13 +145,6 @@ function getRegistrationTotalPriceForMember({ accommodation, ziplineRequested, i
   }
 }
 
-function familyRoleLabel(role) {
-  if (role === 'holder') return 'Titular'
-  if (role === 'partner') return 'Pareja'
-  if (role === 'child') return 'Hijo/a'
-  return 'Asistente'
-}
-
 function formatAttendeeNumber(value) {
   const n = Number(value)
   if (!Number.isInteger(n) || n <= 0) return null
@@ -179,7 +172,6 @@ export function buildRegistrationCreatedEmail({
   const familyRows = Array.isArray(familyMembers)
     ? familyMembers
         .map((member) => {
-          const role = familyRoleLabel(member?.family_role)
           const memberName = String(member?.full_name || '').trim()
           const pricing = getRegistrationTotalPriceForMember({
             accommodation: member?.accommodation,
@@ -191,7 +183,6 @@ export function buildRegistrationCreatedEmail({
             ACCOMMODATION_LABELS[String(member?.accommodation || '').trim()] || 'Sin definir'
           const memberTempNumber = formatAttendeeNumber(member?.temp_attendee_number)
           return {
-            role,
             name: memberName || 'Sin nombre',
             accommodationLabel: memberAccommodationLabel,
             ziplineRequested: Boolean(member?.zipline_requested),
@@ -234,7 +225,6 @@ export function buildRegistrationCreatedEmail({
             (row) =>
               `<tr>
                 <td style="padding:10px;border-bottom:1px solid #e5e7eb;">
-                  <strong>${escapeHtml(row.role)}</strong><br/>
                   ${escapeHtml(row.name)}
                 </td>
                 <td style="padding:10px;border-bottom:1px solid #e5e7eb;">
@@ -374,11 +364,9 @@ export function buildPaymentConfirmedEmail({ fullName, attendeeNumber, familyMem
   const familyRows = Array.isArray(familyMembers)
     ? familyMembers
         .map((member) => {
-          const role = familyRoleLabel(member?.family_role)
           const memberName = String(member?.full_name || '').trim() || 'Sin nombre'
           const definitiveNumber = formatAttendeeNumber(member?.attendee_number)
           return {
-            role,
             name: memberName,
             definitiveLabel: definitiveNumber ? `A-${definitiveNumber}` : 'Pendiente de asignación',
           }
@@ -394,7 +382,7 @@ export function buildPaymentConfirmedEmail({ fullName, attendeeNumber, familyMem
         ${familyRows
           .map(
             (row) =>
-              `<li>${escapeHtml(row.role)} - ${escapeHtml(row.name)}: <strong>${escapeHtml(row.definitiveLabel)}</strong></li>`,
+              `<li>${escapeHtml(row.name)}: <strong>${escapeHtml(row.definitiveLabel)}</strong></li>`,
           )
           .join('')}
       </ul>

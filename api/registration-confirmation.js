@@ -29,6 +29,8 @@ import {
 const ALLOWED_TYPES = new Set(['INSERT', 'UPDATE'])
 const FAMILY_MEMBERS_MAX_READ_RETRIES = 5
 const FAMILY_MEMBERS_RETRY_DELAY_MS = 250
+const FAMILY_PAYMENT_MAX_READ_RETRIES = 20
+const FAMILY_PAYMENT_RETRY_DELAY_MS = 300
 
 function safeHeaderEqual(received, expected) {
   if (typeof received !== 'string' || typeof expected !== 'string') {
@@ -68,7 +70,13 @@ function sleep(ms) {
   })
 }
 
-async function loadFamilyMembersWithRetry({ record, eventMeta }) {
+async function loadFamilyMembersWithRetry({
+  record,
+  eventMeta,
+  requireDefinitiveNumbers = false,
+  maxRetries = FAMILY_MEMBERS_MAX_READ_RETRIES,
+  retryDelayMs = FAMILY_MEMBERS_RETRY_DELAY_MS,
+}) {
   const fallbackMembers = [record]
   const fallbackResult = { members: fallbackMembers, incomplete: false }
   const supabaseUrl = process.env.SUPABASE_URL
@@ -82,7 +90,7 @@ async function loadFamilyMembersWithRetry({ record, eventMeta }) {
   })
 
   let lastRows = fallbackMembers
-  for (let attempt = 0; attempt < FAMILY_MEMBERS_MAX_READ_RETRIES; attempt += 1) {
+  for (let attempt = 0; attempt < maxRetries; attempt += 1) {
     const { data: familyRows, error: familyRowsError } = await serviceClient
       .from('registrations')
       .select(
@@ -109,16 +117,23 @@ async function loadFamilyMembersWithRetry({ record, eventMeta }) {
       if (notificationOwner?.id && record.id !== notificationOwner.id) {
         return { members: familyRows, incomplete: false, skipSend: 'family_member_insert_non_owner' }
       }
-      if (familyRows.length > 1) {
+      const hasMultipleMembers = familyRows.length > 1
+      const hasCompleteDefinitiveNumbers = familyRows.every((row) =>
+        Number.isInteger(Number(row?.attendee_number)),
+      )
+      const familyIsReady = requireDefinitiveNumbers
+        ? hasMultipleMembers && hasCompleteDefinitiveNumbers
+        : hasMultipleMembers
+      if (familyIsReady) {
         return { members: familyRows, incomplete: false }
       }
     }
 
-    const hasMoreAttempts = attempt < FAMILY_MEMBERS_MAX_READ_RETRIES - 1
+    const hasMoreAttempts = attempt < maxRetries - 1
     if (!hasMoreAttempts) {
       break
     }
-    await sleep(FAMILY_MEMBERS_RETRY_DELAY_MS)
+    await sleep(retryDelayMs)
   }
 
   return {
@@ -247,7 +262,13 @@ export default async function handler(req, res) {
           return
         }
 
-        const familyLoad = await loadFamilyMembersWithRetry({ record, eventMeta })
+        const familyLoad = await loadFamilyMembersWithRetry({
+          record,
+          eventMeta,
+          requireDefinitiveNumbers: true,
+          maxRetries: FAMILY_PAYMENT_MAX_READ_RETRIES,
+          retryDelayMs: FAMILY_PAYMENT_RETRY_DELAY_MS,
+        })
         if (familyLoad.skipSend) {
           res.status(200).json({ ok: true, skipped: familyLoad.skipSend })
           return
