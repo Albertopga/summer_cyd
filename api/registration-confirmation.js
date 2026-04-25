@@ -19,6 +19,7 @@ import { timingSafeEqual } from 'node:crypto'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 import {
+  buildPaymentConfirmedEmail,
   buildRegistrationCreatedEmail,
   buildRegistrationUpdatedEmail,
   detectRegistrationChanges,
@@ -85,7 +86,7 @@ async function loadFamilyMembersWithRetry({ record, eventMeta }) {
     const { data: familyRows, error: familyRowsError } = await serviceClient
       .from('registrations')
       .select(
-        'id,created_at,full_name,family_role,is_minor,accommodation,zipline_requested,child_shares_parent_chozo,temp_attendee_number',
+        'id,created_at,full_name,family_role,is_minor,accommodation,zipline_requested,child_shares_parent_chozo,temp_attendee_number,attendee_number,accommodation_paid',
       )
       .eq('family_group_id', record.family_group_id)
       .order('created_at', { ascending: true })
@@ -235,6 +236,29 @@ export default async function handler(req, res) {
       })
     } else {
       const oldRecord = body.old_record
+      const paymentJustConfirmed =
+        oldRecord &&
+        Boolean(oldRecord.accommodation_paid) === false &&
+        Boolean(record.accommodation_paid) === true
+
+      if (paymentJustConfirmed) {
+        if (record.family_group_id && record.family_role && record.family_role !== 'holder') {
+          res.status(200).json({ ok: true, skipped: 'family_payment_update_non_holder' })
+          return
+        }
+
+        const familyLoad = await loadFamilyMembersWithRetry({ record, eventMeta })
+        if (familyLoad.skipSend) {
+          res.status(200).json({ ok: true, skipped: familyLoad.skipSend })
+          return
+        }
+
+        message = buildPaymentConfirmedEmail({
+          fullName,
+          attendeeNumber: record.attendee_number,
+          familyMembers: familyLoad.members,
+        })
+      } else {
       const changes = detectRegistrationChanges(record, oldRecord)
       if (changes.length === 0) {
         console.info('[registration-confirmation] skipped update without relevant changes', eventMeta)
@@ -242,6 +266,7 @@ export default async function handler(req, res) {
         return
       }
       message = buildRegistrationUpdatedEmail({ fullName, changes })
+      }
     }
 
     const resend = new Resend(apiKey)

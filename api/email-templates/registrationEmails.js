@@ -352,6 +352,64 @@ export function buildPaymentReminderEmail({ fullName }) {
   }
 }
 
+export function buildPaymentConfirmedEmail({ fullName, attendeeNumber, familyMembers = [] }) {
+  const normalizedName = String(fullName || '').trim()
+  const greeting = normalizedName
+    ? `<p>Hola, <strong>${escapeHtml(normalizedName)}</strong>:</p>`
+    : '<p>Hola:</p>'
+  const formattedAttendeeNumber = formatAttendeeNumber(attendeeNumber)
+
+  const familyRows = Array.isArray(familyMembers)
+    ? familyMembers
+        .map((member) => {
+          const role = familyRoleLabel(member?.family_role)
+          const memberName = String(member?.full_name || '').trim() || 'Sin nombre'
+          const definitiveNumber = formatAttendeeNumber(member?.attendee_number)
+          return {
+            role,
+            name: memberName,
+            definitiveLabel: definitiveNumber ? `A-${definitiveNumber}` : 'Pendiente de asignación',
+          }
+        })
+        .filter((row) => row.name)
+    : []
+
+  const familyNumbersHtml =
+    familyRows.length > 1
+      ? `
+      <p><strong>Números definitivos del grupo familiar:</strong></p>
+      <ul>
+        ${familyRows
+          .map(
+            (row) =>
+              `<li>${escapeHtml(row.role)} - ${escapeHtml(row.name)}: <strong>${escapeHtml(row.definitiveLabel)}</strong></li>`,
+          )
+          .join('')}
+      </ul>
+    `
+      : ''
+
+  return {
+    subject: 'Pago confirmado y número definitivo - Retiro Lúdico Castilla y Dragón',
+    html: buildLayout({
+      title: 'Pago confirmado',
+      introHtml: greeting,
+      bodyHtml: `
+        <p>Hemos confirmado correctamente tu pago de alojamiento.</p>
+        <p><strong>Tu número definitivo de asistente:</strong>
+        ${
+          formattedAttendeeNumber
+            ? `<strong>A-${escapeHtml(formattedAttendeeNumber)}</strong>`
+            : 'Pendiente de asignación'
+        }</p>
+        ${familyNumbersHtml}
+        <p>Guarda este correo para identificarte en el evento.</p>
+      `,
+      footerHtml: '<p>- El equipo del retiro</p>',
+    }),
+  }
+}
+
 export function detectRegistrationChanges(currentRecord, previousRecord) {
   if (!currentRecord || !previousRecord) {
     return []
