@@ -4,7 +4,12 @@
  */
 
 import { supabase } from '@/lib/supabase'
-import { EVENT_DATES, parseEventDateLocal, SLOT_TIME_RANGES } from '@/constants'
+import {
+  ACTIVITY_DOCUMENTS_STORAGE_PUBLIC_PREFIX,
+  EVENT_DATES,
+  parseEventDateLocal,
+  SLOT_TIME_RANGES,
+} from '@/constants'
 
 const ACTIVITY_DOCUMENT_MAX_SIZE = 10 * 1024 * 1024
 const ACTIVITY_DOCUMENT_ALLOWED_TYPES = [
@@ -177,6 +182,58 @@ async function uploadAdminActivityDocuments(files, organizerEmail) {
   }
 
   return { success: true, data: uploaded, error: null }
+}
+
+function extractStoragePathFromDocument(doc) {
+  if (doc && typeof doc === 'object') {
+    if (typeof doc.path === 'string' && doc.path.trim()) {
+      return doc.path.trim()
+    }
+    if (typeof doc.url === 'string' && doc.url.trim()) {
+      return extractStoragePathFromPublicUrl(doc.url)
+    }
+  }
+  if (typeof doc === 'string') {
+    return extractStoragePathFromPublicUrl(doc)
+  }
+  return ''
+}
+
+function extractStoragePathFromPublicUrl(url) {
+  try {
+    const parsed = new URL(url)
+    const markerIndex = parsed.pathname.indexOf(ACTIVITY_DOCUMENTS_STORAGE_PUBLIC_PREFIX)
+    if (markerIndex < 0) return ''
+    return decodeURIComponent(
+      parsed.pathname.slice(markerIndex + ACTIVITY_DOCUMENTS_STORAGE_PUBLIC_PREFIX.length),
+    )
+  } catch {
+    return ''
+  }
+}
+
+async function removeActivityDocumentsFromStorage(paths = []) {
+  const cleanPaths = Array.from(
+    new Set(
+      (Array.isArray(paths) ? paths : [])
+        .map((path) => String(path || '').trim())
+        .filter((path) => path.length > 0),
+    ),
+  )
+
+  if (cleanPaths.length === 0) {
+    return { success: true, error: null }
+  }
+
+  const { error } = await supabase.storage.from('activity-documents').remove(cleanPaths)
+  if (error) {
+    return {
+      success: false,
+      error: error.message || 'No se pudieron eliminar documentos del almacenamiento.',
+    }
+  }
+
+  return { success: true, error: null }
 }
 
 /**
@@ -605,9 +662,11 @@ export async function updateActivity(id, updates, allowedFields = []) {
     delete filteredUpdates.id
     delete filteredUpdates.created_at
 
-    const incomingDocuments = Array.isArray(filteredUpdates.documents)
-      ? filteredUpdates.documents
+    const incomingDocuments = Array.isArray(filteredUpdates.documents) ? filteredUpdates.documents : []
+    const documentsToRemove = Array.isArray(filteredUpdates.documents_to_remove)
+      ? filteredUpdates.documents_to_remove.map((path) => String(path || '').trim()).filter(Boolean)
       : []
+    delete filteredUpdates.documents_to_remove
     const scheduleFieldsChanged =
       Object.prototype.hasOwnProperty.call(filteredUpdates, 'activity_date') ||
       Object.prototype.hasOwnProperty.call(filteredUpdates, 'activity_time') ||
@@ -630,7 +689,7 @@ export async function updateActivity(id, updates, allowedFields = []) {
       }
       currentActivitySchedule = scheduleRow
     }
-    if (incomingDocuments.length > 0) {
+    if (incomingDocuments.length > 0 || documentsToRemove.length > 0) {
       const { data: currentActivity, error: currentActivityError } = await supabase
         .from('activities')
         .select('documents, organizer_email')
@@ -646,25 +705,44 @@ export async function updateActivity(id, updates, allowedFields = []) {
         }
       }
 
-      const organizerEmail = String(
-        filteredUpdates.organizer_email || currentActivity?.organizer_email || '',
-      )
+      const organizerEmail = String(filteredUpdates.organizer_email || currentActivity?.organizer_email || '')
         .trim()
         .toLowerCase()
 
-      const uploadResult = await uploadAdminActivityDocuments(incomingDocuments, organizerEmail)
-      if (!uploadResult.success) {
-        return {
-          success: false,
-          data: null,
-          error: uploadResult.error || 'No se pudieron subir los documentos.',
+      const currentDocuments = Array.isArray(currentActivity?.documents) ? currentActivity.documents : []
+      let nextDocuments = [...currentDocuments]
+
+      if (documentsToRemove.length > 0) {
+        const currentDocPaths = nextDocuments.map((doc) => extractStoragePathFromDocument(doc)).filter(Boolean)
+        const removablePaths = currentDocPaths.filter((path) => documentsToRemove.includes(path))
+        const removeResult = await removeActivityDocumentsFromStorage(removablePaths)
+        if (!removeResult.success) {
+          return {
+            success: false,
+            data: null,
+            error: removeResult.error || 'No se pudieron eliminar los documentos seleccionados.',
+          }
         }
+
+        nextDocuments = nextDocuments.filter((doc) => {
+          const path = extractStoragePathFromDocument(doc)
+          return !documentsToRemove.includes(path)
+        })
       }
 
-      const currentDocuments = Array.isArray(currentActivity?.documents)
-        ? currentActivity.documents
-        : []
-      filteredUpdates.documents = [...currentDocuments, ...uploadResult.data]
+      if (incomingDocuments.length > 0) {
+        const uploadResult = await uploadAdminActivityDocuments(incomingDocuments, organizerEmail)
+        if (!uploadResult.success) {
+          return {
+            success: false,
+            data: null,
+            error: uploadResult.error || 'No se pudieron subir los documentos.',
+          }
+        }
+        nextDocuments = [...nextDocuments, ...uploadResult.data]
+      }
+
+      filteredUpdates.documents = nextDocuments
     }
 
     if (scheduleFieldsChanged) {
@@ -736,13 +814,11 @@ export async function deleteActivity(id) {
       }
     }
 
-    const {
-      data: { user: currentUser },
-      error: userError,
-    } = await supabase.auth.getUser()
-    if (userError) {
-      console.error('Error obteniendo usuario autenticado:', userError)
-    }
+    const { data: activityRowBeforeDelete } = await supabase
+      .from('activities')
+      .select('documents')
+      .eq('id', id)
+      .maybeSingle()
 
     // Con RLS, Supabase puede devolver error=null aunque no borre filas.
     // Pedimos retorno de filas borradas para confirmar eliminación real.
@@ -769,6 +845,15 @@ export async function deleteActivity(id) {
         error:
           'No se pudo borrar la actividad. Puede que no exista o que tu usuario no tenga permisos de borrado (RLS).',
       }
+    }
+
+    const documents = Array.isArray(activityRowBeforeDelete?.documents)
+      ? activityRowBeforeDelete.documents
+      : []
+    const documentPaths = documents.map((doc) => extractStoragePathFromDocument(doc)).filter(Boolean)
+    const removeDocsResult = await removeActivityDocumentsFromStorage(documentPaths)
+    if (!removeDocsResult.success) {
+      console.error('Actividad eliminada pero falló limpieza de documentos:', removeDocsResult.error)
     }
 
     return {

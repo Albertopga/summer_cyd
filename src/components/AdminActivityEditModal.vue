@@ -120,6 +120,40 @@
             <p class="form-help">
               Formatos permitidos: PDF, Word e imágenes (JPG, PNG). Máximo 10MB por archivo.
             </p>
+            <ul v-if="existingDocuments.length > 0" class="file-list">
+              <li
+                v-for="doc in existingDocuments"
+                :key="doc.path || doc.url || doc.name"
+                class="file-item"
+              >
+                <span>{{ doc.name }}</span>
+                <button
+                  type="button"
+                  class="remove-file-button"
+                  :aria-label="`Eliminar documento ya subido ${doc.name}`"
+                  @click="markExistingDocumentForRemoval(doc.path)"
+                >
+                  Eliminar subido
+                </button>
+              </li>
+            </ul>
+            <ul v-if="documentsMarkedForRemoval.length > 0" class="file-list pending-remove-list">
+              <li
+                v-for="doc in documentsMarkedForRemoval"
+                :key="`remove-${doc.path}`"
+                class="file-item"
+              >
+                <span>{{ doc.name }}</span>
+                <button
+                  type="button"
+                  class="remove-file-button"
+                  :aria-label="`Restaurar documento ${doc.name}`"
+                  @click="restoreMarkedDocument(doc.path)"
+                >
+                  Restaurar
+                </button>
+              </li>
+            </ul>
             <ul v-if="selectedFiles.length > 0" class="file-list">
               <li
                 v-for="(file, index) in selectedFiles"
@@ -197,6 +231,7 @@ const normalizeTime = (timeValue) => String(timeValue || '').slice(0, 5)
 const formData = reactive({})
 const errors = reactive({})
 const selectedFiles = ref([])
+const removedDocumentPaths = ref([])
 
 const status = reactive({
   message: '',
@@ -330,6 +365,66 @@ const editableFieldsConfig = computed(() => {
   return Object.values(config).filter((field) => field.isEditable)
 })
 
+const extractStoragePathFromPublicUrl = (url) => {
+  try {
+    const parsed = new URL(url)
+    const marker = '/storage/v1/object/public/activity-documents/'
+    const markerIndex = parsed.pathname.indexOf(marker)
+    if (markerIndex < 0) return ''
+    return decodeURIComponent(parsed.pathname.slice(markerIndex + marker.length))
+  } catch {
+    return ''
+  }
+}
+
+const normalizedExistingDocuments = computed(() => {
+  const rawList = Array.isArray(props.activity?.documents) ? props.activity.documents : []
+
+  return rawList
+    .map((doc, index) => {
+      if (doc && typeof doc === 'object') {
+        const docPath =
+          typeof doc.path === 'string' && doc.path.trim()
+            ? doc.path.trim()
+            : extractStoragePathFromPublicUrl(String(doc.url || ''))
+        const fallbackName = `documento-${index + 1}`
+        const docName =
+          String(doc.name || '').trim() ||
+          String(doc.url || '')
+            .split('?')[0]
+            .split('/')
+            .pop() ||
+          fallbackName
+        return {
+          name: docName,
+          path: docPath,
+          url: String(doc.url || ''),
+        }
+      }
+
+      if (typeof doc === 'string' && doc.trim()) {
+        const docPath = extractStoragePathFromPublicUrl(doc)
+        const docName = doc.split('?')[0].split('/').pop() || `documento-${index + 1}`
+        return {
+          name: docName,
+          path: docPath,
+          url: doc,
+        }
+      }
+
+      return null
+    })
+    .filter((doc) => doc && doc.path)
+})
+
+const existingDocuments = computed(() =>
+  normalizedExistingDocuments.value.filter((doc) => !removedDocumentPaths.value.includes(doc.path)),
+)
+
+const documentsMarkedForRemoval = computed(() =>
+  normalizedExistingDocuments.value.filter((doc) => removedDocumentPaths.value.includes(doc.path)),
+)
+
 // Inicializar formData cuando se abre el modal
 watch(
   () => props.activity,
@@ -378,6 +473,7 @@ const focusFirstField = () => {
 const handleClose = () => {
   isOpen.value = false
   selectedFiles.value = []
+  removedDocumentPaths.value = []
   if (documentsInputRef.value) {
     documentsInputRef.value.value = ''
   }
@@ -481,6 +577,16 @@ const removeFile = (index) => {
   }
 }
 
+const markExistingDocumentForRemoval = (path) => {
+  if (!path || removedDocumentPaths.value.includes(path)) return
+  removedDocumentPaths.value = [...removedDocumentPaths.value, path]
+}
+
+const restoreMarkedDocument = (path) => {
+  if (!path) return
+  removedDocumentPaths.value = removedDocumentPaths.value.filter((item) => item !== path)
+}
+
 const openFilePicker = () => {
   documentsInputRef.value?.click()
 }
@@ -519,6 +625,9 @@ const handleSave = async () => {
   if (selectedFiles.value.length > 0) {
     updates.documents = selectedFiles.value
   }
+  if (removedDocumentPaths.value.length > 0) {
+    updates.documents_to_remove = removedDocumentPaths.value
+  }
 
   if (Object.keys(updates).length === 0) {
     status.type = 'idle'
@@ -528,7 +637,11 @@ const handleSave = async () => {
   }
 
   // Obtener lista de campos editables
-  const editableFieldKeys = [...editableFieldsConfig.value.map((field) => field.key), 'documents']
+  const editableFieldKeys = [
+    ...editableFieldsConfig.value.map((field) => field.key),
+    'documents',
+    'documents_to_remove',
+  ]
   const result = await updateActivity(props.activity.id, updates, editableFieldKeys)
 
   if (result.success) {

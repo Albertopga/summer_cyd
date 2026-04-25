@@ -102,6 +102,10 @@ export function isActivityRegistrationDeadlinePassed() {
 /** Máximo de filas en `activities` por `organizer_email` (debe coincidir con la BD). */
 export const MAX_ACTIVITIES_PER_ORGANIZER = 2
 
+/** Prefijo de URL pública de Supabase Storage para documentos de actividades. */
+export const ACTIVITY_DOCUMENTS_STORAGE_PUBLIC_PREFIX =
+  '/storage/v1/object/public/activity-documents/'
+
 /** Etiqueta legible en español para una fecha local. */
 export function formatDeadlineLabelEs(date) {
   return new Intl.DateTimeFormat('es-ES', {

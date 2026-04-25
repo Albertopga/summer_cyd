@@ -258,6 +258,18 @@
                           : `Descargar ${doc.name}`
                       }}
                     </button>
+                    <button
+                      type="button"
+                      class="delete-doc-link"
+                      :disabled="deletingDocumentPath === (doc.path || doc.url)"
+                      @click="removeDocument(doc)"
+                    >
+                      {{
+                        deletingDocumentPath === (doc.path || doc.url)
+                          ? `Eliminando ${doc.name}...`
+                          : `Eliminar ${doc.name}`
+                      }}
+                    </button>
                   </li>
                 </ul>
               </section>
@@ -317,7 +329,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { getAllActivities, deleteActivity } from '@/services/adminService'
+import { getAllActivities, deleteActivity, updateActivity } from '@/services/adminService'
 import { supabase } from '@/lib/supabase'
 import { ACTIVITY_TYPES, TIME_SLOTS, SPACE_NEEDS } from '@/constants'
 import AdminActivityCreateModal from '@/components/AdminActivityCreateModal.vue'
@@ -340,6 +352,7 @@ const activityToDelete = ref(null)
 const showCreateModal = ref(false)
 const isDeleting = ref(false)
 const downloadingDocumentUrl = ref('')
+const deletingDocumentPath = ref('')
 const deleteError = ref('')
 const downloadError = ref('')
 const statusFilter = ref('')
@@ -403,6 +416,7 @@ const openDetailModal = (activity) => {
 const closeDetailModal = () => {
   downloadError.value = ''
   downloadingDocumentUrl.value = ''
+  deletingDocumentPath.value = ''
   detailActivity.value = null
 }
 
@@ -659,6 +673,36 @@ const downloadDocument = async (doc) => {
   } finally {
     downloadingDocumentUrl.value = ''
   }
+}
+
+const removeDocument = async (doc) => {
+  if (!detailActivity.value?.id) return
+  const storagePath = doc?.path || extractStoragePathFromPublicUrl(doc?.url || '')
+  if (!storagePath) {
+    downloadError.value = 'No se pudo identificar la ruta del documento para eliminarlo.'
+    return
+  }
+
+  deletingDocumentPath.value = doc.path || doc.url || storagePath
+  downloadError.value = ''
+
+  const result = await updateActivity(
+    detailActivity.value.id,
+    { documents_to_remove: [storagePath] },
+    ['documents_to_remove'],
+  )
+
+  deletingDocumentPath.value = ''
+
+  if (!result.success) {
+    downloadError.value = result.error || 'No se pudo eliminar el documento.'
+    return
+  }
+
+  detailActivity.value = { ...result.data }
+  activities.value = activities.value.map((activity) =>
+    activity.id === result.data.id ? { ...activity, documents: result.data.documents || [] } : activity,
+  )
 }
 
 const handleDownloadExcel = async () => {
@@ -1290,6 +1334,26 @@ defineExpose({
 
 .download-doc-link:focus-visible {
   outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.delete-doc-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  font: inherit;
+}
+
+.delete-doc-link:hover {
+  color: var(--color-accent-dark);
+}
+
+.delete-doc-link:focus-visible {
+  outline: 3px solid var(--color-accent);
   outline-offset: 2px;
 }
 
