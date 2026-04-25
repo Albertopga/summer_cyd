@@ -378,6 +378,23 @@ const handleSendPaymentReminders = async () => {
     return
   }
 
+  if (result.data?.skipped === 'payment_reminders_disabled') {
+    remindersFeedback.value = {
+      type: 'error',
+      message:
+        'Los recordatorios de pago están desactivados en el entorno actual (PAYMENT_REMINDER_EMAIL_ENABLED).',
+    }
+    return
+  }
+
+  if (result.data?.skipped === 'confirmation_email_disabled') {
+    remindersFeedback.value = {
+      type: 'error',
+      message: 'El envío de emails está desactivado en el entorno actual.',
+    }
+    return
+  }
+
   const sent = Number(result.data?.sent || 0)
   const skipped = Number(result.data?.skipped || 0)
   const total = Number(result.data?.total || 0)
