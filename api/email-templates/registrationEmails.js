@@ -251,14 +251,7 @@ export function buildRegistrationCreatedEmail({
     `
       : ''
   const economicSummaryHtml = hasFamilyBreakdown
-    ? `
-      <p><strong>Resumen económico familiar:</strong></p>
-      <ul>
-        <li>Total alojamiento familiar: <strong>${familyAccommodationTotal}€</strong></li>
-        <li>Total extras (tirolina): <strong>${familyZiplineTotal}€</strong></li>
-        <li>Total final familiar a abonar: <strong>${familyTotal}€</strong></li>
-      </ul>
-    `
+    ? ''
     : `
       <p><strong>Resumen económico:</strong></p>
       <ul>
@@ -267,6 +260,9 @@ export function buildRegistrationCreatedEmail({
         <li>Importe total: <strong>${totalPrice}€</strong></li>
       </ul>
     `
+  const paymentConcept = formattedTempNumber
+    ? `pago_retiro_2026_T-${formattedTempNumber}`
+    : 'pago_retiro_2026_T-XXXX'
 
   return {
     subject: 'Confirmación de inscripción - Retiro Lúdico Castilla y Dragón',
@@ -279,6 +275,7 @@ export function buildRegistrationCreatedEmail({
         ${familyProcessingHtml}
         ${familyBreakdownHtml}
         <p><strong>IBAN para el pago:</strong> ${escapeHtml(PAYMENT_IBAN)}</p>
+        <p><strong>Concepto de la transferencia:</strong> ${escapeHtml(paymentConcept)}</p>
         ${
           formattedTempNumber
             ? `<p><strong>Número temporal de asistente:</strong> T-${escapeHtml(formattedTempNumber)}</p>`
