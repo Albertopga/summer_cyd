@@ -109,9 +109,10 @@
               <th scope="col">Email</th>
               <th scope="col">Teléfono</th>
               <th scope="col">Alojamiento</th>
+              <th scope="col">Pagado</th>
+              <th scope="col">Último recordatorio</th>
               <th scope="col">Tirolina</th>
               <th scope="col">Tirolina pagada</th>
-              <th scope="col">Pagado</th>
               <th scope="col">Fecha registro</th>
               <th scope="col">Acciones</th>
             </tr>
@@ -168,6 +169,9 @@
                 >
                   {{ registration.accommodation_paid ? 'Sí' : 'No' }}
                 </span>
+              </td>
+              <td data-label="Último recordatorio">
+                {{ formatLastContactDate(registration.last_payment_reminder_sent_at) }}
               </td>
               <td data-label="Fecha registro">{{ formatDate(registration.created_at) }}</td>
               <td data-label="Acciones">
@@ -432,6 +436,19 @@ const getRegistrationFullName = (registration) => {
 const formatDate = (dateString) => {
   if (!dateString) return '-'
   const date = new Date(dateString)
+  return date.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+const formatLastContactDate = (dateString) => {
+  if (!dateString) return 'Nunca'
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return 'Nunca'
   return date.toLocaleDateString('es-ES', {
     year: 'numeric',
     month: 'short',
