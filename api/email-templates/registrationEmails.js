@@ -38,6 +38,7 @@ const ACCOMMODATION_PRICES_EUR = {
   chozos: 150,
   'chozo-individual': 300,
 }
+const PAYMENT_IBAN = String(process.env.PAYMENT_IBAN || 'ES41 3035 0255 7125 5002 4794').trim()
 
 function escapeHtml(value) {
   if (value == null) {
@@ -132,7 +133,18 @@ function getRegistrationTotalPriceEur({ accommodation, ziplineRequested }) {
   }
 }
 
-export function buildRegistrationCreatedEmail({ fullName, accommodation, ziplineRequested }) {
+function formatAttendeeNumber(value) {
+  const n = Number(value)
+  if (!Number.isInteger(n) || n <= 0) return null
+  return String(n).padStart(4, '0')
+}
+
+export function buildRegistrationCreatedEmail({
+  fullName,
+  accommodation,
+  ziplineRequested,
+  tempAttendeeNumber,
+}) {
   const normalizedName = String(fullName || '').trim()
   const greeting = normalizedName
     ? `<p>Hola, <strong>${escapeHtml(normalizedName)}</strong>:</p>`
@@ -142,6 +154,7 @@ export function buildRegistrationCreatedEmail({ fullName, accommodation, zipline
     ziplineRequested: Boolean(ziplineRequested),
   })
   const accommodationLabel = ACCOMMODATION_LABELS[accommodation] || 'Sin definir'
+  const formattedTempNumber = formatAttendeeNumber(tempAttendeeNumber)
 
   return {
     subject: 'Confirmación de inscripción - Retiro Lúdico Castilla y Dragón',
@@ -156,6 +169,12 @@ export function buildRegistrationCreatedEmail({ fullName, accommodation, zipline
           <li>Tirolina: <strong>${ziplinePrice}€</strong></li>
           <li>Importe total: <strong>${totalPrice}€</strong></li>
         </ul>
+        <p><strong>IBAN para el pago:</strong> ${escapeHtml(PAYMENT_IBAN)}</p>
+        ${
+          formattedTempNumber
+            ? `<p><strong>Número temporal de asistente:</strong> T-${escapeHtml(formattedTempNumber)}</p>`
+            : ''
+        }
         <p>Guarda este correo como confirmación. Si necesitas corregir algún dato, responde a este mensaje.</p>
       `,
       footerHtml: '<p>- El equipo del retiro</p>',
@@ -218,6 +237,7 @@ export function buildPaymentReminderEmail({ fullName }) {
       introHtml: greeting,
       bodyHtml: `
         <p>Tu inscripción está registrada, pero todavía no consta el pago de la reserva de plaza.</p>
+        <p><strong>IBAN para el pago:</strong> ${escapeHtml(PAYMENT_IBAN)}</p>
         <p>Para garantizar tu asistencia, realiza el pago cuanto antes y responde a este correo si necesitas ayuda.</p>
       `,
       footerHtml: '<p>Gracias por tu interés.<br/>- El equipo del retiro</p>',

@@ -135,6 +135,86 @@ export async function triggerPaymentReminders() {
   }
 }
 
+/**
+ * Reinicia numeración de asistentes desde admin (acción sensible).
+ * Requiere sesión autenticada y contraseña operativa.
+ * @param {string} password
+ * @returns {Promise<{success: boolean, data: Object|null, error: string|null}>}
+ */
+export async function resetAttendeeNumbers(password) {
+  try {
+    const normalizedPassword = String(password || '').trim()
+    if (!normalizedPassword) {
+      return {
+        success: false,
+        data: null,
+        error: 'Debes introducir la contraseña de reinicio.',
+      }
+    }
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
+    if (sessionError || !session?.access_token) {
+      return {
+        success: false,
+        data: null,
+        error: 'No hay sesión activa de administrador.',
+      }
+    }
+
+    const response = await fetch('/api/reset-attendee-numbers', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        password: normalizedPassword,
+      }),
+    })
+
+    let payload = null
+    let rawBody = ''
+    try {
+      payload = await response.json()
+    } catch {
+      payload = null
+      try {
+        rawBody = await response.text()
+      } catch {
+        rawBody = ''
+      }
+    }
+
+    if (!response.ok) {
+      return {
+        success: false,
+        data: payload,
+        error:
+          payload?.error ||
+          (rawBody ? `Error al reiniciar numeración (${response.status}): ${rawBody}` : '') ||
+          `Error al reiniciar numeración (${response.status})`,
+      }
+    }
+
+    return {
+      success: true,
+      data: payload,
+      error: null,
+    }
+  } catch (error) {
+    console.error('Error inesperado al reiniciar numeración de asistentes:', error)
+    return {
+      success: false,
+      data: null,
+      error: error.message || 'Error inesperado al reiniciar numeración',
+    }
+  }
+}
+
 async function uploadAdminActivityFile(file, organizerEmail, fileIndex) {
   const timestamp = Date.now()
   const sanitizedEmail = organizerEmail.replace(/[^a-zA-Z0-9]/g, '_')

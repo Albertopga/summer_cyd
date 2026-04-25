@@ -28,6 +28,15 @@
           </button>
           <button
             type="button"
+            @click="handleResetAttendeeNumbers"
+            class="reset-attendees-button"
+            :disabled="loading"
+            aria-label="Reiniciar numeración de asistentes"
+          >
+            Reiniciar nº asistentes
+          </button>
+          <button
+            type="button"
             @click="handleDownloadExcel"
             class="download-button"
             :disabled="loading"
@@ -94,6 +103,7 @@
         <table class="registrations-table" aria-label="Lista de registros de asistentes">
           <thead>
             <tr>
+              <th scope="col">Nº asistente</th>
               <th scope="col" class="checkbox-column">
                 <label for="select-all" class="sr-only">Seleccionar todos los registros</label>
                 <input
@@ -120,6 +130,7 @@
           </thead>
           <tbody>
             <tr v-for="registration in registrations" :key="registration.id">
+              <td data-label="Nº asistente">{{ formatAttendeeNumber(registration.attendee_number) }}</td>
               <td class="checkbox-column" data-label="Seleccionar">
                 <label :for="`select-${registration.id}`" class="sr-only">
                   Seleccionar registro de {{ getRegistrationFullName(registration) }}
@@ -275,6 +286,7 @@ import {
   deleteRegistration,
   deleteRegistrationsBulk,
   getAllRegistrations,
+  resetAttendeeNumbers,
   triggerPaymentReminders,
 } from '@/services/adminService'
 import { ACCOMMODATION_OPTIONS, ACCOMMODATION_PRICES_EUR, ZIPLINE_PRICE_EUR } from '@/constants'
@@ -375,6 +387,29 @@ const handleSendPaymentReminders = async () => {
   }
 }
 
+const handleResetAttendeeNumbers = async () => {
+  const password = window.prompt('Introduce la contraseña para reiniciar la numeración de asistentes:')
+  if (password == null) return
+
+  remindersFeedback.value = { type: '', message: '' }
+  const result = await resetAttendeeNumbers(password)
+
+  if (!result.success) {
+    remindersFeedback.value = {
+      type: 'error',
+      message: result.error || 'No se pudo reiniciar la numeración de asistentes.',
+    }
+    return
+  }
+
+  const reassigned = Number(result.data?.reassigned || 0)
+  remindersFeedback.value = {
+    type: 'success',
+    message: `Numeración reiniciada correctamente. Asistentes renumerados: ${reassigned}.`,
+  }
+  await loadRegistrations()
+}
+
 const openDeleteModal = (ids = []) => {
   const cleanIds = Array.isArray(ids) ? ids.filter(Boolean) : []
   if (cleanIds.length === 0) return
@@ -433,6 +468,11 @@ const getAccommodationLabel = (value) => {
 const getRegistrationFullName = (registration) => {
   const fullName = String(registration?.full_name || '').trim()
   return fullName || '-'
+}
+
+const formatAttendeeNumber = (value) => {
+  if (!Number.isInteger(value) || value <= 0) return '-'
+  return String(value).padStart(4, '0')
 }
 
 const getRegistrationTotalAmount = (registration) => {
@@ -558,6 +598,7 @@ const handleDownloadExcel = async () => {
     const worksheet = workbook.addWorksheet('Registros')
 
     worksheet.columns = [
+      { header: 'Nº asistente', key: 'numeroAsistente', width: 14 },
       { header: 'Nombre y apellidos', key: 'nombreCompleto', width: 30 },
       { header: 'Mote/Alias', key: 'nickname', width: 15 },
       { header: 'Email', key: 'email', width: 25 },
@@ -592,6 +633,7 @@ const handleDownloadExcel = async () => {
 
     dataToExport.forEach((reg) => {
       worksheet.addRow({
+        numeroAsistente: formatAttendeeNumber(reg.attendee_number),
         nombreCompleto: getRegistrationFullName(reg),
         nickname: reg.nickname || '',
         email: reg.email,
@@ -773,6 +815,32 @@ defineExpose({
 }
 
 .reminder-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reset-attendees-button {
+  background-color: #6b1d1d;
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.reset-attendees-button:hover:not(:disabled) {
+  background-color: #4f1515;
+}
+
+.reset-attendees-button:focus-visible {
+  outline: 3px solid #6b1d1d;
+  outline-offset: 2px;
+}
+
+.reset-attendees-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

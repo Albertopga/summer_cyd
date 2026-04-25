@@ -150,6 +150,7 @@ export default async function handler(req, res) {
         fullName,
         accommodation: record.accommodation,
         ziplineRequested: Boolean(record.zipline_requested),
+        tempAttendeeNumber: record.temp_attendee_number,
       })
     } else {
       const oldRecord = body.old_record
