@@ -97,17 +97,26 @@ export async function triggerPaymentReminders() {
     })
 
     let payload = null
+    let rawBody = ''
     try {
       payload = await response.json()
     } catch {
       payload = null
+      try {
+        rawBody = await response.text()
+      } catch {
+        rawBody = ''
+      }
     }
 
     if (!response.ok) {
       return {
         success: false,
         data: payload,
-        error: payload?.error || `Error al lanzar recordatorios (${response.status})`,
+        error:
+          payload?.error ||
+          (rawBody ? `Error al lanzar recordatorios (${response.status}): ${rawBody}` : '') ||
+          `Error al lanzar recordatorios (${response.status})`,
       }
     }
 
