@@ -55,7 +55,7 @@
               <option value="accommodation_paid,created_at">Estado pago → Fecha registro</option>
               <option value="created_at">Fecha registro</option>
               <option value="accommodation_paid">Estado pago</option>
-              <option value="first_name">Nombre</option>
+              <option value="full_name">Nombre</option>
               <option value="email">Email</option>
               <option value="accommodation">Alojamiento</option>
             </select>
@@ -120,18 +120,17 @@
             <tr v-for="registration in registrations" :key="registration.id">
               <td class="checkbox-column" data-label="Seleccionar">
                 <label :for="`select-${registration.id}`" class="sr-only">
-                  Seleccionar registro de {{ registration.first_name }}
-                  {{ registration.last_name }}
+                  Seleccionar registro de {{ getRegistrationFullName(registration) }}
                 </label>
                 <input
                   :id="`select-${registration.id}`"
                   type="checkbox"
                   :checked="selectedRegistrations.has(registration.id)"
                   @change="handleSelectRegistration(registration.id, $event.target.checked)"
-                  :aria-label="`Seleccionar registro de ${registration.first_name} ${registration.last_name}`"
+                  :aria-label="`Seleccionar registro de ${getRegistrationFullName(registration)}`"
                 />
               </td>
-              <td data-label="Nombre">{{ registration.first_name }} {{ registration.last_name }}</td>
+              <td data-label="Nombre">{{ getRegistrationFullName(registration) }}</td>
               <td data-label="Email">{{ registration.email }}</td>
               <td data-label="Teléfono">{{ registration.phone }}</td>
               <td data-label="Alojamiento">{{ getAccommodationLabel(registration.accommodation) }}</td>
@@ -176,7 +175,7 @@
                   type="button"
                   @click="openEditModal(registration)"
                   class="edit-button"
-                  :aria-label="`Editar registro de ${registration.first_name} ${registration.last_name}`"
+                  :aria-label="`Editar registro de ${getRegistrationFullName(registration)}`"
                 >
                   Editar
                 </button>
@@ -185,7 +184,7 @@
                   @click="handleDeleteOne(registration.id)"
                   class="delete-icon-button"
                   :disabled="isDeleting"
-                  :aria-label="`Eliminar registro de ${registration.first_name} ${registration.last_name}`"
+                  :aria-label="`Eliminar registro de ${getRegistrationFullName(registration)}`"
                   title="Eliminar registro"
                 >
                   <span aria-hidden="true">🗑️</span>
@@ -425,6 +424,11 @@ const getAccommodationLabel = (value) => {
   return option.fullLabel ?? option.label
 }
 
+const getRegistrationFullName = (registration) => {
+  const fullName = String(registration?.full_name || '').trim()
+  return fullName || '-'
+}
+
 const formatDate = (dateString) => {
   if (!dateString) return '-'
   const date = new Date(dateString)
@@ -525,8 +529,7 @@ const handleDownloadExcel = async () => {
     const worksheet = workbook.addWorksheet('Registros')
 
     worksheet.columns = [
-      { header: 'Nombre', key: 'nombre', width: 15 },
-      { header: 'Apellidos', key: 'apellidos', width: 20 },
+      { header: 'Nombre y apellidos', key: 'nombreCompleto', width: 30 },
       { header: 'Mote/Alias', key: 'nickname', width: 15 },
       { header: 'Email', key: 'email', width: 25 },
       { header: 'Teléfono', key: 'telefono', width: 15 },
@@ -560,8 +563,7 @@ const handleDownloadExcel = async () => {
 
     dataToExport.forEach((reg) => {
       worksheet.addRow({
-        nombre: reg.first_name,
-        apellidos: reg.last_name,
+        nombreCompleto: getRegistrationFullName(reg),
         nickname: reg.nickname || '',
         email: reg.email,
         telefono: reg.phone,

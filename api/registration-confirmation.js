@@ -107,12 +107,11 @@ export default async function handler(req, res) {
     return
   }
 
-  const firstName = typeof record.first_name === 'string' ? record.first_name : ''
-  const lastName = typeof record.last_name === 'string' ? record.last_name : ''
+  const fullName = typeof record.full_name === 'string' ? record.full_name.trim() : ''
   let message
 
   if (body.type === 'INSERT') {
-    message = buildRegistrationCreatedEmail({ firstName, lastName })
+    message = buildRegistrationCreatedEmail({ fullName })
   } else {
     const oldRecord = body.old_record
     const changes = detectRegistrationChanges(record, oldRecord)
@@ -120,7 +119,7 @@ export default async function handler(req, res) {
       res.status(200).json({ ok: true, skipped: 'no_relevant_changes' })
       return
     }
-    message = buildRegistrationUpdatedEmail({ firstName, lastName, changes })
+    message = buildRegistrationUpdatedEmail({ fullName, changes })
   }
 
   const resend = new Resend(apiKey)

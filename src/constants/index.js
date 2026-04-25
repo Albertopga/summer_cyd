@@ -322,8 +322,7 @@ export const VALIDATION_PATTERNS = {
 
 // Etiquetas de campos para mensajes de error
 export const FIELD_LABELS = {
-  firstName: 'Nombre',
-  lastName: 'Apellidos',
+  fullName: 'Nombre y apellidos',
   nickname: 'Mote/Alias',
   email: 'Correo electrónico',
   phone: 'Teléfono',
@@ -331,6 +330,9 @@ export const FIELD_LABELS = {
   arrivalDate: 'Fecha de llegada',
   departureDate: 'Fecha de salida',
   accommodation: 'Alojamiento',
+  comments: 'Comentarios de alojamiento',
+  dietComments: 'Comentarios de dieta',
+  norms: 'Aceptación de normas',
   emergencyContactName: 'Contacto de emergencia (nombre)',
   emergencyContactPhone: 'Contacto de emergencia (teléfono)',
   terms: 'Aceptación de términos',

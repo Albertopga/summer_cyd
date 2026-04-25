@@ -17,7 +17,9 @@
       <form @submit.prevent="handleSave" class="edit-form" novalidate>
         <div class="form-fields">
           <div v-for="field in editableFieldsConfig" :key="field.key" class="form-group">
-            <label :for="`field-${field.key}`">{{ field.label }}</label>
+            <label :for="`field-${field.key}`"
+              >{{ field.label }}<span v-if="field.required" aria-hidden="true"> *</span></label
+            >
 
             <!-- Campo de texto -->
             <input
@@ -246,6 +248,7 @@ const editableFieldsConfig = computed(() => {
       label: 'Estado',
       type: 'select',
       isEditable: true,
+      required: false,
       options: [
         { value: 'pending', label: 'Pendiente' },
         { value: 'approved', label: 'Aprobada' },
@@ -258,18 +261,21 @@ const editableFieldsConfig = computed(() => {
       label: 'Nombre de la actividad',
       type: 'text',
       isEditable: true,
+      required: true,
     },
     organizer_name: {
       key: 'organizer_name',
       label: 'Organizador',
       type: 'text',
       isEditable: true,
+      required: true,
     },
     organizer_email: {
       key: 'organizer_email',
       label: 'Email de contacto',
       type: 'text',
       isEditable: true,
+      required: true,
     },
     type: {
       key: 'type',
@@ -277,12 +283,14 @@ const editableFieldsConfig = computed(() => {
       type: 'select',
       isEditable: true,
       options: ACTIVITY_TYPES,
+      required: true,
     },
     description: {
       key: 'description',
       label: 'Descripción',
       type: 'textarea',
       isEditable: true,
+      required: true,
     },
     min_participants: {
       key: 'min_participants',
@@ -290,6 +298,7 @@ const editableFieldsConfig = computed(() => {
       type: 'number',
       isEditable: true,
       min: 1,
+      required: true,
     },
     max_participants: {
       key: 'max_participants',
@@ -297,6 +306,7 @@ const editableFieldsConfig = computed(() => {
       type: 'number',
       isEditable: true,
       min: 1,
+      required: true,
     },
     preferred_time_slot: {
       key: 'preferred_time_slot',
@@ -304,36 +314,42 @@ const editableFieldsConfig = computed(() => {
       type: 'select',
       isEditable: true,
       options: TIME_SLOTS,
+      required: true,
     },
     activity_date: {
       key: 'activity_date',
       label: 'Fecha de actividad',
       type: 'date',
       isEditable: true,
+      required: false,
     },
     activity_time: {
       key: 'activity_time',
       label: 'Hora de actividad',
       type: 'time',
       isEditable: true,
+      required: false,
     },
     duration: {
       key: 'duration',
       label: 'Duración',
       type: 'text',
       isEditable: true,
+      required: true,
     },
     participant_needs: {
       key: 'participant_needs',
       label: 'Necesidades de los participantes',
       type: 'textarea',
       isEditable: true,
+      required: false,
     },
     organization_needs: {
       key: 'organization_needs',
       label: 'Necesidades de la organización',
       type: 'textarea',
       isEditable: true,
+      required: false,
     },
     space_need: {
       key: 'space_need',
@@ -341,28 +357,33 @@ const editableFieldsConfig = computed(() => {
       type: 'select',
       isEditable: true,
       options: SPACE_NEEDS,
+      required: false,
     },
     setup: {
       key: 'setup',
       label: 'Puesta en marcha',
       type: 'textarea',
       isEditable: true,
+      required: false,
     },
     observations: {
       key: 'observations',
       label: 'Observaciones',
       type: 'textarea',
       isEditable: true,
+      required: false,
     },
     approval_notes: {
       key: 'approval_notes',
       label: 'Notas de aprobación',
       type: 'textarea',
       isEditable: true,
+      required: false,
     },
   }
 
-  return Object.values(config).filter((field) => field.isEditable)
+  const editable = Object.values(config).filter((field) => field.isEditable)
+  return editable.sort((a, b) => Number(Boolean(b.required)) - Number(Boolean(a.required)))
 })
 
 const extractStoragePathFromPublicUrl = (url) => {
@@ -502,15 +523,41 @@ const validateForm = () => {
     errors.organizer_email = 'Formato de correo no válido'
     isValid = false
   }
+  if (!String(formData.name || '').trim()) {
+    errors.name = 'Obligatorio'
+    isValid = false
+  }
+  if (!String(formData.type || '').trim()) {
+    errors.type = 'Obligatorio'
+    isValid = false
+  }
+  if (!String(formData.description || '').trim()) {
+    errors.description = 'Obligatorio'
+    isValid = false
+  }
+  if (!String(formData.preferred_time_slot || '').trim()) {
+    errors.preferred_time_slot = 'Obligatorio'
+    isValid = false
+  }
+  if (!String(formData.duration || '').trim()) {
+    errors.duration = 'Obligatorio'
+    isValid = false
+  }
   if (!String(formData.activity_date || '').trim()) {
-    errors.activity_date = 'Obligatorio'
+    errors.activity_date = ''
+  }
+  const hasDate = Boolean(formData.activity_date)
+  const hasTime = Boolean(formData.activity_time)
+  if (hasDate !== hasTime) {
+    if (!hasDate) {
+      errors.activity_date = 'Si indicas hora, añade también la fecha'
+    }
+    if (!hasTime) {
+      errors.activity_time = 'Si indicas fecha, añade también la hora'
+    }
     isValid = false
   }
-  if (!String(formData.activity_time || '').trim()) {
-    errors.activity_time = 'Obligatorio'
-    isValid = false
-  }
-  if (formData.activity_date) {
+  if (hasDate) {
     const selectedDate = parseEventDateLocal(formData.activity_date)
     const startDate = parseEventDateLocal(EVENT_DATES.start)
     const endDate = parseEventDateLocal(EVENT_DATES.end)
@@ -521,14 +568,14 @@ const validateForm = () => {
   }
   const selectedSlot = SLOT_TIME_RANGES[formData.preferred_time_slot]
   const normalizedTime = normalizeTime(formData.activity_time)
-  if (selectedSlot && formData.activity_date) {
+  if (selectedSlot && hasDate) {
     const selectedDate = parseEventDateLocal(formData.activity_date)
     if (selectedDate.getDay() !== selectedSlot.day) {
       errors.activity_date = 'La fecha no coincide con la franja horaria seleccionada'
       isValid = false
     }
   }
-  if (selectedSlot && normalizedTime) {
+  if (selectedSlot && hasTime) {
     if (normalizedTime < selectedSlot.start || normalizedTime > selectedSlot.end) {
       errors.activity_time = `La hora debe estar entre ${selectedSlot.start} y ${selectedSlot.end}`
       isValid = false

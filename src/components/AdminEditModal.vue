@@ -17,7 +17,9 @@
       <form @submit.prevent="handleSave" class="edit-form" novalidate>
         <div class="form-fields">
           <div v-for="field in editableFieldsConfig" :key="field.key" class="form-group">
-            <label :for="`field-${field.key}`">{{ field.label }}</label>
+            <label :for="`field-${field.key}`"
+              >{{ field.label }}<span v-if="field.required" aria-hidden="true"> *</span></label
+            >
 
             <!-- Campo de texto -->
             <input
@@ -193,17 +195,12 @@ const editableFieldsConfig = computed(() => {
       type: 'checkbox',
       isEditable: true,
     },
-    first_name: {
-      key: 'first_name',
-      label: 'Nombre',
+    full_name: {
+      key: 'full_name',
+      label: 'Nombre y apellidos',
       type: 'text',
       isEditable: true,
-    },
-    last_name: {
-      key: 'last_name',
-      label: 'Apellidos',
-      type: 'text',
-      isEditable: true,
+      required: true,
     },
     nickname: {
       key: 'nickname',
@@ -216,18 +213,21 @@ const editableFieldsConfig = computed(() => {
       label: 'Correo electrónico',
       type: 'email',
       isEditable: true,
+      required: true,
     },
     phone: {
       key: 'phone',
       label: 'Teléfono',
       type: 'tel',
       isEditable: true,
+      required: false,
     },
     birth_date: {
       key: 'birth_date',
       label: 'Fecha de nacimiento',
       type: 'date',
       isEditable: true,
+      required: true,
     },
     is_minor: {
       key: 'is_minor',
@@ -252,6 +252,7 @@ const editableFieldsConfig = computed(() => {
       label: 'Fecha de llegada',
       type: 'datetime-local',
       isEditable: true,
+      required: true,
     },
     departure_date: {
       key: 'departure_date',
@@ -264,6 +265,7 @@ const editableFieldsConfig = computed(() => {
       label: 'Alojamiento',
       type: 'select',
       isEditable: true,
+      required: true,
       options: ACCOMMODATION_OPTIONS.map((opt) => ({
         value: opt.value,
         label: opt.fullLabel ?? opt.label,
@@ -299,6 +301,7 @@ const editableFieldsConfig = computed(() => {
       label: 'Términos aceptados',
       type: 'checkbox',
       isEditable: true,
+      required: true,
     },
     image_consent_accepted: {
       key: 'image_consent_accepted',
@@ -309,8 +312,8 @@ const editableFieldsConfig = computed(() => {
 
   }
 
-  // Filtrar solo los campos editables
-  return Object.values(config).filter((field) => field.isEditable)
+  const editable = Object.values(config).filter((field) => field.isEditable)
+  return editable.sort((a, b) => Number(Boolean(b.required)) - Number(Boolean(a.required)))
 })
 
 // Función helper para convertir fecha a formato datetime-local
@@ -429,6 +432,24 @@ const validateForm = () => {
   editableFieldsConfig.value.forEach((field) => {
     const value = formData[field.key]
 
+    if (field.required) {
+      const isMissing =
+        value === null ||
+        value === undefined ||
+        (typeof value === 'string' && value.trim() === '') ||
+        (typeof value === 'boolean' && value === false)
+      if (isMissing) {
+        errors[field.key] = 'Campo obligatorio'
+        isValid = false
+        return
+      }
+    }
+
+    if (field.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) {
+      errors[field.key] = 'Formato de correo inválido'
+      isValid = false
+    }
+
     if (field.type === 'tel' && value && !/^[0-9+\s()-]{9,15}$/.test(value)) {
       errors[field.key] = 'Formato de teléfono inválido'
       isValid = false
@@ -515,6 +536,12 @@ const handleSave = async () => {
       updates[fieldKey] = newValue
     }
   })
+
+  if (Object.prototype.hasOwnProperty.call(updates, 'full_name')) {
+    updates.full_name = String(updates.full_name || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+  }
 
   if (Object.keys(updates).length === 0) {
     status.type = 'idle'

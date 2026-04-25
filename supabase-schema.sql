@@ -6,8 +6,7 @@ CREATE TABLE IF NOT EXISTS public.registrations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   
   -- Datos personales
-  first_name TEXT NOT NULL,
-  last_name TEXT NOT NULL,
+  full_name TEXT NOT NULL,
   nickname TEXT,
   email TEXT NOT NULL,
   phone TEXT NOT NULL,
@@ -40,8 +39,8 @@ CREATE TABLE IF NOT EXISTS public.registrations (
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
--- Crear índice único compuesto (email, first_name, birth_date) para evitar duplicados
-CREATE UNIQUE INDEX IF NOT EXISTS registrations_unique_person ON public.registrations(email, first_name, birth_date);
+-- Crear índice único compuesto (email, full_name, birth_date) para evitar duplicados
+CREATE UNIQUE INDEX IF NOT EXISTS registrations_unique_person ON public.registrations(email, full_name, birth_date);
 
 -- Crear índice en created_at para consultas ordenadas por fecha
 CREATE INDEX IF NOT EXISTS registrations_created_at_idx ON public.registrations(created_at DESC);
@@ -116,10 +115,9 @@ CREATE POLICY "allow_select_recent_registrations"
 -- Comentarios en la tabla para documentación
 COMMENT ON TABLE public.registrations IS 'Registros de asistentes al Retiro Lúdico de Castilla y Dragón';
 COMMENT ON COLUMN public.registrations.id IS 'Identificador único del registro';
-COMMENT ON COLUMN public.registrations.first_name IS 'Nombre del asistente';
-COMMENT ON COLUMN public.registrations.last_name IS 'Apellidos del asistente';
+COMMENT ON COLUMN public.registrations.full_name IS 'Nombre y apellidos del asistente';
 COMMENT ON COLUMN public.registrations.nickname IS 'Mote/Alias del asistente para el evento';
-COMMENT ON COLUMN public.registrations.email IS 'Correo electrónico (parte de índice único compuesto con first_name y birth_date)';
+COMMENT ON COLUMN public.registrations.email IS 'Correo electrónico (parte de índice único compuesto con full_name y birth_date)';
 COMMENT ON COLUMN public.registrations.phone IS 'Teléfono de contacto';
 COMMENT ON COLUMN public.registrations.birth_date IS 'Fecha de nacimiento';
 COMMENT ON COLUMN public.registrations.is_minor IS 'Indica si el asistente es menor de edad';

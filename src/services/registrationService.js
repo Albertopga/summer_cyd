@@ -22,10 +22,12 @@ export async function saveRegistration(registrationData, isMinor) {
       }
     }
 
+    const normalizedFullName = String(registrationData.fullName || '')
+      .trim()
+      .replace(/\s+/g, ' ')
     // Preparar los datos para insertar en la base de datos
     const dataToInsert = {
-      first_name: registrationData.firstName,
-      last_name: registrationData.lastName,
+      full_name: normalizedFullName,
       nickname: registrationData.nickname || null,
       email: registrationData.email,
       phone: registrationData.phone?.trim() || null,

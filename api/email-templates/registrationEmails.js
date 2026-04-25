@@ -6,8 +6,7 @@
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const FIELD_LABELS = {
-  first_name: 'Nombre',
-  last_name: 'Apellidos',
+  full_name: 'Nombre y apellidos',
   nickname: 'Alias',
   email: 'Correo electrónico',
   phone: 'Teléfono',
@@ -112,9 +111,11 @@ export function isValidEmail(value) {
   return typeof value === 'string' && EMAIL_RE.test(value.trim())
 }
 
-export function buildRegistrationCreatedEmail({ firstName, lastName }) {
-  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim()
-  const greeting = fullName ? `<p>Hola, <strong>${escapeHtml(fullName)}</strong>:</p>` : '<p>Hola:</p>'
+export function buildRegistrationCreatedEmail({ fullName }) {
+  const normalizedName = String(fullName || '').trim()
+  const greeting = normalizedName
+    ? `<p>Hola, <strong>${escapeHtml(normalizedName)}</strong>:</p>`
+    : '<p>Hola:</p>'
 
   return {
     subject: 'Confirmación de inscripción - Retiro Lúdico Castilla y Dragón',
@@ -130,9 +131,11 @@ export function buildRegistrationCreatedEmail({ firstName, lastName }) {
   }
 }
 
-export function buildRegistrationUpdatedEmail({ firstName, lastName, changes }) {
-  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim()
-  const greeting = fullName ? `<p>Hola, <strong>${escapeHtml(fullName)}</strong>:</p>` : '<p>Hola:</p>'
+export function buildRegistrationUpdatedEmail({ fullName, changes }) {
+  const normalizedName = String(fullName || '').trim()
+  const greeting = normalizedName
+    ? `<p>Hola, <strong>${escapeHtml(normalizedName)}</strong>:</p>`
+    : '<p>Hola:</p>'
 
   const rows = changes
     .map((change) => {
@@ -170,9 +173,11 @@ export function buildRegistrationUpdatedEmail({ firstName, lastName, changes }) 
   }
 }
 
-export function buildPaymentReminderEmail({ firstName, lastName }) {
-  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim()
-  const greeting = fullName ? `<p>Hola, <strong>${escapeHtml(fullName)}</strong>:</p>` : '<p>Hola:</p>'
+export function buildPaymentReminderEmail({ fullName }) {
+  const normalizedName = String(fullName || '').trim()
+  const greeting = normalizedName
+    ? `<p>Hola, <strong>${escapeHtml(normalizedName)}</strong>:</p>`
+    : '<p>Hola:</p>'
 
   return {
     subject: 'Recordatorio de pago pendiente - Retiro Lúdico Castilla y Dragón',

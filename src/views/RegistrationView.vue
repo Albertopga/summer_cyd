@@ -90,84 +90,35 @@
             <legend class="sr-only">Formulario de inscripción</legend>
             <fieldset class="form-fieldset">
               <legend>
-                Datos personales
-                <span class="legend-note">(nombre y apellidos, tal como aparecen en tu DNI)</span>
+                Datos de contacto (lead)
+                <span class="legend-note">(lo mínimo para poder localizarte)</span>
               </legend>
+              <p class="form-help">
+                Completa primero estos campos obligatorios para que podamos contactar contigo aunque
+                termines el resto más tarde.
+              </p>
               <div class="form-row">
-                <label for="firstName">Nombre *</label>
+                <label for="fullName">Nombre y apellidos *</label>
                 <input
-                  id="firstName"
-                  v-model.trim="form.firstName"
+                  id="fullName"
+                  v-model.trim="form.fullName"
                   type="text"
-                  name="firstName"
-                  autocomplete="given-name"
+                  name="fullName"
+                  autocomplete="name"
                   required
                   aria-required="true"
-                  :aria-invalid="errors.firstName ? 'true' : 'false'"
-                  :aria-describedby="describedByFor('firstName')"
-                  @blur="() => validateField('firstName')"
+                  :aria-invalid="errors.fullName ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('fullName')"
+                  @blur="() => validateField('fullName')"
                 />
                 <span
-                  id="firstName-error"
+                  id="fullName-error"
                   class="form-error"
-                  :class="{ 'form-error-hidden': !errors.firstName }"
+                  :class="{ 'form-error-hidden': !errors.fullName }"
                   role="alert"
                   aria-live="polite"
                 >
-                  {{ errors.firstName || '&nbsp;' }}
-                </span>
-              </div>
-
-              <div class="form-row">
-                <label for="lastName">Apellidos *</label>
-                <input
-                  id="lastName"
-                  v-model.trim="form.lastName"
-                  type="text"
-                  name="lastName"
-                  autocomplete="family-name"
-                  required
-                  aria-required="true"
-                  :aria-invalid="errors.lastName ? 'true' : 'false'"
-                  :aria-describedby="describedByFor('lastName')"
-                  @blur="() => validateField('lastName')"
-                />
-                <span
-                  id="lastName-error"
-                  class="form-error"
-                  :class="{ 'form-error-hidden': !errors.lastName }"
-                  role="alert"
-                  aria-live="polite"
-                >
-                  {{ errors.lastName || '&nbsp;' }}
-                </span>
-              </div>
-              <div class="form-row">
-                <label for="lastName"
-                  >Mote/Alias
-                  <span class="legend-note"
-                    >(Este nombre será el que usaremos para identificarte en el evento)</span
-                  ></label
-                >
-                <input
-                  id="nickname"
-                  v-model.trim="form.nickname"
-                  type="text"
-                  name="nickname"
-                  autocomplete="family-name"
-                  required
-                  aria-required="true"
-                  :aria-describedby="describedByFor('nickname')"
-                  @blur="() => validateField('nickname')"
-                />
-                <span
-                  id="nickname-error"
-                  class="form-error"
-                  :class="{ 'form-error-hidden': !errors.nickname }"
-                  role="alert"
-                  aria-live="polite"
-                >
-                  {{ errors.nickname || '&nbsp;' }}
+                  {{ errors.fullName || '&nbsp;' }}
                 </span>
               </div>
 
@@ -197,6 +148,58 @@
                 </span>
               </div>
 
+              <div class="form-row">
+                <label for="birthDate">Fecha de nacimiento *</label>
+                <input
+                  id="birthDate"
+                  v-model="form.birthDate"
+                  type="date"
+                  name="birthDate"
+                  :max="EVENT_DATES.start"
+                  required
+                  aria-required="true"
+                  :aria-invalid="errors.birthDate ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('birthDate')"
+                  @blur="() => validateField('birthDate')"
+                />
+                <span
+                  id="birthDate-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.birthDate }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors.birthDate || '&nbsp;' }}
+                </span>
+              </div>
+
+              <div class="form-row">
+                <label for="nickname"
+                  >Mote/Alias
+                  <span class="legend-note"
+                    >(Este nombre será el que usaremos para identificarte en el evento)</span
+                  ></label
+                >
+                <input
+                  id="nickname"
+                  v-model.trim="form.nickname"
+                  type="text"
+                  name="nickname"
+                  autocomplete="nickname"
+                  aria-required="false"
+                  :aria-describedby="describedByFor('nickname')"
+                  @blur="() => validateField('nickname')"
+                />
+                <span
+                  id="nickname-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.nickname }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors.nickname || '&nbsp;' }}
+                </span>
+              </div>
               <div class="form-row">
                 <label for="phone">Teléfono de contacto</label>
                 <input
@@ -266,31 +269,6 @@
                   aria-live="polite"
                 >
                   {{ errors.phone || '&nbsp;' }}
-                </span>
-              </div>
-
-              <div class="form-row">
-                <label for="birthDate">Fecha de nacimiento *</label>
-                <input
-                  id="birthDate"
-                  v-model="form.birthDate"
-                  type="date"
-                  name="birthDate"
-                  :max="EVENT_DATES.start"
-                  required
-                  aria-required="true"
-                  :aria-invalid="errors.birthDate ? 'true' : 'false'"
-                  :aria-describedby="describedByFor('birthDate')"
-                  @blur="() => validateField('birthDate')"
-                />
-                <span
-                  id="birthDate-error"
-                  class="form-error"
-                  :class="{ 'form-error-hidden': !errors.birthDate }"
-                  role="alert"
-                  aria-live="polite"
-                >
-                  {{ errors.birthDate || '&nbsp;' }}
                 </span>
               </div>
               <fieldset class="form-fieldset">
@@ -388,40 +366,11 @@
               </div>
 
               <div class="form-row">
-                <label for="departureDate">Salida estimada (fecha y hora)</label>
-                <input
-                  id="departureDate"
-                  v-model="form.departureDate"
-                  type="datetime-local"
-                  name="departureDate"
-                  :min="minDepartureDateTime"
-                  :max="maxDepartureDateTime"
-                  aria-required="false"
-                  :aria-invalid="errors.departureDate ? 'true' : 'false'"
-                  :aria-describedby="describedByFor('departureDate')"
-                  :title="departureHelpText"
-                  @blur="() => validateField('departureDate')"
-                  @change="() => validateField('departureDate')"
-                />
-                <p id="departureDate-help" class="form-help">
-                  {{ departureHelpText }}
-                </p>
-                <span
-                  id="departureDate-error"
-                  class="form-error"
-                  :class="{ 'form-error-hidden': !errors.departureDate }"
-                  role="alert"
-                  aria-live="polite"
+                <fieldset
+                  class="form-subfieldset"
+                  role="radiogroup"
+                  :aria-describedby="accommodationFieldsetDescribedBy"
                 >
-                  {{ errors.departureDate || '&nbsp;' }}
-                </span>
-              </div>
-
-              <fieldset
-                class="form-subfieldset"
-                role="radiogroup"
-                :aria-describedby="accommodationFieldsetDescribedBy"
-              >
                 <legend>Alojamiento preferido *</legend>
                 <p id="accommodation-outlets-help" class="form-help">
                   {{ ACCOMMODATION_OUTLETS_NOTE }}
@@ -518,7 +467,38 @@
                 >
                   {{ errors.accommodation || '&nbsp;' }}
                 </span>
-              </fieldset>
+                </fieldset>
+              </div>
+
+              <div class="form-row">
+                <label for="departureDate">Salida estimada (fecha y hora)</label>
+                <input
+                  id="departureDate"
+                  v-model="form.departureDate"
+                  type="datetime-local"
+                  name="departureDate"
+                  :min="minDepartureDateTime"
+                  :max="maxDepartureDateTime"
+                  aria-required="false"
+                  :aria-invalid="errors.departureDate ? 'true' : 'false'"
+                  :aria-describedby="describedByFor('departureDate')"
+                  :title="departureHelpText"
+                  @blur="() => validateField('departureDate')"
+                  @change="() => validateField('departureDate')"
+                />
+                <p id="departureDate-help" class="form-help">
+                  {{ departureHelpText }}
+                </p>
+                <span
+                  id="departureDate-error"
+                  class="form-error"
+                  :class="{ 'form-error-hidden': !errors.departureDate }"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {{ errors.departureDate || '&nbsp;' }}
+                </span>
+              </div>
 
               <fieldset class="form-subfieldset" aria-describedby="diet-help">
                 <legend>Restricciones alimentarias</legend>
@@ -608,8 +588,16 @@
                   >
                     política de privacidad
                   </button>
-                  y autorizo el tratamiento de mis datos para la gestión de mi inscripción al
-                  evento.
+                  , autorizo el tratamiento de mis datos para la gestión de mi inscripción y declaro
+                  haber leído y aceptado las
+                  <button
+                    type="button"
+                    class="privacy-link privacy-link-button"
+                    @click="openContentModal('/normas')"
+                  >
+                    normas
+                  </button>
+                  del evento.
                 </span>
               </label>
               <span
@@ -648,41 +636,6 @@
                 Si no marcas esta casilla, podrás inscribirte igualmente; la organización no usará
                 tu imagen para difusión con base en este consentimiento.
               </p>
-
-              <label class="checkbox-consent">
-                <input
-                  id="norms"
-                  v-model="form.norms"
-                  type="checkbox"
-                  name="norms"
-                  required
-                  aria-required="true"
-                  :aria-invalid="errors.norms ? 'true' : 'false'"
-                  :aria-describedby="describedByFor('norms')"
-                  @change="() => validateField('norms')"
-                />
-                <span>
-                  Declaro haber leído y aceptado las
-                  <button
-                    type="button"
-                    class="privacy-link privacy-link-button"
-                    @click="openContentModal('/normas')"
-                  >
-                    normas
-                  </button>
-                  del evento.
-                </span>
-              </label>
-
-              <span
-                id="norms-error"
-                class="form-error"
-                :class="{ 'form-error-hidden': !errors.norms }"
-                role="alert"
-                aria-live="polite"
-              >
-                {{ errors.norms || '&nbsp;' }}
-              </span>
             </div>
 
             <div class="form-actions">
@@ -812,13 +765,11 @@ const registrationConfirmationEmailEnabled = /^(true|1|yes)$/i.test(
 )
 
 const form = reactive({
-  firstName: '',
-  lastName: '',
+  fullName: '',
   nickname: '',
   email: '',
   phone: '',
   birthDate: '',
-  guardianFullName: '',
   arrivalDate: '',
   departureDate: '',
   accommodation: '',
@@ -830,17 +781,14 @@ const form = reactive({
   emergencyContactPhone: '',
   terms: false,
   imageConsent: false,
-  norms: false,
 })
 
 const errors = reactive({
-  firstName: '',
-  lastName: '',
+  fullName: '',
   nickname: '',
   email: '',
   phone: '',
   birthDate: '',
-  guardianFullName: '',
   arrivalDate: '',
   departureDate: '',
   accommodation: '',
@@ -849,7 +797,6 @@ const errors = reactive({
   emergencyContactName: '',
   emergencyContactPhone: '',
   terms: '',
-  norms: '',
 })
 
 const status = reactive({
@@ -1054,7 +1001,6 @@ const describedByFor = (field) => {
   const helpIds = {
     phone: 'phone-help',
     birthDate: 'birthDate-help',
-    guardianFullName: 'guardianFullName-help',
     arrivalDate: 'arrivalDate-help',
     departureDate: 'departureDate-help',
     comments: 'comments-help',
@@ -1086,20 +1032,16 @@ const validateField = (field) => {
   clearStatus()
 
   switch (field) {
-    case 'firstName':
-      if (!form.firstName.trim()) {
-        errors.firstName = 'El nombre es obligatorio.'
+    case 'fullName':
+      if (!form.fullName.trim()) {
+        errors.fullName = 'El nombre y apellidos son obligatorios.'
         return false
       }
-      errors.firstName = ''
-      return true
-
-    case 'lastName':
-      if (!form.lastName.trim()) {
-        errors.lastName = 'Los apellidos son obligatorios.'
+      if (form.fullName.trim().length < 4) {
+        errors.fullName = 'Indica nombre y apellidos completos.'
         return false
       }
-      errors.lastName = ''
+      errors.fullName = ''
       return true
 
     case 'email':
@@ -1136,14 +1078,6 @@ const validateField = (field) => {
       errors.birthDate = ''
       return true
     }
-
-    case 'guardianFullName':
-      if (isMinor.value && !form.guardianFullName.trim()) {
-        errors.guardianFullName = 'Indica el nombre y apellidos del tutor o responsable.'
-        return false
-      }
-      errors.guardianFullName = ''
-      return true
 
     case 'arrivalDate': {
       if (!form.arrivalDate) {
@@ -1250,18 +1184,10 @@ const validateField = (field) => {
 
     case 'terms':
       if (!form.terms) {
-        errors.terms = 'Debes aceptar la política de privacidad.'
+        errors.terms = 'Debes aceptar la política de privacidad y las normas del evento.'
         return false
       }
       errors.terms = ''
-      return true
-
-    case 'norms':
-      if (!form.norms) {
-        errors.norms = 'Debes aceptar las normas del evento.'
-        return false
-      }
-      errors.norms = ''
       return true
 
     default:
@@ -1270,8 +1196,7 @@ const validateField = (field) => {
 }
 
 const fieldsToValidate = [
-  'firstName',
-  'lastName',
+  'fullName',
   'email',
   'birthDate',
   'arrivalDate',
@@ -1282,7 +1207,6 @@ const fieldsToValidate = [
   'emergencyContactName',
   'emergencyContactPhone',
   'terms',
-  'norms',
 ]
 
 const validateForm = () => {
@@ -1307,13 +1231,11 @@ const validateForm = () => {
 }
 
 const resetForm = () => {
-  form.firstName = ''
-  form.lastName = ''
+  form.fullName = ''
   form.nickname = ''
   form.email = ''
   form.phone = ''
   form.birthDate = ''
-  form.guardianFullName = ''
   form.arrivalDate = ''
   form.departureDate = ''
   form.accommodation = ''
@@ -1325,7 +1247,6 @@ const resetForm = () => {
   form.emergencyContactPhone = ''
   form.terms = false
   form.imageConsent = false
-  form.norms = false
 
   Object.keys(errors).forEach((key) => {
     errors[key] = ''
@@ -1389,7 +1310,7 @@ const handleSubmit = async () => {
         status.message = result.error
       } else if (result.error?.includes('duplicate') || result.error?.includes('unique')) {
         status.message =
-          'Ya existe un registro con esta combinación de correo electrónico, nombre y fecha de nacimiento. Si crees que es un error, contacta con nosotros.'
+          'Ya existe un registro con esta combinación de correo electrónico, nombre completo y fecha de nacimiento. Si crees que es un error, contacta con nosotros.'
       } else if (result.error?.includes('network') || result.error?.includes('fetch')) {
         status.message =
           'Error de conexión. Por favor, verifica tu conexión a internet e inténtalo de nuevo.'
@@ -1442,8 +1363,10 @@ watch(
 
 watch(isMinor, (value) => {
   if (!value) {
-    form.guardianFullName = ''
-    errors.guardianFullName = ''
+    form.emergencyContactName = ''
+    form.emergencyContactPhone = ''
+    errors.emergencyContactName = ''
+    errors.emergencyContactPhone = ''
   }
   validateField('comments')
 })
@@ -1481,15 +1404,6 @@ watch(
   () => {
     if (errors.terms) {
       validateField('terms')
-    }
-  },
-)
-
-watch(
-  () => form.norms,
-  () => {
-    if (errors.norms) {
-      validateField('norms')
     }
   },
 )

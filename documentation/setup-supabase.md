@@ -69,10 +69,9 @@ Esta guía te ayudará a configurar Supabase para almacenar los registros de asi
 La tabla `registrations` contiene los siguientes campos:
 
 - **id**: UUID único generado automáticamente
-- **first_name**: Nombre del asistente
-- **last_name**: Apellidos del asistente
+- **full_name**: Nombre y apellidos del asistente
 - **nickname**: Mote/Alias (opcional)
-- **email**: Correo electrónico (parte de índice único compuesto con first_name y birth_date)
+- **email**: Correo electrónico (parte de índice único compuesto con full_name y birth_date)
 - **phone**: Teléfono de contacto
 - **birth_date**: Fecha de nacimiento
 - **is_minor**: Boolean que indica si es menor de edad
@@ -116,7 +115,7 @@ GROUP BY accommodation;
 ### Ver registros de menores de edad
 
 ```sql
-SELECT first_name, last_name, email, birth_date
+SELECT full_name, email, birth_date
 FROM registrations
 WHERE is_minor = true;
 ```
@@ -124,7 +123,7 @@ WHERE is_minor = true;
 ### Ver registros con restricciones alimentarias
 
 ```sql
-SELECT first_name, last_name, email, diet, diet_comments
+SELECT full_name, email, diet, diet_comments
 FROM registrations
 WHERE array_length(diet, 1) > 0;
 ```
