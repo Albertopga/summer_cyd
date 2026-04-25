@@ -21,7 +21,7 @@
 import { timingSafeEqual } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
-import { buildPaymentReminderEmail, isValidEmail } from './email-templates/registrationEmails'
+import { buildPaymentReminderEmail, isValidEmail } from './email-templates/registrationEmails.js'
 
 function isEnabled(value) {
   if (value == null || String(value).trim() === '') {
