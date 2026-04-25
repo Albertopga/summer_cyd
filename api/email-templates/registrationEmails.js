@@ -260,6 +260,23 @@ export function buildRegistrationCreatedEmail({
       </ul>
     `
       : ''
+  const economicSummaryHtml = hasFamilyBreakdown
+    ? `
+      <p><strong>Resumen económico familiar:</strong></p>
+      <ul>
+        <li>Total alojamiento familiar: <strong>${familyAccommodationTotal}€</strong></li>
+        <li>Total extras (tirolina): <strong>${familyZiplineTotal}€</strong></li>
+        <li>Total final familiar a abonar: <strong>${familyTotal}€</strong></li>
+      </ul>
+    `
+    : `
+      <p><strong>Resumen económico:</strong></p>
+      <ul>
+        <li>Alojamiento (${escapeHtml(accommodationLabel)}): <strong>${accommodationPrice}€</strong></li>
+        <li>Tirolina: <strong>${ziplinePrice}€</strong></li>
+        <li>Importe total: <strong>${totalPrice}€</strong></li>
+      </ul>
+    `
 
   return {
     subject: 'Confirmación de inscripción - Retiro Lúdico Castilla y Dragón',
@@ -268,12 +285,7 @@ export function buildRegistrationCreatedEmail({
       introHtml: greeting,
       bodyHtml: `
         <p>Hemos recibido correctamente tu inscripción al <strong>Retiro Lúdico Castilla y Dragón</strong>.</p>
-        <p><strong>Resumen económico:</strong></p>
-        <ul>
-          <li>Alojamiento (${escapeHtml(accommodationLabel)}): <strong>${accommodationPrice}€</strong></li>
-          <li>Tirolina: <strong>${ziplinePrice}€</strong></li>
-          <li>Importe total: <strong>${totalPrice}€</strong></li>
-        </ul>
+        ${economicSummaryHtml}
         ${familyProcessingHtml}
         ${familyBreakdownHtml}
         <p><strong>IBAN para el pago:</strong> ${escapeHtml(PAYMENT_IBAN)}</p>
@@ -388,6 +400,15 @@ export function buildPaymentConfirmedEmail({ fullName, attendeeNumber, familyMem
       </ul>
     `
       : ''
+  const familyNumbersPendingHtml =
+    familyRows.length <= 1
+      ? `
+      <p style="padding:12px;border:1px solid #d1d5db;border-radius:8px;background:#f9fafb;">
+        Si esta inscripción es familiar y todavía no ves los números del resto de miembros,
+        se están terminando de asignar y quedarán reflejados en breve.
+      </p>
+    `
+      : ''
 
   return {
     subject: 'Pago confirmado y número definitivo - Retiro Lúdico Castilla y Dragón',
@@ -403,6 +424,7 @@ export function buildPaymentConfirmedEmail({ fullName, attendeeNumber, familyMem
             : 'Pendiente de asignación'
         }</p>
         ${familyNumbersHtml}
+        ${familyNumbersPendingHtml}
         <p>Guarda este correo para identificarte en el evento.</p>
       `,
       footerHtml: '<p>- El equipo del retiro</p>',
