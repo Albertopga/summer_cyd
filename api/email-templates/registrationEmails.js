@@ -164,6 +164,7 @@ export function buildRegistrationCreatedEmail({
   ziplineRequested,
   tempAttendeeNumber,
   familyMembers = [],
+  familyDataIncomplete = false,
 }) {
   const normalizedName = String(fullName || '').trim()
   const greeting = normalizedName
@@ -186,28 +187,77 @@ export function buildRegistrationCreatedEmail({
             isChild: member?.family_role === 'child' || Boolean(member?.is_minor),
             childSharesParentChozo: Boolean(member?.child_shares_parent_chozo),
           })
+          const memberAccommodationLabel =
+            ACCOMMODATION_LABELS[String(member?.accommodation || '').trim()] || 'Sin definir'
+          const memberTempNumber = formatAttendeeNumber(member?.temp_attendee_number)
           return {
             role,
             name: memberName || 'Sin nombre',
+            accommodationLabel: memberAccommodationLabel,
+            ziplineRequested: Boolean(member?.zipline_requested),
+            accommodationPrice: pricing.accommodationPrice,
+            ziplinePrice: pricing.ziplinePrice,
             total: pricing.totalPrice,
+            tempNumber: memberTempNumber ? `T-${memberTempNumber}` : 'Pendiente de asignación',
           }
         })
         .filter((row) => row.name)
     : []
+  const familyAccommodationTotal = familyRows.reduce((sum, row) => sum + row.accommodationPrice, 0)
+  const familyZiplineTotal = familyRows.reduce((sum, row) => sum + row.ziplinePrice, 0)
   const familyTotal = familyRows.reduce((sum, row) => sum + row.total, 0)
+  const hasFamilyBreakdown = familyRows.length > 1
+  const familyProcessingHtml =
+    familyDataIncomplete && hasFamilyBreakdown === false
+      ? `<p style="padding:12px;border:1px solid #f59e0b;border-radius:8px;background:#fffbeb;">
+          Estamos terminando de consolidar los datos de tu grupo familiar. Si falta algún miembro en este correo,
+          te lo confirmaremos en una comunicación de seguimiento.
+        </p>`
+      : ''
   const familyBreakdownHtml =
-    familyRows.length > 0
+    hasFamilyBreakdown
       ? `
       <p><strong>Desglose familiar:</strong></p>
-      <ul>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e5e7eb;border-collapse:collapse;margin-top:12px;">
+        <thead>
+          <tr>
+            <th align="left" style="padding:10px;background:#f9fafb;border-bottom:1px solid #e5e7eb;">Persona</th>
+            <th align="left" style="padding:10px;background:#f9fafb;border-bottom:1px solid #e5e7eb;">Alojamiento</th>
+            <th align="left" style="padding:10px;background:#f9fafb;border-bottom:1px solid #e5e7eb;">Tirolina</th>
+            <th align="left" style="padding:10px;background:#f9fafb;border-bottom:1px solid #e5e7eb;">Subtotal</th>
+            <th align="left" style="padding:10px;background:#f9fafb;border-bottom:1px solid #e5e7eb;">Nº temporal</th>
+          </tr>
+        </thead>
+        <tbody>
         ${familyRows
           .map(
             (row) =>
-              `<li>${escapeHtml(row.role)} - ${escapeHtml(row.name)}: <strong>${row.total}€</strong></li>`,
+              `<tr>
+                <td style="padding:10px;border-bottom:1px solid #e5e7eb;">
+                  <strong>${escapeHtml(row.role)}</strong><br/>
+                  ${escapeHtml(row.name)}
+                </td>
+                <td style="padding:10px;border-bottom:1px solid #e5e7eb;">
+                  ${escapeHtml(row.accommodationLabel)}<br/>
+                  <span style="color:#6b7280;">${row.accommodationPrice}€</span>
+                </td>
+                <td style="padding:10px;border-bottom:1px solid #e5e7eb;">
+                  ${row.ziplineRequested ? 'Sí' : 'No'}<br/>
+                  <span style="color:#6b7280;">${row.ziplinePrice}€</span>
+                </td>
+                <td style="padding:10px;border-bottom:1px solid #e5e7eb;"><strong>${row.total}€</strong></td>
+                <td style="padding:10px;border-bottom:1px solid #e5e7eb;">${escapeHtml(row.tempNumber)}</td>
+              </tr>`,
           )
           .join('')}
+        </tbody>
+      </table>
+      <p><strong>Resumen familiar:</strong></p>
+      <ul>
+        <li>Total alojamiento familiar: <strong>${familyAccommodationTotal}€</strong></li>
+        <li>Total extras (tirolina): <strong>${familyZiplineTotal}€</strong></li>
+        <li>Total final familiar a abonar: <strong>${familyTotal}€</strong></li>
       </ul>
-      <p><strong>Total familiar:</strong> ${familyTotal}€</p>
     `
       : ''
 
@@ -224,6 +274,7 @@ export function buildRegistrationCreatedEmail({
           <li>Tirolina: <strong>${ziplinePrice}€</strong></li>
           <li>Importe total: <strong>${totalPrice}€</strong></li>
         </ul>
+        ${familyProcessingHtml}
         ${familyBreakdownHtml}
         <p><strong>IBAN para el pago:</strong> ${escapeHtml(PAYMENT_IBAN)}</p>
         ${

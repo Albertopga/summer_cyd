@@ -26,6 +26,8 @@ import {
 } from './email-templates/registrationEmails.js'
 
 const ALLOWED_TYPES = new Set(['INSERT', 'UPDATE'])
+const FAMILY_MEMBERS_MAX_READ_RETRIES = 5
+const FAMILY_MEMBERS_RETRY_DELAY_MS = 250
 
 function safeHeaderEqual(received, expected) {
   if (typeof received !== 'string' || typeof expected !== 'string') {
@@ -56,6 +58,71 @@ function getSafeErrorMeta(error) {
     message: typeof error.message === 'string' ? error.message : 'Unhandled error',
     statusCode: Number.isFinite(error.statusCode) ? error.statusCode : undefined,
     code: typeof error.code === 'string' ? error.code : undefined,
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
+async function loadFamilyMembersWithRetry({ record, eventMeta }) {
+  const fallbackMembers = [record]
+  const fallbackResult = { members: fallbackMembers, incomplete: false }
+  const supabaseUrl = process.env.SUPABASE_URL
+  const supabaseReadKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+  if (!record?.family_group_id || !supabaseUrl || !supabaseReadKey) {
+    return fallbackResult
+  }
+
+  const serviceClient = createClient(supabaseUrl, supabaseReadKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+
+  let lastRows = fallbackMembers
+  for (let attempt = 0; attempt < FAMILY_MEMBERS_MAX_READ_RETRIES; attempt += 1) {
+    const { data: familyRows, error: familyRowsError } = await serviceClient
+      .from('registrations')
+      .select(
+        'id,created_at,full_name,family_role,is_minor,accommodation,zipline_requested,child_shares_parent_chozo,temp_attendee_number',
+      )
+      .eq('family_group_id', record.family_group_id)
+      .order('created_at', { ascending: true })
+      .order('id', { ascending: true })
+
+    if (familyRowsError) {
+      console.warn('[registration-confirmation] could not load family rows', {
+        ...eventMeta,
+        family_group_id: record.family_group_id,
+        attempt: attempt + 1,
+        error: familyRowsError.message,
+      })
+      return fallbackResult
+    }
+
+    if (Array.isArray(familyRows) && familyRows.length > 0) {
+      lastRows = familyRows
+      const explicitHolder = familyRows.find((row) => row.family_role === 'holder')
+      const notificationOwner = explicitHolder || familyRows[0]
+      if (notificationOwner?.id && record.id !== notificationOwner.id) {
+        return { members: familyRows, incomplete: false, skipSend: 'family_member_insert_non_owner' }
+      }
+      if (familyRows.length > 1) {
+        return { members: familyRows, incomplete: false }
+      }
+    }
+
+    const hasMoreAttempts = attempt < FAMILY_MEMBERS_MAX_READ_RETRIES - 1
+    if (!hasMoreAttempts) {
+      break
+    }
+    await sleep(FAMILY_MEMBERS_RETRY_DELAY_MS)
+  }
+
+  return {
+    members: Array.isArray(lastRows) && lastRows.length > 0 ? lastRows : fallbackMembers,
+    incomplete: true,
   }
 }
 
@@ -152,35 +219,10 @@ export default async function handler(req, res) {
         return
       }
 
-      let familyMembers = [record]
-      const supabaseUrl = process.env.SUPABASE_URL
-      const supabaseReadKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-      if (record.family_group_id && supabaseUrl && supabaseReadKey) {
-        const serviceClient = createClient(supabaseUrl, supabaseReadKey, {
-          auth: { autoRefreshToken: false, persistSession: false },
-        })
-        const { data: familyRows, error: familyRowsError } = await serviceClient
-          .from('registrations')
-          .select(
-            'id,created_at,full_name,family_role,is_minor,accommodation,zipline_requested,child_shares_parent_chozo',
-          )
-          .eq('family_group_id', record.family_group_id)
-          .order('created_at', { ascending: true })
-          .order('id', { ascending: true })
-        if (familyRowsError) {
-          console.warn('[registration-confirmation] could not load family rows', {
-            family_group_id: record.family_group_id,
-            error: familyRowsError.message,
-          })
-        } else if (Array.isArray(familyRows) && familyRows.length > 0) {
-          const explicitHolder = familyRows.find((row) => row.family_role === 'holder')
-          const notificationOwner = explicitHolder || familyRows[0]
-          if (notificationOwner?.id && record.id !== notificationOwner.id) {
-            res.status(200).json({ ok: true, skipped: 'family_member_insert_non_owner' })
-            return
-          }
-          familyMembers = familyRows
-        }
+      const familyLoad = await loadFamilyMembersWithRetry({ record, eventMeta })
+      if (familyLoad.skipSend) {
+        res.status(200).json({ ok: true, skipped: familyLoad.skipSend })
+        return
       }
 
       message = buildRegistrationCreatedEmail({
@@ -188,7 +230,8 @@ export default async function handler(req, res) {
         accommodation: record.accommodation,
         ziplineRequested: Boolean(record.zipline_requested),
         tempAttendeeNumber: record.temp_attendee_number,
-        familyMembers,
+        familyMembers: familyLoad.members,
+        familyDataIncomplete: familyLoad.incomplete,
       })
     } else {
       const oldRecord = body.old_record
