@@ -198,13 +198,6 @@ export function buildRegistrationCreatedEmail({
   const familyZiplineTotal = familyRows.reduce((sum, row) => sum + row.ziplinePrice, 0)
   const familyTotal = familyRows.reduce((sum, row) => sum + row.total, 0)
   const hasFamilyBreakdown = familyRows.length > 1
-  const familyProcessingHtml =
-    familyDataIncomplete && hasFamilyBreakdown === false
-      ? `<p style="padding:12px;border:1px solid #f59e0b;border-radius:8px;background:#fffbeb;">
-          Estamos terminando de consolidar los datos de tu grupo familiar. Si falta algún miembro en este correo,
-          te lo confirmaremos en una comunicación de seguimiento.
-        </p>`
-      : ''
   const familyBreakdownHtml =
     hasFamilyBreakdown
       ? `
@@ -272,7 +265,6 @@ export function buildRegistrationCreatedEmail({
       bodyHtml: `
         <p>Hemos recibido correctamente tu inscripción al <strong>Retiro Lúdico Castilla y Dragón</strong>.</p>
         ${economicSummaryHtml}
-        ${familyProcessingHtml}
         ${familyBreakdownHtml}
         <p><strong>IBAN para el pago:</strong> ${escapeHtml(PAYMENT_IBAN)}</p>
         <p><strong>Concepto de la transferencia:</strong> ${escapeHtml(paymentConcept)}</p>
