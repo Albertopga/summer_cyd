@@ -24,8 +24,19 @@ const ACTIVITY_DOCUMENT_ALLOWED_TYPES = [
 const normalizeTime = (timeValue) => String(timeValue || '').slice(0, 5)
 
 function validateActivityDateTime(activityDate, activityTime, preferredTimeSlot) {
-  if (!activityDate || !activityTime || !preferredTimeSlot) {
-    return { valid: false, error: 'Franja horaria, fecha y hora son obligatorias.' }
+  const hasDate = Boolean(activityDate)
+  const hasTime = Boolean(activityTime)
+
+  if (!preferredTimeSlot) {
+    return { valid: false, error: 'La franja horaria es obligatoria.' }
+  }
+
+  if (!hasDate && !hasTime) {
+    return { valid: true, error: null }
+  }
+
+  if (!hasDate || !hasTime) {
+    return { valid: false, error: 'Debes indicar fecha y hora juntas, o dejar ambas vacías.' }
   }
 
   const selectedDate = parseEventDateLocal(activityDate)
@@ -933,11 +944,19 @@ export async function createActivityAdmin(payload) {
       }
     }
 
-    if (!row.preferred_time_slot || !row.duration || !row.activity_date || !row.activity_time) {
+    if (!row.preferred_time_slot || !row.duration) {
       return {
         success: false,
         data: null,
-        error: 'Franja horaria, fecha, hora y duración son obligatorias.',
+        error: 'Franja horaria y duración son obligatorias.',
+      }
+    }
+
+    if (Boolean(row.activity_date) !== Boolean(row.activity_time)) {
+      return {
+        success: false,
+        data: null,
+        error: 'Si indicas fecha de actividad, debes indicar también hora (y viceversa).',
       }
     }
 

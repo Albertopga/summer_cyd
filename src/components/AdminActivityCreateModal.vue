@@ -51,7 +51,9 @@
           </div>
 
           <div v-for="field in coreFields" :key="field.key" class="form-group">
-            <label :for="`create-${field.key}`">{{ field.label }}</label>
+            <label :for="`create-${field.key}`"
+              >{{ field.label }}<span v-if="field.required" aria-hidden="true"> *</span></label
+            >
             <input
               v-if="field.type === 'text'"
               :id="`create-${field.key}`"
@@ -231,20 +233,44 @@ const status = reactive({
 })
 
 const coreFields = [
-  { key: 'name', label: 'Nombre de la actividad', type: 'text' },
-  { key: 'type', label: 'Tipo de actividad', type: 'select', options: ACTIVITY_TYPES },
-  { key: 'description', label: 'Descripción', type: 'textarea' },
-  { key: 'min_participants', label: 'Mínimo de participantes', type: 'number', min: 1 },
-  { key: 'max_participants', label: 'Máximo de participantes', type: 'number', min: 1 },
+  { key: 'name', label: 'Nombre de la actividad', type: 'text', required: true },
+  {
+    key: 'type',
+    label: 'Tipo de actividad',
+    type: 'select',
+    options: ACTIVITY_TYPES,
+    required: true,
+  },
+  { key: 'description', label: 'Descripción', type: 'textarea', required: true },
+  {
+    key: 'min_participants',
+    label: 'Mínimo de participantes',
+    type: 'number',
+    min: 1,
+    required: true,
+  },
+  {
+    key: 'max_participants',
+    label: 'Máximo de participantes',
+    type: 'number',
+    min: 1,
+    required: true,
+  },
   {
     key: 'preferred_time_slot',
     label: 'Preferencia (día/franja)',
     type: 'select',
     options: TIME_SLOTS,
+    required: true,
   },
-  { key: 'activity_date', label: 'Fecha de actividad', type: 'date' },
-  { key: 'activity_time', label: 'Hora de actividad', type: 'time' },
-  { key: 'duration', label: 'Duración (texto libre, ej. 2 horas)', type: 'text' },
+  { key: 'activity_date', label: 'Fecha de actividad', type: 'date', required: false },
+  { key: 'activity_time', label: 'Hora de actividad', type: 'time', required: false },
+  {
+    key: 'duration',
+    label: 'Duración (texto libre, ej. 2 horas)',
+    type: 'text',
+    required: true,
+  },
   { key: 'participant_needs', label: 'Necesidades de los participantes', type: 'textarea' },
   { key: 'organization_needs', label: 'Necesidades de la organización', type: 'textarea' },
   { key: 'space_need', label: 'Necesidad de espacio', type: 'select', options: SPACE_NEEDS },
@@ -309,15 +335,20 @@ const validateForm = () => {
     errors.duration = 'Obligatorio'
     ok = false
   }
-  if (!formData.activity_date) {
-    errors.activity_date = 'Obligatorio'
+  const hasDate = Boolean(formData.activity_date)
+  const hasTime = Boolean(formData.activity_time)
+
+  if (hasDate !== hasTime) {
+    if (!hasDate) {
+      errors.activity_date = 'Si indicas hora, añade también la fecha'
+    }
+    if (!hasTime) {
+      errors.activity_time = 'Si indicas fecha, añade también la hora'
+    }
     ok = false
   }
-  if (!formData.activity_time) {
-    errors.activity_time = 'Obligatorio'
-    ok = false
-  }
-  if (formData.activity_date) {
+
+  if (hasDate) {
     const selectedDate = parseEventDateLocal(formData.activity_date)
     const startDate = parseEventDateLocal(EVENT_DATES.start)
     const endDate = parseEventDateLocal(EVENT_DATES.end)
@@ -328,14 +359,14 @@ const validateForm = () => {
   }
   const selectedSlot = SLOT_TIME_RANGES[formData.preferred_time_slot]
   const normalizedTime = normalizeTime(formData.activity_time)
-  if (selectedSlot && formData.activity_date) {
+  if (selectedSlot && hasDate) {
     const selectedDate = parseEventDateLocal(formData.activity_date)
     if (selectedDate.getDay() !== selectedSlot.day) {
       errors.activity_date = 'La fecha no coincide con la franja horaria seleccionada'
       ok = false
     }
   }
-  if (selectedSlot && normalizedTime) {
+  if (selectedSlot && hasTime) {
     if (normalizedTime < selectedSlot.start || normalizedTime > selectedSlot.end) {
       errors.activity_time = `La hora debe estar entre ${selectedSlot.start} y ${selectedSlot.end}`
       ok = false
