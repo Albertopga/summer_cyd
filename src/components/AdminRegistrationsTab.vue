@@ -14,6 +14,7 @@
         <h2>Registros de asistentes ({{ totalRegistrations }})</h2>
         <div class="controls-group">
           <button
+            v-if="showPaymentReminderAndResetButtons"
             type="button"
             @click="handleSendPaymentReminders"
             class="reminder-button"
@@ -27,6 +28,7 @@
             </span>
           </button>
           <button
+            v-if="showPaymentReminderAndResetButtons"
             type="button"
             @click="handleResetAttendeeNumbers"
             class="reset-attendees-button"
@@ -314,6 +316,7 @@ const registrationsToDelete = ref([])
 const isDeleting = ref(false)
 const isSendingReminders = ref(false)
 const remindersFeedback = ref({ type: '', message: '' })
+const showPaymentReminderAndResetButtons = false
 
 // Controles de ordenamiento
 const sortField = ref('accommodation_paid,created_at')
