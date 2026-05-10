@@ -88,7 +88,15 @@ const props = defineProps({
 
 const emit = defineEmits(['click'])
 
-const iconIsImage = computed(() => /\.(svg|png|jpe?g|webp|gif|ico)$/i.test(props.icon))
+const iconIsImage = computed(() => {
+  if (typeof props.icon !== 'string') return false
+  const icon = props.icon.trim()
+  return (
+    /\.(svg|png|jpe?g|webp|gif|ico)$/i.test(icon) ||
+    /^data:image\//i.test(icon) ||
+    icon.startsWith('/assets/')
+  )
+})
 
 const iconAltText = computed(() => props.iconAlt || `Icono de ${props.title}`)
 

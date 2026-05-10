@@ -56,6 +56,32 @@
             </template>
           </AppCard>
 
+          <AppCard
+            title="Forma de pago"
+            :icon="payPalLogo"
+            icon-alt="Logo de PayPal"
+            variant="info"
+          >
+            <template #text>
+              <p>
+                Los pagos de la inscripción de esta edición solo podrán realizarse a través de
+                <strong>PayPal</strong>. Esta decisión se debe a limitaciones externas que escapan
+                al control de la asociación.
+              </p>
+              <p style="margin-top: 0.75rem">
+                En los próximos días recibirás un correo de <strong>PayPal</strong> con una
+                solicitud de cobro por la cantidad que corresponda según tu inscripción. El correo
+                de confirmación incluirá el detalle económico y el
+                <strong>concepto del pago</strong> que debes usar al completar la solicitud.
+              </p>
+              <p style="margin-top: 0.75rem">
+                Si necesitas orientación, escríbenos a
+                <a :href="`mailto:${CONTACT_INFO.email}`">{{ CONTACT_INFO.email }}</a
+                >.
+              </p>
+            </template>
+          </AppCard>
+
           <article class="summary-note">
             <h3>¿Tienes dudas?</h3>
             <p>
@@ -373,7 +399,11 @@
                   <label for="partnerAccommodation">Alojamiento *</label>
                   <select id="partnerAccommodation" v-model="form.partner.accommodation">
                     <option value="" disabled>Selecciona una opción</option>
-                    <option v-for="option in ACCOMMODATION_OPTIONS" :key="`partner-${option.value}`" :value="option.value">
+                    <option
+                      v-for="option in ACCOMMODATION_OPTIONS"
+                      :key="`partner-${option.value}`"
+                      :value="option.value"
+                    >
                       {{ option.fullLabel ?? option.label }}
                     </option>
                   </select>
@@ -387,6 +417,10 @@
                     />
                     <span>Quiere tirolina ({{ ZIPLINE_PRICE_EUR }}€)</span>
                   </label>
+                  <p class="form-help">
+                    Esta actividad ÚNICAMENTE podrás realizarla si te apuntas durante esta
+                    inscripción.
+                  </p>
                 </div>
                 <div class="form-row">
                   <fieldset class="form-subfieldset">
@@ -461,9 +495,17 @@
                 </div>
                 <div class="form-row">
                   <label class="option-item" :for="`childZipline-${index}`">
-                    <input :id="`childZipline-${index}`" v-model="child.ziplineRequested" type="checkbox" />
+                    <input
+                      :id="`childZipline-${index}`"
+                      v-model="child.ziplineRequested"
+                      type="checkbox"
+                    />
                     <span>Quiere tirolina ({{ ZIPLINE_PRICE_EUR }}€)</span>
                   </label>
+                  <p class="form-help">
+                    Esta actividad <strong>ÚNICAMENTE</strong> podrá realizarse si se registra durante esta
+                    inscripción.
+                  </p>
                 </div>
                 <div v-if="child.accommodation === 'chozos'" class="form-row">
                   <label class="option-item" :for="`childSharesParentChozo-${index}`">
@@ -473,12 +515,13 @@
                       type="checkbox"
                     />
                     <span
-                      >Comparte chozo con progenitores (menor de 12 años: {{ CHILD_SHARED_CHOZO_PRICE_EUR }}€)</span
+                      >Comparte chozo con progenitores (menor de 12 años:
+                      {{ CHILD_SHARED_CHOZO_PRICE_EUR }}€)</span
                     >
                   </label>
                   <p v-if="!isChildUnderTwelve(child)" class="form-help">
-                    El precio especial de {{ CHILD_SHARED_CHOZO_PRICE_EUR }}€ solo aplica a menores de 12
-                    años.
+                    El precio especial de {{ CHILD_SHARED_CHOZO_PRICE_EUR }}€ solo aplica a menores
+                    de 12 años.
                   </p>
                 </div>
                 <p class="form-help">
@@ -506,7 +549,9 @@
                           type="checkbox"
                           :value="option.value"
                         />
-                        <label :for="`child-${index}-diet-${option.value}`">{{ option.label }}</label>
+                        <label :for="`child-${index}-diet-${option.value}`">{{
+                          option.label
+                        }}</label>
                       </div>
                     </div>
                   </fieldset>
@@ -519,7 +564,9 @@
                     rows="3"
                   ></textarea>
                 </div>
-                <button type="button" class="form-reset" @click="removeChild(index)">Eliminar hijo/a</button>
+                <button type="button" class="form-reset" @click="removeChild(index)">
+                  Eliminar hijo/a
+                </button>
               </fieldset>
 
               <span
@@ -573,102 +620,106 @@
                   role="radiogroup"
                   :aria-describedby="accommodationFieldsetDescribedBy"
                 >
-                <legend>Alojamiento preferido *</legend>
-                <p id="accommodation-outlets-help" class="form-help">
-                  {{ ACCOMMODATION_OUTLETS_NOTE }}
-                </p>
-                <div class="option-list option-list--radio">
-                  <template
-                    v-for="(block, blockIndex) in accommodationFieldGroups"
-                    :key="
-                      block.type === 'single'
-                        ? block.option.value
-                        : `${block.groupKey}-${blockIndex}`
-                    "
-                  >
-                    <div v-if="block.type === 'single'" class="option-item">
-                      <input
-                        :id="`accommodation-${block.option.value}`"
-                        v-model="form.accommodation"
-                        type="radio"
-                        name="accommodation"
-                        :value="block.option.value"
-                        required
-                        aria-required="true"
-                        @change="() => validateField('accommodation')"
-                      />
-                      <label :for="`accommodation-${block.option.value}`">{{
-                        block.option.label
-                      }}</label>
-                    </div>
-                    <div
-                      v-else
-                      class="accommodation-subgroup"
-                      role="group"
-                      :aria-labelledby="`accommodation-chozo-${blockIndex}`"
+                  <legend>Alojamiento preferido *</legend>
+                  <p id="accommodation-outlets-help" class="form-help">
+                    {{ ACCOMMODATION_OUTLETS_NOTE }}
+                  </p>
+                  <div class="option-list option-list--radio">
+                    <template
+                      v-for="(block, blockIndex) in accommodationFieldGroups"
+                      :key="
+                        block.type === 'single'
+                          ? block.option.value
+                          : `${block.groupKey}-${blockIndex}`
+                      "
                     >
-                      <p
-                        class="accommodation-subgroup-title"
-                        :id="`accommodation-chozo-${blockIndex}`"
-                      >
-                        {{ block.title }}
-                      </p>
-                      <div v-for="option in block.options" :key="option.value" class="option-item">
+                      <div v-if="block.type === 'single'" class="option-item">
                         <input
-                          :id="`accommodation-${option.value}`"
+                          :id="`accommodation-${block.option.value}`"
                           v-model="form.accommodation"
                           type="radio"
                           name="accommodation"
-                          :value="option.value"
+                          :value="block.option.value"
                           required
                           aria-required="true"
                           @change="() => validateField('accommodation')"
                         />
-                        <label :for="`accommodation-${option.value}`">{{ option.label }}</label>
+                        <label :for="`accommodation-${block.option.value}`">{{
+                          block.option.label
+                        }}</label>
                       </div>
-                    </div>
-                  </template>
-                </div>
-                <div class="form-row">
-                  <label for="comments">
-                    Comentarios adicionales de alojamiento
-                    {{ isAccommodationCommentsRequired ? '*' : '' }}
-                  </label>
-                  <textarea
-                    id="comments"
-                    v-model.trim="form.comments"
-                    name="comments"
-                    rows="4"
-                    :required="isAccommodationCommentsRequired"
-                    :aria-required="isAccommodationCommentsRequired"
-                    :aria-invalid="errors.comments ? 'true' : 'false'"
-                    :aria-describedby="describedByFor('comments')"
-                    maxlength="600"
-                    @blur="() => validateField('comments')"
-                  ></textarea>
-                  <p id="comments-help" class="form-help">
-                    Cuéntanos con quién quieres compartir chozo y/o cualquier necesidad especial de
-                    alojamiento para que podamos ayudarte mejor.
-                  </p>
+                      <div
+                        v-else
+                        class="accommodation-subgroup"
+                        role="group"
+                        :aria-labelledby="`accommodation-chozo-${blockIndex}`"
+                      >
+                        <p
+                          class="accommodation-subgroup-title"
+                          :id="`accommodation-chozo-${blockIndex}`"
+                        >
+                          {{ block.title }}
+                        </p>
+                        <div
+                          v-for="option in block.options"
+                          :key="option.value"
+                          class="option-item"
+                        >
+                          <input
+                            :id="`accommodation-${option.value}`"
+                            v-model="form.accommodation"
+                            type="radio"
+                            name="accommodation"
+                            :value="option.value"
+                            required
+                            aria-required="true"
+                            @change="() => validateField('accommodation')"
+                          />
+                          <label :for="`accommodation-${option.value}`">{{ option.label }}</label>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                  <div class="form-row">
+                    <label for="comments">
+                      Comentarios adicionales de alojamiento
+                      {{ isAccommodationCommentsRequired ? '*' : '' }}
+                    </label>
+                    <textarea
+                      id="comments"
+                      v-model.trim="form.comments"
+                      name="comments"
+                      rows="4"
+                      :required="isAccommodationCommentsRequired"
+                      :aria-required="isAccommodationCommentsRequired"
+                      :aria-invalid="errors.comments ? 'true' : 'false'"
+                      :aria-describedby="describedByFor('comments')"
+                      maxlength="600"
+                      @blur="() => validateField('comments')"
+                    ></textarea>
+                    <p id="comments-help" class="form-help">
+                      Cuéntanos con quién quieres compartir chozo y/o cualquier necesidad especial
+                      de alojamiento para que podamos ayudarte mejor.
+                    </p>
+                    <span
+                      id="comments-error"
+                      class="form-error"
+                      :class="{ 'form-error-hidden': !errors.comments }"
+                      role="alert"
+                      aria-live="polite"
+                    >
+                      {{ errors.comments || '&nbsp;' }}
+                    </span>
+                  </div>
                   <span
-                    id="comments-error"
+                    id="accommodation-error"
                     class="form-error"
-                    :class="{ 'form-error-hidden': !errors.comments }"
+                    :class="{ 'form-error-hidden': !errors.accommodation }"
                     role="alert"
                     aria-live="polite"
                   >
-                    {{ errors.comments || '&nbsp;' }}
+                    {{ errors.accommodation || '&nbsp;' }}
                   </span>
-                </div>
-                <span
-                  id="accommodation-error"
-                  class="form-error"
-                  :class="{ 'form-error-hidden': !errors.accommodation }"
-                  role="alert"
-                  aria-live="polite"
-                >
-                  {{ errors.accommodation || '&nbsp;' }}
-                </span>
                 </fieldset>
               </div>
 
@@ -765,6 +816,10 @@
                     <label for="ziplineRequested">Quiero tirolina ({{ ZIPLINE_PRICE_EUR }}€)</label>
                   </div>
                 </div>
+                <p class="form-help">
+                  Esta actividad ÚNICAMENTE podrás realizarla si te apuntas durante esta
+                  inscripción.
+                </p>
               </fieldset>
             </fieldset>
 
@@ -874,8 +929,9 @@
                 <p class="form-status-success-copy">
                   ¡Gracias por tu interés! Hemos recibido tu solicitud correctamente.
                   <template v-if="registrationConfirmationEmailEnabled">
-                    En breve recibirás un correo de confirmación en la dirección que nos has
-                    facilitado.
+                    En los próximos días recibirás un correo de confirmación en la dirección que nos
+                    has facilitado. Recibirás también un correo de PayPal con la solicitud de cobro
+                    por el importe correspondiente a tu inscripción.
                   </template>
                   <template v-else> Te contactaremos en las próximas horas. </template>
                   Si quieres organizar actividades, usa el
@@ -935,6 +991,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import AppCard from '@/components/AppCard.vue'
+import payPalLogo from '@/assets/paypal-logo.svg'
 import {
   ACCOMMODATION_OPTIONS,
   ACCOMMODATION_OUTLETS_NOTE,

@@ -8,7 +8,7 @@
       />
 
       <div class="faq-content">
-        <article class="faq-section">
+        <article id="faq-politica-cancelacion" class="faq-section">
           <details class="faq-details">
             <summary class="faq-summary">
               <h2 class="faq-summary-title">¿Cuál es la política de cancelación de la reserva?</h2>
@@ -197,6 +197,81 @@
               <p>
                 No, quien quiera venir a las jornadas, necesita estar apuntado y haber pagado su
                 plaza.
+              </p>
+            </div>
+          </details>
+        </article>
+
+        <article class="faq-section">
+          <details class="faq-details">
+            <summary class="faq-summary">
+              <h2 class="faq-summary-title">
+                ¿Al realizar el pago por PayPal, me va a suponer un coste adicional a mi inscripción?
+              </h2>
+            </summary>
+            <div class="faq-panel">
+              <p>
+                No. No supone ningún coste extra: el pago con PayPal no incrementa el importe de tu
+                inscripción.
+              </p>
+            </div>
+          </details>
+        </article>
+
+        <article class="faq-section">
+          <details class="faq-details">
+            <summary class="faq-summary">
+              <h2 class="faq-summary-title">
+                ¿Y si quiero cancelar, me va a suponer un gasto adicional el pago por PayPal?
+              </h2>
+            </summary>
+            <div class="faq-panel">
+              <p>
+                No. El uso de PayPal no añade ningún gasto extra respecto a otras formas de pago.
+                Las condiciones económicas en caso de cancelación son las de nuestra
+                <RouterLink
+                  :to="{ path: '/faqs', hash: '#faq-politica-cancelacion' }"
+                  class="faq-link"
+                  >política de cancelación</RouterLink
+                >
+                (primera pregunta de esta página).
+              </p>
+            </div>
+          </details>
+        </article>
+
+        <article class="faq-section">
+          <details class="faq-details">
+            <summary class="faq-summary">
+              <h2 class="faq-summary-title">
+                ¿Si al final quiero apuntarme a la tirolina pero no lo he hecho durante la inscripción,
+                puedo hacerlo en las jornadas?
+              </h2>
+            </summary>
+            <div class="faq-panel">
+              <p>
+                No. La inscripción a la tirolina debe hacerse durante el
+                <RouterLink to="/registration" class="faq-link">formulario de inscripción</RouterLink>
+                a las jornadas. Contratamos personal externo y necesitamos avisar con antelación.
+              </p>
+            </div>
+          </details>
+        </article>
+
+        <article class="faq-section">
+          <details class="faq-details">
+            <summary class="faq-summary">
+              <h2 class="faq-summary-title">
+                ¿Puedo inscribirme y pagar la tirolina después de haber pagado la inscripción?
+              </h2>
+            </summary>
+            <div class="faq-panel">
+              <p>
+                La asociación no puede asegurar la disponibilidad una vez realizado el pago de la
+                inscripción a las jornadas. No obstante estudiaremos cada caso particular para buscar
+                la mejor solución. Escríbenos a
+                <a :href="`mailto:${CONTACT_INFO.email}`" class="faq-link">{{ CONTACT_INFO.email }}</a>
+                y te responderemos lo antes posible.
               </p>
             </div>
           </details>

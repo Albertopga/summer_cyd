@@ -38,7 +38,7 @@ const ACCOMMODATION_PRICES_EUR = {
   chozos: 150,
   'chozo-individual': 300,
 }
-const PAYMENT_IBAN = String(process.env.PAYMENT_IBAN || 'ES41 3035 0255 7125 5002 4794').trim()
+// const PAYMENT_IBAN = String(process.env.PAYMENT_IBAN || 'ES41 3035 0255 7125 5002 4794').trim()
 
 function escapeHtml(value) {
   if (value == null) {
@@ -133,7 +133,12 @@ function getRegistrationTotalPriceEur({ accommodation, ziplineRequested }) {
   }
 }
 
-function getRegistrationTotalPriceForMember({ accommodation, ziplineRequested, isChild, childSharesParentChozo }) {
+function getRegistrationTotalPriceForMember({
+  accommodation,
+  ziplineRequested,
+  isChild,
+  childSharesParentChozo,
+}) {
   const usesChildChozoPrice =
     Boolean(isChild) && Boolean(childSharesParentChozo) && String(accommodation) === 'chozos'
   const accommodationPrice = usesChildChozoPrice ? 100 : getAccommodationPriceEur(accommodation)
@@ -198,9 +203,8 @@ export function buildRegistrationCreatedEmail({
   const familyZiplineTotal = familyRows.reduce((sum, row) => sum + row.ziplinePrice, 0)
   const familyTotal = familyRows.reduce((sum, row) => sum + row.total, 0)
   const hasFamilyBreakdown = familyRows.length > 1
-  const familyBreakdownHtml =
-    hasFamilyBreakdown
-      ? `
+  const familyBreakdownHtml = hasFamilyBreakdown
+    ? `
       <p><strong>Desglose familiar:</strong></p>
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e5e7eb;border-collapse:collapse;margin-top:12px;">
         <thead>
@@ -242,7 +246,7 @@ export function buildRegistrationCreatedEmail({
         <li>Total final familiar a abonar: <strong>${familyTotal}€</strong></li>
       </ul>
     `
-      : ''
+    : ''
   const economicSummaryHtml = hasFamilyBreakdown
     ? ''
     : `
@@ -257,6 +261,14 @@ export function buildRegistrationCreatedEmail({
     ? `pago_retiro_2026_T-${formattedTempNumber}`
     : 'pago_retiro_2026_T-XXXX'
 
+  const paypalPolicyHtml = `
+        <p>Los pagos de la inscripción de esta edición solo podrán realizarse a través de PayPal. Esta decisión se debe a limitaciones externas que escapan al control de la asociación. PayPal centraliza los cobros y reduce errores habituales en importes, conceptos o datos, tanto para quien se inscribe como para la organización.</p>
+        <p>Esperamos que esto no te suponga un inconveniente. Si necesitas orientación con el pago, responde a este correo y te ayudaremos en la medida de lo posible.</p>
+        <p><strong>Concepto del pago:</strong> ${escapeHtml(paymentConcept)}</p>
+        <p>Utiliza exactamente este texto como concepto o referencia al completar el pago a través de la solicitud que recibirás por PayPal.</p>
+        <p>En los próximos días recibirás un correo de PayPal con una solicitud de cobro por la cantidad que corresponda según el resumen anterior.</p>
+  `
+
   return {
     subject: 'Confirmación de inscripción - Retiro Lúdico Castilla y Dragón',
     html: buildLayout({
@@ -266,8 +278,7 @@ export function buildRegistrationCreatedEmail({
         <p>Hemos recibido correctamente tu inscripción al <strong>Retiro Lúdico Castilla y Dragón</strong>.</p>
         ${economicSummaryHtml}
         ${familyBreakdownHtml}
-        <p><strong>IBAN para el pago:</strong> ${escapeHtml(PAYMENT_IBAN)}</p>
-        <p><strong>Concepto de la transferencia:</strong> ${escapeHtml(paymentConcept)}</p>
+        ${paypalPolicyHtml}
         ${
           formattedTempNumber
             ? `<p><strong>Número temporal de asistente:</strong> T-${escapeHtml(formattedTempNumber)}</p>`
@@ -275,7 +286,7 @@ export function buildRegistrationCreatedEmail({
         }
         <p>Guarda este correo como confirmación. Si necesitas corregir algún dato, responde a este mensaje.</p>
       `,
-      footerHtml: '<p>- El equipo del retiro</p>',
+      footerHtml: '<p>- Castilla y Dragón</p>',
     }),
   }
 }
@@ -317,16 +328,21 @@ export function buildRegistrationUpdatedEmail({ fullName, changes }) {
         </table>
       `,
       footerHtml:
-        '<p>Si no reconoces esta modificación, responde a este correo para revisarlo.</p><p>- El equipo del retiro</p>',
+        '<p>Si no reconoces esta modificación, responde a este correo para revisarlo.</p><p>- Castilla y Dragón</p>',
     }),
   }
 }
 
-export function buildPaymentReminderEmail({ fullName }) {
+export function buildPaymentReminderEmail({ fullName, tempAttendeeNumber }) {
   const normalizedName = String(fullName || '').trim()
   const greeting = normalizedName
     ? `<p>Hola, <strong>${escapeHtml(normalizedName)}</strong>:</p>`
     : '<p>Hola:</p>'
+  const formattedTemp = formatAttendeeNumber(tempAttendeeNumber)
+  const paymentConcept = formattedTemp
+    ? `pago_retiro_2026_T-${formattedTemp}`
+    : 'pago_retiro_2026_T-XXXX'
+  const conceptLine = `<p><strong>Concepto del pago:</strong> ${escapeHtml(paymentConcept)} (el mismo que en tu correo de inscripción).</p>`
 
   return {
     subject: 'Recordatorio de pago pendiente - Retiro Lúdico Castilla y Dragón',
@@ -335,10 +351,11 @@ export function buildPaymentReminderEmail({ fullName }) {
       introHtml: greeting,
       bodyHtml: `
         <p>Tu inscripción está registrada, pero todavía no consta el pago de la reserva de plaza.</p>
-        <p><strong>IBAN para el pago:</strong> ${escapeHtml(PAYMENT_IBAN)}</p>
-        <p>Para garantizar tu asistencia, realiza el pago cuanto antes y responde a este correo si necesitas ayuda.</p>
+        <p>Los cobros de esta edición se realizan solo mediante PayPal. Revisa tu correo (incluida la carpeta de spam): recibirás en breve una solicitud de cobro enviada por PayPal.</p>
+        ${conceptLine}
+        <p>Completa el pago desde esa solicitud cuando puedas. Si no te llega el correo de PayPal o tienes dudas, responde a este mensaje.</p>
       `,
-      footerHtml: '<p>Gracias por tu interés.<br/>- El equipo del retiro</p>',
+      footerHtml: '<p>Gracias por tu interés.<br/>- Castilla y Dragón</p>',
     }),
   }
 }
@@ -404,7 +421,7 @@ export function buildPaymentConfirmedEmail({ fullName, attendeeNumber, familyMem
         ${familyNumbersPendingHtml}
         <p>Guarda este correo para identificarte en el evento.</p>
       `,
-      footerHtml: '<p>- El equipo del retiro</p>',
+      footerHtml: '<p>- Castilla y Dragón</p>',
     }),
   }
 }

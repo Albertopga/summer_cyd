@@ -123,7 +123,7 @@ export default async function handler(req, res) {
   const { data: pendingRows, error: pendingError } = await supabase
     .from('registrations')
     .select(
-      'id, full_name, email, accommodation_paid, created_at, last_payment_reminder_sent_at, payment_reminder_count',
+      'id, full_name, email, temp_attendee_number, accommodation_paid, created_at, last_payment_reminder_sent_at, payment_reminder_count',
     )
     .eq('accommodation_paid', false)
     .lte('created_at', minCreatedAt)
@@ -181,7 +181,10 @@ export default async function handler(req, res) {
 
     const fullName = typeof row.full_name === 'string' ? row.full_name.trim() : ''
 
-    const message = buildPaymentReminderEmail({ fullName })
+    const message = buildPaymentReminderEmail({
+      fullName,
+      tempAttendeeNumber: row?.temp_attendee_number,
+    })
 
     const { error } = await resend.emails.send({
       from,

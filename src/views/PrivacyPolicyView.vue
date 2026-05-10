@@ -32,8 +32,9 @@
           <ul>
             <li>
               <strong>Gestión de la inscripción al evento:</strong> Procesamiento de su solicitud de
-              inscripción, confirmación de plaza, gestión de pagos y comunicación relacionada con el
-              evento.
+              inscripción, confirmación de plaza, gestión de pagos (incluido el cobro mediante
+              <strong>PayPal</strong> como intermediario cuando corresponda) y comunicación relacionada
+              con el evento.
             </li>
             <li>
               <strong>Gestión del alojamiento:</strong> Asignación y organización del alojamiento
