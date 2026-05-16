@@ -121,6 +121,14 @@ export const ACCOMMODATION_OUTLETS_NOTE =
 
 // Precios (EUR) para poder reutilizarlos en cálculos
 export const ZIPLINE_PRICE_EUR = 12
+
+/** Texto de ayuda bajo el checkbox de tirolina (inscripción individual o pareja). */
+export const ZIPLINE_REGISTRATION_NOTE =
+  'Esta actividad ÚNICAMENTE podrás realizarla si te apuntas durante esta inscripción, y has de tener una altura mínima de 1,50 m y un peso inferior a 100 kg.'
+
+/** Texto de ayuda bajo el checkbox de tirolina (hijos en inscripción familiar). */
+export const ZIPLINE_REGISTRATION_NOTE_THIRD_PERSON =
+  'Esta actividad ÚNICAMENTE podrá realizarse si se registra durante esta inscripción, y ha de tener una altura mínima de 1,50 m y un peso inferior a 100 kg.'
 export const CHILD_SHARED_CHOZO_PRICE_EUR = 100
 export const ACCOMMODATION_PRICES_EUR = {
   albergue: 130,

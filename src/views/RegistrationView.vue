@@ -417,10 +417,7 @@
                     />
                     <span>Quiere tirolina ({{ ZIPLINE_PRICE_EUR }}€)</span>
                   </label>
-                  <p class="form-help">
-                    Esta actividad ÚNICAMENTE podrás realizarla si te apuntas durante esta
-                    inscripción.
-                  </p>
+                  <p class="form-help">{{ ZIPLINE_REGISTRATION_NOTE }}</p>
                 </div>
                 <div class="form-row">
                   <fieldset class="form-subfieldset">
@@ -502,10 +499,7 @@
                     />
                     <span>Quiere tirolina ({{ ZIPLINE_PRICE_EUR }}€)</span>
                   </label>
-                  <p class="form-help">
-                    Esta actividad <strong>ÚNICAMENTE</strong> podrá realizarse si se registra durante esta
-                    inscripción.
-                  </p>
+                  <p class="form-help">{{ ZIPLINE_REGISTRATION_NOTE_THIRD_PERSON }}</p>
                 </div>
                 <div v-if="child.accommodation === 'chozos'" class="form-row">
                   <label class="option-item" :for="`childSharesParentChozo-${index}`">
@@ -816,10 +810,7 @@
                     <label for="ziplineRequested">Quiero tirolina ({{ ZIPLINE_PRICE_EUR }}€)</label>
                   </div>
                 </div>
-                <p class="form-help">
-                  Esta actividad ÚNICAMENTE podrás realizarla si te apuntas durante esta
-                  inscripción.
-                </p>
+                <p class="form-help">{{ ZIPLINE_REGISTRATION_NOTE }}</p>
               </fieldset>
             </fieldset>
 
@@ -1013,6 +1004,8 @@ import {
   parseEventDateLocal,
   TELEGRAM_TOOLTIP,
   ZIPLINE_PRICE_EUR,
+  ZIPLINE_REGISTRATION_NOTE,
+  ZIPLINE_REGISTRATION_NOTE_THIRD_PERSON,
   VALIDATION_PATTERNS,
 } from '@/constants'
 import { saveRegistration } from '@/services/registrationService'

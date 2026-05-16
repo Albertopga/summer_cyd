@@ -243,6 +243,23 @@
         <article class="faq-section">
           <details class="faq-details">
             <summary class="faq-summary">
+              <h2 class="faq-summary-title">¿Hay requisitos para participar en la tirolina?</h2>
+            </summary>
+            <div class="faq-panel">
+              <p>
+                Para realizar la tirolina hay que apuntarse al inscribirse en las jornadas (extra
+                opcional de {{ ZIPLINE_PRICE_EUR }}€ en el
+                <RouterLink to="/registration" class="faq-link">formulario de inscripción</RouterLink
+                >). Además, el proveedor de la actividad exige una altura mínima de 1,50 m y un peso
+                inferior a 100 kg.
+              </p>
+            </div>
+          </details>
+        </article>
+
+        <article class="faq-section">
+          <details class="faq-details">
+            <summary class="faq-summary">
               <h2 class="faq-summary-title">
                 ¿Si al final quiero apuntarme a la tirolina pero no lo he hecho durante la inscripción,
                 puedo hacerlo en las jornadas?
@@ -466,6 +483,7 @@ import {
   formatDeadlineLabelEs,
   getActivityRegistrationLastValidDate,
   getRegistrationLastValidDate,
+  ZIPLINE_PRICE_EUR,
 } from '@/constants'
 
 defineOptions({
