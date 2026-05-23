@@ -1,0 +1,604 @@
+/* Estilos compartidos de tablas y herramientas del panel admin */
+
+.admin-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.admin-tab-content .loading-message,
+.admin-tab-content .error-message {
+  text-align: center;
+  padding: var(--spacing-lg);
+  font-size: 1.125rem;
+}
+
+.admin-tab-content .error-message {
+  color: var(--color-accent);
+  background-color: #fce8e6;
+  border-radius: var(--radius-lg);
+}
+
+.admin-tab-content .list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.admin-tab-content .list-header h2 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.admin-tab-content .controls-group {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-tab-content .filter-controls,
+.admin-tab-content .sort-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+/* Selector de columnas */
+.admin-tab-content .column-settings {
+  position: relative;
+}
+
+.admin-tab-content .columns-button {
+  background-color: var(--color-cream-dark);
+  color: var(--color-text);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.admin-tab-content .columns-button:hover {
+  background-color: var(--color-cream);
+}
+
+.admin-tab-content .columns-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.admin-tab-content .column-panel {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 20;
+  width: min(22rem, calc(100vw - 2rem));
+  padding: var(--spacing-md);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-cream-dark);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.admin-tab-content .column-panel-intro {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  line-height: 1.4;
+}
+
+.admin-tab-content .column-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.admin-tab-content .column-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.admin-tab-content .column-visibility {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.admin-tab-content .column-order-actions {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.admin-tab-content .column-order-button,
+.admin-tab-content .column-reset-button {
+  border: 1px solid var(--color-cream-dark);
+  background-color: var(--color-white);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.admin-tab-content .column-order-button {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+}
+
+.admin-tab-content .column-order-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.admin-tab-content .column-order-button:focus-visible,
+.admin-tab-content .column-reset-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.admin-tab-content .column-reset-button {
+  margin-top: var(--spacing-sm);
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+}
+
+/* Botones y selects de toolbar */
+.admin-tab-content .download-button {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.admin-tab-content .download-button:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.admin-tab-content .download-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.admin-tab-content .download-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-tab-content .filter-select,
+.admin-tab-content .sort-select {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-cream-dark);
+  background-color: var(--color-white);
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.admin-tab-content .filter-select:hover,
+.admin-tab-content .sort-select:hover {
+  border-color: var(--color-primary);
+}
+
+.admin-tab-content .filter-select:focus-visible,
+.admin-tab-content .sort-select:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-color: var(--color-primary);
+}
+
+.admin-tab-content .empty-state {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-light);
+}
+
+/* Tabla */
+.admin-table-wrapper {
+  overflow-x: auto;
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.admin-table thead {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.admin-table th {
+  padding: var(--spacing-md);
+  text-align: left;
+  font-weight: 600;
+}
+
+.admin-table thead th {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.admin-table .sortable-column {
+  padding: 0;
+}
+
+.admin-table .sortable-header-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: var(--spacing-md);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  line-height: 1.25;
+}
+
+.admin-table .sortable-header-button > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-table .sortable-header-button:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-table .sortable-header-button:focus-visible {
+  outline: 3px solid var(--color-accent-light);
+  outline-offset: -3px;
+}
+
+.admin-table .sort-indicator {
+  opacity: 0.45;
+  font-size: 0.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.admin-table .sort-indicator--active {
+  opacity: 1;
+}
+
+.admin-table td {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-cream-dark);
+  overflow-wrap: anywhere;
+}
+
+.admin-table tbody tr:hover {
+  background-color: var(--color-cream);
+}
+
+.admin-table .edit-button {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-right: var(--spacing-xs);
+}
+
+.admin-table .edit-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.admin-table .edit-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.admin-table .delete-icon-button {
+  border: none;
+  background: transparent;
+  color: #dc3545;
+  border-radius: var(--radius-sm);
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: var(--spacing-xs);
+  transition:
+    color 0.2s ease,
+    transform 0.15s ease;
+  font-size: 1.1rem;
+}
+
+.admin-table .delete-icon-button:hover:not(:disabled) {
+  color: #b8323f;
+  transform: translateY(-1px);
+}
+
+.admin-table .delete-icon-button:focus-visible {
+  outline: 3px solid #dc3545;
+  outline-offset: 2px;
+}
+
+.admin-table .delete-icon-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Modales de confirmación en tabs admin */
+.admin-tab-content .spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-top: 2px solid var(--color-white);
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  animation: admin-table-spinner 0.8s linear infinite;
+}
+
+@keyframes admin-table-spinner {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.admin-tab-content .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-md);
+}
+
+.admin-tab-content .modal-content {
+  background-color: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  max-width: 500px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-tab-content .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-cream-dark);
+}
+
+.admin-tab-content .modal-header h2 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.admin-tab-content .close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--color-text-light);
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+.admin-tab-content .close-button:hover:not(:disabled) {
+  background-color: var(--color-cream);
+}
+
+.admin-tab-content .close-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.admin-tab-content .close-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-tab-content .modal-body {
+  padding: var(--spacing-lg);
+}
+
+.admin-tab-content .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-top: 1px solid var(--color-cream-dark);
+}
+
+.admin-tab-content .cancel-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: none;
+  background-color: var(--color-cream-dark);
+  color: var(--color-text);
+}
+
+.admin-tab-content .cancel-button:hover:not(:disabled) {
+  background-color: var(--color-cream);
+}
+
+.admin-tab-content .cancel-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.admin-tab-content .cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-tab-content .delete-button {
+  background-color: var(--color-accent);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.admin-tab-content .delete-button:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+}
+
+.admin-tab-content .delete-button:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.admin-tab-content .delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .admin-tab-content .list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-tab-content .controls-group {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-tab-content .column-settings {
+    width: 100%;
+  }
+
+  .admin-tab-content .columns-button,
+  .admin-tab-content .download-button {
+    width: 100%;
+  }
+
+  .admin-tab-content .column-panel {
+    position: static;
+    width: 100%;
+    margin-top: var(--spacing-xs);
+  }
+
+  .admin-tab-content .filter-controls,
+  .admin-tab-content .sort-controls {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .admin-tab-content .filter-select,
+  .admin-tab-content .sort-select {
+    width: 100%;
+  }
+
+  .admin-table-wrapper {
+    overflow-x: visible;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .admin-table,
+  .admin-table thead,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table th,
+  .admin-table td {
+    display: block;
+  }
+
+  .admin-table {
+    font-size: 0.875rem;
+    table-layout: auto;
+  }
+
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table tbody {
+    display: grid;
+    gap: var(--spacing-sm);
+  }
+
+  .admin-table tbody tr {
+    background-color: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-sm);
+  }
+
+  .admin-table td {
+    border-bottom: none;
+    padding: var(--spacing-xs) 0;
+  }
+
+  .admin-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 0.2rem;
+  }
+
+  .admin-table .edit-button,
+  .admin-table .delete-icon-button {
+    display: block;
+    width: 100%;
+    margin-bottom: var(--spacing-xs);
+    height: auto;
+  }
+}

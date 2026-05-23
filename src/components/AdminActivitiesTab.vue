@@ -22,6 +22,67 @@
           >
             Crear actividad
           </button>
+          <div class="column-settings">
+            <button
+              type="button"
+              class="columns-button"
+              :aria-expanded="showColumnPanel ? 'true' : 'false'"
+              aria-controls="activity-column-settings-panel"
+              @click="showColumnPanel = !showColumnPanel"
+            >
+              Columnas
+            </button>
+            <div
+              v-if="showColumnPanel"
+              id="activity-column-settings-panel"
+              class="column-panel"
+              role="region"
+              aria-label="Configuración de columnas"
+            >
+              <p class="column-panel-intro">
+                El orden y la visibilidad se aplican a la tabla y al Excel descargado.
+              </p>
+              <ul class="column-list">
+                <li
+                  v-for="column in columnSelectorItems"
+                  :key="column.id"
+                  class="column-list-item"
+                >
+                  <label class="column-visibility">
+                    <input
+                      type="checkbox"
+                      :checked="isColumnVisible(column.id)"
+                      @change="toggleColumnVisibility(column.id, $event.target.checked)"
+                    />
+                    <span>{{ column.label }}</span>
+                  </label>
+                  <div class="column-order-actions">
+                    <button
+                      type="button"
+                      class="column-order-button"
+                      :disabled="isColumnMoveDisabled(column.id, -1)"
+                      :aria-label="`Subir columna ${column.label}`"
+                      @click="moveColumn(column.id, -1)"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      class="column-order-button"
+                      :disabled="isColumnMoveDisabled(column.id, 1)"
+                      :aria-label="`Bajar columna ${column.label}`"
+                      @click="moveColumn(column.id, 1)"
+                    >
+                      ↓
+                    </button>
+                  </div>
+                </li>
+              </ul>
+              <button type="button" class="column-reset-button" @click="resetColumnPreferences">
+                Restaurar columnas predeterminadas
+              </button>
+            </div>
+          </div>
           <button
             type="button"
             @click="handleDownloadExcel"
@@ -46,31 +107,6 @@
               <option value="cancelled">Canceladas</option>
             </select>
           </div>
-          <div class="sort-controls">
-            <label for="sort-field-activities" class="sr-only">Ordenar por</label>
-            <select
-              id="sort-field-activities"
-              v-model="sortField"
-              @change="handleSortChange"
-              class="sort-select"
-            >
-              <option value="created_at">Fecha registro</option>
-              <option value="status">Estado</option>
-              <option value="type">Tipo</option>
-              <option value="name">Nombre</option>
-              <option value="organizer_name">Organizador</option>
-            </select>
-            <label for="sort-direction-activities" class="sr-only">Dirección del orden</label>
-            <select
-              id="sort-direction-activities"
-              v-model="sortDirection"
-              @change="handleSortChange"
-              class="sort-select"
-            >
-              <option value="desc">Descendente</option>
-              <option value="asc">Ascendente</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -78,26 +114,44 @@
         No hay actividades disponibles
       </div>
 
-      <div v-else class="activities-table-wrapper">
-        <table class="activities-table" aria-label="Lista de actividades propuestas">
+      <div v-else class="admin-table-wrapper">
+        <table class="admin-table" aria-label="Lista de actividades propuestas">
+          <colgroup>
+            <col
+              v-for="column in tableColumns"
+              :key="`col-${column.id}`"
+              :style="getActivityColumnTableStyle(column)"
+            />
+          </colgroup>
           <thead>
             <tr>
-              <th scope="col">Organizador</th>
-              <th scope="col">Email</th>
-              <th scope="col">Tipo</th>
-              <th scope="col">Nombre</th>
-              <th scope="col">Participantes</th>
-              <th scope="col">Fecha actividad</th>
-              <th scope="col">Hora actividad</th>
               <th
+                v-for="column in tableColumns"
+                :key="column.id"
                 scope="col"
-                title="Preferencia del organizador; el horario final lo asigna la organización"
+                :class="{ 'sortable-column': isColumnSortable(column) }"
+                :style="getActivityColumnTableStyle(column)"
+                :title="column.headerTitle || column.label"
+                :aria-sort="isColumnSortable(column) ? getColumnAriaSort(column.id) : undefined"
               >
-                Preferencia (día/franja)
+                <button
+                  v-if="isColumnSortable(column)"
+                  type="button"
+                  class="sortable-header-button"
+                  :aria-label="getColumnSortLabel(column)"
+                  @click="handleColumnSort(column.id)"
+                >
+                  <span>{{ column.label }}</span>
+                  <span
+                    class="sort-indicator"
+                    :class="{ 'sort-indicator--active': getColumnSortIndicator(column.id) }"
+                    aria-hidden="true"
+                  >
+                    {{ getColumnSortIndicator(column.id) || '↕' }}
+                  </span>
+                </button>
+                <template v-else>{{ column.label }}</template>
               </th>
-              <th scope="col">Estado</th>
-              <th scope="col">Fecha registro</th>
-              <th scope="col">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -112,47 +166,46 @@
               @keydown.enter.prevent="openDetailModal(activity)"
               @keydown.space.prevent="openDetailModal(activity)"
             >
-              <td data-label="Organizador">{{ activity.organizer_name }}</td>
-              <td data-label="Email">{{ activity.organizer_email }}</td>
-              <td data-label="Tipo">{{ getActivityTypeLabel(activity.type) }}</td>
-              <td data-label="Nombre">{{ activity.name }}</td>
-              <td data-label="Participantes">
-                {{ activity.min_participants }}-{{ activity.max_participants }}
-              </td>
-              <td data-label="Fecha actividad">{{ formatActivityDate(activity.activity_date) }}</td>
-              <td data-label="Hora actividad">{{ formatActivityTime(activity.activity_time) }}</td>
-              <td data-label="Preferencia (día/franja)">
-                {{ getTimeSlotLabel(activity.preferred_time_slot) }}
-              </td>
-              <td data-label="Estado">
-                <span
-                  class="status-badge"
-                  :class="`status-badge--${activity.status}`"
-                  :aria-label="`Estado: ${getStatusLabel(activity.status)}`"
-                >
-                  {{ getStatusLabel(activity.status) }}
-                </span>
-              </td>
-              <td data-label="Fecha registro">{{ formatDate(activity.created_at) }}</td>
-              <td data-label="Acciones">
-                <button
-                  type="button"
-                  @click="openEditModal(activity)"
-                  @click.stop
-                  class="edit-button"
-                  :aria-label="`Editar actividad ${activity.name}`"
-                >
-                  Editar
-                </button>
-                <button
-                  type="button"
-                  @click.stop="confirmDelete(activity)"
-                  class="delete-icon-button"
-                  :aria-label="`Borrar actividad ${activity.name}`"
-                  title="Borrar actividad"
-                >
-                  <span aria-hidden="true">🗑️</span>
-                </button>
+              <td
+                v-for="column in tableColumns"
+                :key="`${activity.id}-${column.id}`"
+                :data-label="column.label"
+                :style="getActivityColumnTableStyle(column)"
+              >
+                <template v-if="column.id === 'actions'">
+                  <button
+                    type="button"
+                    @click="openEditModal(activity)"
+                    @click.stop
+                    class="edit-button"
+                    :aria-label="`Editar actividad ${activity.name}`"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    @click.stop="confirmDelete(activity)"
+                    class="delete-icon-button"
+                    :aria-label="`Borrar actividad ${activity.name}`"
+                    title="Borrar actividad"
+                  >
+                    <span aria-hidden="true">🗑️</span>
+                  </button>
+                </template>
+
+                <template v-else-if="column.cellType === 'status-badge'">
+                  <span
+                    class="status-badge"
+                    :class="`status-badge--${activity.status}`"
+                    :aria-label="`Estado: ${getActivityStatusLabel(activity.status)}`"
+                  >
+                    {{ getActivityStatusLabel(activity.status) }}
+                  </span>
+                </template>
+
+                <template v-else>
+                  {{ getActivityColumnValue(column.id, activity) }}
+                </template>
               </td>
             </tr>
           </tbody>
@@ -203,7 +256,7 @@
             <p><strong>Organizador:</strong> {{ detailActivity.organizer_name || '-' }}</p>
             <p><strong>Email:</strong> {{ detailActivity.organizer_email || '-' }}</p>
             <p><strong>Tipo:</strong> {{ getActivityTypeLabel(detailActivity.type) }}</p>
-            <p><strong>Estado:</strong> {{ getStatusLabel(detailActivity.status) }}</p>
+            <p><strong>Estado:</strong> {{ getActivityStatusLabel(detailActivity.status) }}</p>
             <p>
               <strong>Participantes:</strong> {{ detailActivity.min_participants || '-' }} -
               {{ detailActivity.max_participants || '-' }}
@@ -214,9 +267,9 @@
             </p>
             <p><strong>Duración:</strong> {{ detailActivity.duration || '-' }}</p>
             <p><strong>Espacio:</strong> {{ getSpaceNeedLabel(detailActivity.space_need) }}</p>
-            <p><strong>Fecha registro:</strong> {{ formatDate(detailActivity.created_at) }}</p>
+            <p><strong>Fecha registro:</strong> {{ formatActivityDateTime(detailActivity.created_at) }}</p>
             <p>
-              <strong>Última actualización:</strong> {{ formatDate(detailActivity.updated_at) }}
+              <strong>Última actualización:</strong> {{ formatActivityDateTime(detailActivity.updated_at) }}
             </p>
           </div>
 
@@ -331,7 +384,28 @@
 import { computed, onMounted, ref } from 'vue'
 import { getAllActivities, deleteActivity, updateActivity } from '@/services/adminService'
 import { supabase } from '@/lib/supabase'
-import { ACTIVITY_TYPES, TIME_SLOTS, SPACE_NEEDS } from '@/constants'
+import {
+  ACTIVITY_COLUMN_DEFINITIONS,
+  getActivityColumnDefinition,
+  getActivityColumnTableStyle,
+  getConfigurableActivityColumns,
+  getDefaultActivityColumnPreferences,
+  getDefaultActivitySortState,
+  loadActivityColumnPreferences,
+  resolveActivityExportColumns,
+  resolveActivityTableColumns,
+  saveActivityColumnPreferences,
+} from '@/config/adminActivitiesColumns'
+import {
+  formatActivityDateTime,
+  getActivityColumnValue,
+  getActivitySortValue,
+  getActivityStatusLabel,
+  getActivityTypeLabel,
+  getSpaceNeedLabel,
+  getTimeSlotLabel,
+} from '@/utils/adminActivityFormatters'
+import { useAdminTableSort } from '@/composables/useAdminTableSort'
 import AdminActivityCreateModal from '@/components/AdminActivityCreateModal.vue'
 import AdminActivityEditModal from '@/components/AdminActivityEditModal.vue'
 import ExcelJS from 'exceljs'
@@ -356,23 +430,120 @@ const deletingDocumentPath = ref('')
 const deleteError = ref('')
 const downloadError = ref('')
 const statusFilter = ref('')
-const sortField = ref('created_at')
-const sortDirection = ref('desc')
+const showColumnPanel = ref(false)
+
+const columnPreferences = ref(loadActivityColumnPreferences())
+const configurableColumns = computed(() => {
+  const order = columnPreferences.value.order
+  return order
+    .map((id) => getConfigurableActivityColumns().find((col) => col.id === id))
+    .filter(Boolean)
+})
+const columnSelectorItems = computed(() =>
+  [...configurableColumns.value].sort((left, right) =>
+    left.label.localeCompare(right.label, 'es', { sensitivity: 'base' }),
+  ),
+)
+const tableColumns = computed(() => resolveActivityTableColumns(columnPreferences.value))
+const exportColumns = computed(() => resolveActivityExportColumns(columnPreferences.value))
+
+const {
+  handleHeaderSort,
+  resolveFetchSort,
+  applySortToRows,
+  isColumnSortable,
+  getColumnAriaSort,
+  getColumnSortIndicator,
+  getColumnSortLabel,
+} = useAdminTableSort({
+  columns: ACTIVITY_COLUMN_DEFINITIONS,
+  getColumnDefinition: getActivityColumnDefinition,
+  getClientSortValue: getActivitySortValue,
+  defaultSort: getDefaultActivitySortState(),
+})
+
+const getActivityFetchSort = () => {
+  const fetchSort = resolveFetchSort()
+  if (fetchSort) {
+    return {
+      orderBy: fetchSort.orderBy,
+      ascending: fetchSort.ascending,
+    }
+  }
+  return {
+    orderBy: 'created_at',
+    ascending: false,
+  }
+}
+
+const handleColumnSort = (columnId) => {
+  handleHeaderSort(columnId)
+  loadActivities()
+}
+
+const persistColumnPreferences = () => {
+  saveActivityColumnPreferences(columnPreferences.value)
+}
+
+const isColumnVisible = (columnId) => !columnPreferences.value.hidden.includes(columnId)
+
+const toggleColumnVisibility = (columnId, visible) => {
+  const hidden = new Set(columnPreferences.value.hidden)
+  if (visible) {
+    hidden.delete(columnId)
+  } else {
+    hidden.add(columnId)
+  }
+  columnPreferences.value = {
+    ...columnPreferences.value,
+    hidden: [...hidden],
+  }
+  persistColumnPreferences()
+}
+
+const moveColumn = (columnId, direction) => {
+  const order = [...columnPreferences.value.order]
+  const index = order.indexOf(columnId)
+  const targetIndex = index + direction
+  if (index < 0 || targetIndex < 0 || targetIndex >= order.length) return
+
+  const updated = [...order]
+  ;[updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]]
+  columnPreferences.value = {
+    ...columnPreferences.value,
+    order: updated,
+  }
+  persistColumnPreferences()
+}
+
+const resetColumnPreferences = () => {
+  columnPreferences.value = getDefaultActivityColumnPreferences()
+  persistColumnPreferences()
+}
+
+const isColumnMoveDisabled = (columnId, direction) => {
+  const order = columnPreferences.value.order
+  const index = order.indexOf(columnId)
+  if (index < 0) return true
+  if (direction < 0) return index === 0
+  return index === order.length - 1
+}
 
 const loadActivities = async () => {
   loading.value = true
   error.value = ''
 
   try {
+    const { orderBy, ascending } = getActivityFetchSort()
     const result = await getAllActivities({
       limit: 1000,
-      orderBy: sortField.value,
-      ascending: sortDirection.value === 'asc',
+      orderBy,
+      ascending,
       status: statusFilter.value || null,
     })
 
     if (result.success) {
-      activities.value = result.data || []
+      activities.value = applySortToRows(result.data || [])
       totalActivities.value = result.count || 0
       emit('update-count', result.count || 0)
     } else {
@@ -460,65 +631,8 @@ const handleActivityUpdated = () => {
   loadActivities()
 }
 
-const handleSortChange = () => {
-  loadActivities()
-}
-
 const handleFilterChange = () => {
   loadActivities()
-}
-
-const getActivityTypeLabel = (value) => {
-  const option = ACTIVITY_TYPES.find((opt) => opt.value === value)
-  return option ? option.label : value
-}
-
-const getTimeSlotLabel = (value) => {
-  const option = TIME_SLOTS.find((opt) => opt.value === value)
-  return option ? option.label : value
-}
-
-const getStatusLabel = (status) => {
-  const labels = {
-    pending: 'Pendiente',
-    approved: 'Aprobada',
-    rejected: 'Rechazada',
-    cancelled: 'Cancelada',
-  }
-  return labels[status] || status
-}
-
-const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-const formatActivityDate = (dateString) => {
-  if (!dateString) return '-'
-  const date = new Date(`${dateString}T00:00:00`)
-  return date.toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
-}
-
-const formatActivityTime = (timeString) => {
-  if (!timeString) return '-'
-  return String(timeString).slice(0, 5)
-}
-
-const getSpaceNeedLabel = (value) => {
-  if (!value) return '-'
-  const option = SPACE_NEEDS.find((opt) => opt.value === value)
-  return option ? option.label : value
 }
 
 const normalizedDocuments = computed(() => {
@@ -707,29 +821,26 @@ const removeDocument = async (doc) => {
 
 const handleDownloadExcel = async () => {
   try {
-    // Usar las actividades ya cargadas si están disponibles, sino cargar todas
     let dataToExport = []
 
     if (activities.value.length > 0 && activities.value.length === totalActivities.value) {
-      // Si ya tenemos todas las actividades cargadas, usarlas
-      dataToExport = activities.value
+      dataToExport = applySortToRows([...activities.value])
     } else {
-      // Cargar todas las actividades (sin límite) sin afectar el estado de loading de la lista
+      const { orderBy, ascending } = getActivityFetchSort()
       const result = await getAllActivities({
         limit: 10000,
-        orderBy: sortField.value,
-        ascending: sortDirection.value === 'asc',
+        orderBy,
+        ascending,
         status: statusFilter.value || null,
       })
 
       if (!result.success) {
-        // Mostrar error temporal sin afectar el estado principal
         const tempError = result.error || 'Error al cargar las actividades para exportar'
         alert(tempError)
         return
       }
 
-      dataToExport = result.data || []
+      dataToExport = applySortToRows(result.data || [])
     }
 
     if (dataToExport.length === 0) {
@@ -737,35 +848,21 @@ const handleDownloadExcel = async () => {
       return
     }
 
-    // Crear el libro de trabajo
+    const columns = exportColumns.value
+    if (columns.length === 0) {
+      error.value = 'Selecciona al menos una columna exportable para descargar el Excel.'
+      return
+    }
+
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Actividades')
 
-    // Definir las columnas con sus anchos
-    worksheet.columns = [
-      { header: 'Organizador', key: 'organizador', width: 20 },
-      { header: 'Email', key: 'email', width: 25 },
-      { header: 'Tipo', key: 'tipo', width: 15 },
-      { header: 'Nombre', key: 'nombre', width: 25 },
-      { header: 'Descripción', key: 'descripcion', width: 40 },
-      { header: 'Mín. participantes', key: 'minParticipantes', width: 15 },
-      { header: 'Máx. participantes', key: 'maxParticipantes', width: 15 },
-      { header: 'Preferencia (día/franja)', key: 'franjaHoraria', width: 25 },
-      { header: 'Duración', key: 'duracion', width: 15 },
-      { header: 'Necesidades participantes', key: 'necesidadesParticipantes', width: 30 },
-      { header: 'Necesidades organización', key: 'necesidadesOrganizacion', width: 30 },
-      { header: 'Necesidad espacio', key: 'necesidadEspacio', width: 20 },
-      { header: 'Puesta en marcha', key: 'puestaEnMarcha', width: 30 },
-      { header: 'Observaciones', key: 'observaciones', width: 30 },
-      { header: 'Estado', key: 'estado', width: 15 },
-      { header: 'Aprobado por', key: 'aprobadoPor', width: 20 },
-      { header: 'Notas aprobación', key: 'notasAprobacion', width: 30 },
-      { header: 'Documentos', key: 'documentos', width: 20 },
-      { header: 'Fecha registro', key: 'fechaRegistro', width: 20 },
-      { header: 'Última actualización', key: 'ultimaActualizacion', width: 20 },
-    ]
+    worksheet.columns = columns.map((column) => ({
+      header: column.label,
+      key: column.id,
+      width: column.excelWidth ?? 16,
+    }))
 
-    // Estilizar el header
     const headerRow = worksheet.getRow(1)
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
     headerRow.fill = {
@@ -775,57 +872,18 @@ const handleDownloadExcel = async () => {
     }
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
 
-    // Añadir los datos
     dataToExport.forEach((activity) => {
-      worksheet.addRow({
-        organizador: activity.organizer_name || '',
-        email: activity.organizer_email || '',
-        tipo: getActivityTypeLabel(activity.type),
-        nombre: activity.name || '',
-        descripcion: activity.description || '',
-        minParticipantes: activity.min_participants || '',
-        maxParticipantes: activity.max_participants || '',
-        franjaHoraria: getTimeSlotLabel(activity.preferred_time_slot),
-        duracion: activity.duration || '',
-        necesidadesParticipantes: activity.participant_needs || '',
-        necesidadesOrganizacion: activity.organization_needs || '',
-        necesidadEspacio: getSpaceNeedLabel(activity.space_need),
-        puestaEnMarcha: activity.setup || '',
-        observaciones: activity.observations || '',
-        estado: getStatusLabel(activity.status),
-        aprobadoPor: activity.approved_by || '',
-        notasAprobacion: activity.approval_notes || '',
-        documentos:
-          Array.isArray(activity.documents) && activity.documents.length > 0
-            ? `${activity.documents.length} archivo(s)`
-            : 'Sin documentos',
-        fechaRegistro: activity.created_at
-          ? new Date(activity.created_at).toLocaleDateString('es-ES', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          : '',
-        ultimaActualizacion: activity.updated_at
-          ? new Date(activity.updated_at).toLocaleDateString('es-ES', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          : '',
+      const row = {}
+      columns.forEach((column) => {
+        row[column.id] = getActivityColumnValue(column.id, activity)
       })
+      worksheet.addRow(row)
     })
 
-    // Generar el nombre del archivo con fecha
     const now = new Date()
     const dateStr = now.toISOString().split('T')[0]
     const filename = `actividades_${dateStr}.xlsx`
 
-    // Generar el buffer y descargar el archivo
     const buffer = await workbook.xlsx.writeBuffer()
     const blob = new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -852,54 +910,6 @@ defineExpose({
 </script>
 
 <style scoped>
-.admin-tab-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.loading-message,
-.error-message {
-  text-align: center;
-  padding: var(--spacing-lg);
-  font-size: 1.125rem;
-}
-
-.error-message {
-  color: var(--color-accent);
-  background-color: #fce8e6;
-  border-radius: var(--radius-lg);
-}
-
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
-}
-
-.list-header h2 {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  color: var(--color-primary);
-  margin: 0;
-}
-
-.controls-group {
-  display: flex;
-  gap: var(--spacing-md);
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.filter-controls,
-.sort-controls {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-}
-
 .create-button {
   background: linear-gradient(135deg, var(--color-accent) 0%, #d96a3c 100%);
   color: var(--color-white);
@@ -930,94 +940,6 @@ defineExpose({
 .create-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.download-button {
-  background-color: var(--color-primary);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  font-size: 0.875rem;
-}
-
-.download-button:hover:not(:disabled) {
-  background-color: var(--color-primary-dark);
-}
-
-.download-button:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.download-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.filter-select,
-.sort-select {
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-cream-dark);
-  background-color: var(--color-white);
-  font-size: 0.875rem;
-  font-family: inherit;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-}
-
-.filter-select:hover,
-.sort-select:hover {
-  border-color: var(--color-primary);
-}
-
-.filter-select:focus-visible,
-.sort-select:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-  border-color: var(--color-primary);
-}
-
-.empty-state {
-  text-align: center;
-  padding: var(--spacing-xl);
-  color: var(--color-text-light);
-}
-
-.activities-table-wrapper {
-  overflow-x: auto;
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-}
-
-.activities-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.activities-table thead {
-  background-color: var(--color-primary);
-  color: var(--color-white);
-}
-
-.activities-table th {
-  padding: var(--spacing-md);
-  text-align: left;
-  font-weight: 600;
-}
-
-.activities-table td {
-  padding: var(--spacing-md);
-  border-bottom: 1px solid var(--color-cream-dark);
-}
-
-.activities-table tbody tr:hover {
-  background-color: var(--color-cream);
 }
 
 .activity-row {
@@ -1057,179 +979,9 @@ defineExpose({
   color: #495057;
 }
 
-.edit-button {
-  background-color: var(--color-primary);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.edit-button:hover {
-  background-color: var(--color-primary-dark);
-}
-
-.edit-button:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.delete-button {
-  background-color: var(--color-accent);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  margin-left: var(--spacing-xs);
-}
-
-.delete-button:hover:not(:disabled) {
-  background-color: #b64729;
-}
-
-.delete-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.delete-button:focus-visible {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-.delete-icon-button {
-  border: none;
-  background: transparent;
-  color: #dc3545;
-  border-radius: var(--radius-sm);
-  width: 2rem;
-  height: 2rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-left: var(--spacing-xs);
-  transition:
-    color 0.2s ease,
-    transform 0.15s ease;
-  font-size: 1.1rem;
-}
-
-.delete-icon-button:hover {
-  color: #b8323f;
-  transform: translateY(-1px);
-}
-
-.delete-icon-button:focus-visible {
-  outline: 3px solid #dc3545;
-  outline-offset: 2px;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: var(--spacing-md);
-}
-
-.modal-content {
-  background-color: var(--color-white);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  max-width: 500px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-cream-dark);
-}
-
-.modal-header h2 {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  color: var(--color-primary);
-  margin: 0;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: var(--color-text-light);
-  cursor: pointer;
-  padding: 0;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  transition: background-color 0.2s ease;
-}
-
-.close-button:hover {
-  background-color: var(--color-cream);
-}
-
-.close-button:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.modal-body {
-  padding: var(--spacing-lg);
-}
-
 .warning-text {
   color: var(--color-accent);
   font-weight: 600;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-md);
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--color-cream-dark);
-}
-
-.cancel-button {
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  border: none;
-  background-color: var(--color-cream-dark);
-  color: var(--color-text);
-}
-
-.cancel-button:hover {
-  background-color: var(--color-cream);
-}
-
-.cancel-button:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
 }
 
 .detail-modal {
@@ -1368,109 +1120,9 @@ defineExpose({
   font-size: 0.9rem;
 }
 
-.spinner {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  border-top: 2px solid var(--color-white);
-  border-radius: 50%;
-  margin-right: 0.5rem;
-  animation: spinner 0.8s linear infinite;
-}
-
-@keyframes spinner {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @media (max-width: 768px) {
-  .list-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .controls-group {
+  .create-button {
     width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .create-button,
-  .download-button {
-    width: 100%;
-  }
-
-  .filter-controls,
-  .sort-controls {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .filter-select,
-  .sort-select {
-    width: 100%;
-  }
-
-  .activities-table-wrapper {
-    overflow-x: visible;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .activities-table,
-  .activities-table thead,
-  .activities-table tbody,
-  .activities-table tr,
-  .activities-table th,
-  .activities-table td {
-    display: block;
-  }
-
-  .activities-table {
-    font-size: 0.875rem;
-  }
-
-  .activities-table thead {
-    display: none;
-  }
-
-  .activities-table tbody {
-    display: grid;
-    gap: var(--spacing-sm);
-  }
-
-  .activities-table tbody tr {
-    background-color: var(--color-white);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    padding: var(--spacing-sm);
-  }
-
-  .activities-table td {
-    border-bottom: none;
-    padding: var(--spacing-xs) 0;
-  }
-
-  .activities-table td::before {
-    content: attr(data-label);
-    display: block;
-    font-weight: 700;
-    color: var(--color-primary);
-    margin-bottom: 0.2rem;
-  }
-
-  .edit-button,
-  .delete-button,
-  .delete-icon-button {
-    display: block;
-    width: 100%;
-    margin: 0 0 var(--spacing-xs);
-    height: auto;
   }
 
   .detail-grid {

@@ -1,6 +1,6 @@
 <template>
-  <main id="main-content" class="admin-view">
-    <div class="container">
+  <main id="main-content" class="admin-view" :class="{ 'admin-view--panel': showAdminPanel }">
+    <div class="container" :class="{ 'container--admin-full': showAdminPanel }">
       <!-- Recuperación: nueva contraseña (tras enlace del correo) -->
       <section v-if="showRecoveryPasswordForm" class="admin-login">
         <h1>Establecer nueva contraseña</h1>
@@ -254,6 +254,7 @@ import {
 import AdminTabs from '@/components/AdminTabs.vue'
 import AdminRegistrationsTab from '@/components/AdminRegistrationsTab.vue'
 import AdminActivitiesTab from '@/components/AdminActivitiesTab.vue'
+import '@/assets/admin-table.css'
 
 defineOptions({
   name: 'AdminView',
@@ -268,6 +269,11 @@ const authMode = ref('login')
 const isAuthenticated = computed(() => !!sessionRef.value)
 
 const showRecoveryPasswordForm = computed(() => needsRecoveryPassword.value && !!sessionRef.value)
+
+/** Panel con pestañas (Asistentes / Actividades): layout a ancho completo del viewport. */
+const showAdminPanel = computed(
+  () => isAuthenticated.value && !showRecoveryPasswordForm.value && authMode.value === 'login',
+)
 
 const isLoggingIn = ref(false)
 const isSendingReset = ref(false)
@@ -519,10 +525,22 @@ const updateTabCount = (tabId, count) => {
   padding: var(--spacing-lg) 0;
 }
 
+.admin-view--panel {
+  padding-block: var(--spacing-md);
+  padding-inline: 0;
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--spacing-xs);
+}
+
+.container--admin-full {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding-inline: var(--spacing-sm);
 }
 
 /* Login */
@@ -699,7 +717,7 @@ const updateTabCount = (tabId, count) => {
   gap: var(--spacing-lg);
   width: 100%;
   min-width: 0;
-  padding-inline: var(--spacing-sm);
+  padding-inline: 0;
   justify-items: stretch;
 }
 
@@ -765,7 +783,7 @@ const updateTabCount = (tabId, count) => {
 }
 
 @media (max-width: 768px) {
-  .admin-panel {
+  .container--admin-full {
     padding-inline: var(--spacing-xs);
   }
 

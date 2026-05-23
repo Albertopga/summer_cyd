@@ -37,6 +37,63 @@
           >
             Reiniciar nº asistentes
           </button>
+          <div class="column-settings">
+            <button
+              type="button"
+              class="columns-button"
+              :aria-expanded="showColumnPanel ? 'true' : 'false'"
+              aria-controls="column-settings-panel"
+              @click="showColumnPanel = !showColumnPanel"
+            >
+              Columnas
+            </button>
+            <div
+              v-if="showColumnPanel"
+              id="column-settings-panel"
+              class="column-panel"
+              role="region"
+              aria-label="Configuración de columnas"
+            >
+              <p class="column-panel-intro">
+                El orden y la visibilidad se aplican a la tabla y al Excel descargado.
+              </p>
+              <ul class="column-list">
+                <li v-for="column in columnSelectorItems" :key="column.id" class="column-list-item">
+                  <label class="column-visibility">
+                    <input
+                      type="checkbox"
+                      :checked="isColumnVisible(column.id)"
+                      @change="toggleColumnVisibility(column.id, $event.target.checked)"
+                    />
+                    <span>{{ column.label }}</span>
+                  </label>
+                  <div class="column-order-actions">
+                    <button
+                      type="button"
+                      class="column-order-button"
+                      :disabled="isColumnMoveDisabled(column.id, -1)"
+                      :aria-label="`Subir columna ${column.label}`"
+                      @click="moveColumn(column.id, -1)"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      class="column-order-button"
+                      :disabled="isColumnMoveDisabled(column.id, 1)"
+                      :aria-label="`Bajar columna ${column.label}`"
+                      @click="moveColumn(column.id, 1)"
+                    >
+                      ↓
+                    </button>
+                  </div>
+                </li>
+              </ul>
+              <button type="button" class="column-reset-button" @click="resetColumnPreferences">
+                Restaurar columnas predeterminadas
+              </button>
+            </div>
+          </div>
           <button
             type="button"
             @click="handleDownloadExcel"
@@ -55,32 +112,6 @@
           >
             Borrar seleccionados ({{ selectedCount }})
           </button>
-          <div class="sort-controls">
-            <label for="sort-field" class="sr-only">Ordenar por</label>
-            <select
-              id="sort-field"
-              v-model="sortField"
-              @change="handleSortChange"
-              class="sort-select"
-            >
-              <option value="accommodation_paid,created_at">Estado pago → Fecha registro</option>
-              <option value="created_at">Fecha registro</option>
-              <option value="accommodation_paid">Estado pago</option>
-              <option value="full_name">Nombre</option>
-              <option value="email">Email</option>
-              <option value="accommodation">Alojamiento</option>
-            </select>
-            <label for="sort-direction" class="sr-only">Dirección del orden</label>
-            <select
-              id="sort-direction"
-              v-model="sortDirection"
-              @change="handleSortChange"
-              class="sort-select"
-            >
-              <option value="asc">Ascendente</option>
-              <option value="desc">Descendente</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -101,117 +132,120 @@
         No hay registros disponibles
       </div>
 
-      <div v-else class="registrations-table-wrapper">
-        <table class="registrations-table" aria-label="Lista de registros de asistentes">
+      <div v-else class="admin-table-wrapper">
+        <table class="admin-table" aria-label="Lista de registros de asistentes">
+          <colgroup>
+            <col
+              v-for="column in tableColumns"
+              :key="`col-${column.id}`"
+              :style="getColumnTableStyle(column)"
+            />
+          </colgroup>
           <thead>
             <tr>
-              <th scope="col">Nº asistente</th>
-              <th scope="col">Grupo</th>
-              <th scope="col">Rol</th>
-              <th scope="col" class="checkbox-column">
-                <label for="select-all" class="sr-only">Seleccionar todos los registros</label>
-                <input
-                  id="select-all"
-                  type="checkbox"
-                  :checked="isAllSelected"
-                  :indeterminate="isIndeterminate"
-                  @change="handleSelectAll"
-                  aria-label="Seleccionar todos los registros"
-                />
+              <th
+                v-for="column in tableColumns"
+                :key="column.id"
+                scope="col"
+                :class="{
+                  'checkbox-column': column.id === 'select',
+                  'sortable-column': isColumnSortable(column),
+                }"
+                :style="getColumnTableStyle(column)"
+                :title="column.label"
+                :aria-sort="isColumnSortable(column) ? getColumnAriaSort(column.id) : undefined"
+              >
+                <template v-if="column.id === 'select'">
+                  <label for="select-all" class="sr-only">Seleccionar todos los registros</label>
+                  <input
+                    id="select-all"
+                    type="checkbox"
+                    :checked="isAllSelected"
+                    :indeterminate="isIndeterminate"
+                    @change="handleSelectAll"
+                    aria-label="Seleccionar todos los registros"
+                  />
+                </template>
+                <button
+                  v-else-if="isColumnSortable(column)"
+                  type="button"
+                  class="sortable-header-button"
+                  :aria-label="getColumnSortLabel(column)"
+                  @click="handleColumnSort(column.id)"
+                >
+                  <span>{{ column.label }}</span>
+                  <span
+                    class="sort-indicator"
+                    :class="{ 'sort-indicator--active': getColumnSortIndicator(column.id) }"
+                    aria-hidden="true"
+                  >
+                    {{ getColumnSortIndicator(column.id) || '↕' }}
+                  </span>
+                </button>
+                <template v-else>{{ column.label }}</template>
               </th>
-              <th scope="col">Nombre</th>
-              <th scope="col">Email</th>
-              <th scope="col">Teléfono</th>
-              <th scope="col">Alojamiento</th>
-              <th scope="col">Importe total</th>
-              <th scope="col">Pagado</th>
-              <th scope="col">Último recordatorio</th>
-              <th scope="col">Tirolina</th>
-              <th scope="col">Tirolina pagada</th>
-              <th scope="col">Fecha registro</th>
-              <th scope="col">Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="registration in registrations" :key="registration.id">
-              <td data-label="Nº asistente">{{ formatAttendeeNumber(registration.attendee_number) }}</td>
-              <td data-label="Grupo">{{ formatFamilyGroup(registration.family_group_id) }}</td>
-              <td data-label="Rol">{{ formatFamilyRole(registration.family_role) }}</td>
-              <td class="checkbox-column" data-label="Seleccionar">
-                <label :for="`select-${registration.id}`" class="sr-only">
-                  Seleccionar registro de {{ getRegistrationFullName(registration) }}
-                </label>
-                <input
-                  :id="`select-${registration.id}`"
-                  type="checkbox"
-                  :checked="selectedRegistrations.has(registration.id)"
-                  @change="handleSelectRegistration(registration.id, $event.target.checked)"
-                  :aria-label="`Seleccionar registro de ${getRegistrationFullName(registration)}`"
-                />
-              </td>
-              <td data-label="Nombre">{{ getRegistrationFullName(registration) }}</td>
-              <td data-label="Email">{{ registration.email }}</td>
-              <td data-label="Teléfono">{{ registration.phone }}</td>
-              <td data-label="Alojamiento">{{ getAccommodationLabel(registration.accommodation) }}</td>
-              <td data-label="Importe total">{{ formatTotalAmount(registration) }}</td>
-              <td data-label="Pagado">
-                <span
-                  class="payment-status"
-                  :class="
-                    registration.accommodation_paid
-                      ? 'payment-status--paid'
-                      : 'payment-status--unpaid'
-                  "
-                  :aria-label="
-                    registration.accommodation_paid ? 'Alojamiento pagado' : 'Alojamiento no pagado'
-                  "
-                >
-                  {{ registration.accommodation_paid ? 'Sí' : 'No' }}
-                </span>
-              </td>
-              <td data-label="Último recordatorio">
-                {{ formatLastContactDate(registration.last_payment_reminder_sent_at) }}
-              </td>
-              <td data-label="Tirolina">
-                <span
-                  class="payment-status"
-                  :class="
-                    registration.zipline_requested ? 'payment-status--paid' : 'payment-status--unpaid'
-                  "
-                  :aria-label="registration.zipline_requested ? 'Tirolina solicitada' : 'Tirolina no solicitada'"
-                >
-                  {{ registration.zipline_requested ? 'Sí' : 'No' }}
-                </span>
-              </td>
-              <td data-label="Tirolina pagada">
-                <span
-                  class="payment-status"
-                  :class="registration.zipline_paid ? 'payment-status--paid' : 'payment-status--unpaid'"
-                  :aria-label="registration.zipline_paid ? 'Tirolina pagada' : 'Tirolina no pagada'"
-                >
-                  {{ registration.zipline_paid ? 'Sí' : 'No' }}
-                </span>
-              </td>
-              <td data-label="Fecha registro">{{ formatDate(registration.created_at) }}</td>
-              <td data-label="Acciones">
-                <button
-                  type="button"
-                  @click="openEditModal(registration)"
-                  class="edit-button"
-                  :aria-label="`Editar registro de ${getRegistrationFullName(registration)}`"
-                >
-                  Editar
-                </button>
-                <button
-                  type="button"
-                  @click="handleDeleteOne(registration.id)"
-                  class="delete-icon-button"
-                  :disabled="isDeleting"
-                  :aria-label="`Eliminar registro de ${getRegistrationFullName(registration)}`"
-                  title="Eliminar registro"
-                >
-                  <span aria-hidden="true">🗑️</span>
-                </button>
+              <td
+                v-for="column in tableColumns"
+                :key="`${registration.id}-${column.id}`"
+                :data-label="column.label"
+                :class="{ 'checkbox-column': column.id === 'select' }"
+                :style="getColumnTableStyle(column)"
+              >
+                <template v-if="column.id === 'select'">
+                  <label :for="`select-${registration.id}`" class="sr-only">
+                    Seleccionar registro de {{ getRegistrationFullName(registration) }}
+                  </label>
+                  <input
+                    :id="`select-${registration.id}`"
+                    type="checkbox"
+                    :checked="selectedRegistrations.has(registration.id)"
+                    @change="handleSelectRegistration(registration.id, $event.target.checked)"
+                    :aria-label="`Seleccionar registro de ${getRegistrationFullName(registration)}`"
+                  />
+                </template>
+
+                <template v-else-if="column.id === 'actions'">
+                  <button
+                    type="button"
+                    @click="openEditModal(registration)"
+                    class="edit-button"
+                    :aria-label="`Editar registro de ${getRegistrationFullName(registration)}`"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    @click="handleDeleteOne(registration.id)"
+                    class="delete-icon-button"
+                    :disabled="isDeleting"
+                    :aria-label="`Eliminar registro de ${getRegistrationFullName(registration)}`"
+                    title="Eliminar registro"
+                  >
+                    <span aria-hidden="true">🗑️</span>
+                  </button>
+                </template>
+
+                <template v-else-if="column.cellType === 'boolean-badge'">
+                  <span
+                    class="payment-status"
+                    :class="
+                      getColumnBooleanValue(column.id, registration)
+                        ? 'payment-status--paid'
+                        : 'payment-status--unpaid'
+                    "
+                    :aria-label="getColumnBooleanAriaLabel(column.id, registration)"
+                  >
+                    {{ getColumnBooleanValue(column.id, registration) ? 'Sí' : 'No' }}
+                  </span>
+                </template>
+
+                <template v-else>
+                  {{ getRegistrationColumnValue(column.id, registration) }}
+                </template>
               </td>
             </tr>
           </tbody>
@@ -219,7 +253,6 @@
       </div>
     </div>
 
-    <!-- Modal de edición -->
     <AdminEditModal
       v-if="selectedRegistration"
       :registration="selectedRegistration"
@@ -227,7 +260,6 @@
       @saved="handleRegistrationUpdated"
     />
 
-    <!-- Modal de confirmación de borrado -->
     <div
       v-if="registrationsToDelete.length > 0"
       class="modal-overlay"
@@ -255,8 +287,8 @@
             Vas a eliminar 1 registro de asistente. Esta acción no se puede deshacer.
           </p>
           <p v-else>
-            Vas a eliminar {{ registrationsToDelete.length }} registros de asistentes. Esta acción no
-            se puede deshacer.
+            Vas a eliminar {{ registrationsToDelete.length }} registros de asistentes. Esta acción
+            no se puede deshacer.
           </p>
         </div>
         <footer class="modal-footer">
@@ -268,12 +300,7 @@
           >
             Cancelar
           </button>
-          <button
-            type="button"
-            @click="executeDelete"
-            class="delete-button"
-            :disabled="isDeleting"
-          >
+          <button type="button" @click="executeDelete" class="delete-button" :disabled="isDeleting">
             <span v-if="!isDeleting">Eliminar</span>
             <span v-else>
               <span class="spinner" aria-hidden="true"></span>
@@ -295,7 +322,24 @@ import {
   resetAttendeeNumbers,
   triggerPaymentReminders,
 } from '@/services/adminService'
-import { ACCOMMODATION_OPTIONS, getRegistrationTotalPriceForMember } from '@/constants'
+import {
+  getConfigurableRegistrationColumns,
+  getColumnTableStyle,
+  getDefaultColumnPreferences,
+  getDefaultRegistrationSortState,
+  getRegistrationColumnDefinition,
+  loadColumnPreferences,
+  REGISTRATION_COLUMN_DEFINITIONS,
+  resolveExportColumns,
+  resolveTableColumns,
+  saveColumnPreferences,
+} from '@/config/adminRegistrationsColumns'
+import {
+  getRegistrationColumnValue,
+  getRegistrationFullName,
+  getRegistrationSortValue,
+} from '@/utils/adminRegistrationFormatters'
+import { useAdminTableSort } from '@/composables/useAdminTableSort'
 import AdminEditModal from '@/components/AdminEditModal.vue'
 import ExcelJS from 'exceljs'
 
@@ -317,22 +361,157 @@ const isDeleting = ref(false)
 const isSendingReminders = ref(false)
 const remindersFeedback = ref({ type: '', message: '' })
 const showPaymentReminderAndResetButtons = false
+const showColumnPanel = ref(false)
 
-// Controles de ordenamiento
-const sortField = ref('accommodation_paid,created_at')
-const sortDirection = ref('asc')
+const columnPreferences = ref(loadColumnPreferences())
+const configurableColumns = computed(() => {
+  const order = columnPreferences.value.order
+  return order
+    .map((id) => getConfigurableRegistrationColumns().find((col) => col.id === id))
+    .filter(Boolean)
+})
+
+const columnSelectorItems = computed(() =>
+  [...configurableColumns.value].sort((left, right) =>
+    left.label.localeCompare(right.label, 'es', { sensitivity: 'base' }),
+  ),
+)
+
+const isColumnMoveDisabled = (columnId, direction) => {
+  const order = columnPreferences.value.order
+  const index = order.indexOf(columnId)
+  if (index < 0) return true
+  if (direction < 0) return index === 0
+  return index === order.length - 1
+}
+
+const tableColumns = computed(() => resolveTableColumns(columnPreferences.value))
+const exportColumns = computed(() => resolveExportColumns(columnPreferences.value))
+
+const {
+  handleHeaderSort,
+  resolveFetchSort,
+  applySortToRows,
+  isColumnSortable,
+  getColumnAriaSort,
+  getColumnSortIndicator,
+  getColumnSortLabel,
+} = useAdminTableSort({
+  columns: REGISTRATION_COLUMN_DEFINITIONS,
+  getColumnDefinition: getRegistrationColumnDefinition,
+  getClientSortValue: getRegistrationSortValue,
+  defaultSort: getDefaultRegistrationSortState(),
+})
+
+const getRegistrationFetchSort = () => {
+  const fetchSort = resolveFetchSort()
+  if (fetchSort) {
+    return {
+      orderBy: fetchSort.orderBy,
+      ascending: fetchSort.ascending,
+    }
+  }
+  return {
+    orderBy: 'created_at',
+    ascending: false,
+  }
+}
+
+const handleColumnSort = (columnId) => {
+  handleHeaderSort(columnId)
+  loadRegistrations()
+}
+
+const persistColumnPreferences = () => {
+  saveColumnPreferences(columnPreferences.value)
+}
+
+const isColumnVisible = (columnId) => !columnPreferences.value.hidden.includes(columnId)
+
+const toggleColumnVisibility = (columnId, visible) => {
+  const hidden = new Set(columnPreferences.value.hidden)
+  if (visible) {
+    hidden.delete(columnId)
+  } else {
+    hidden.add(columnId)
+  }
+  columnPreferences.value = {
+    ...columnPreferences.value,
+    hidden: [...hidden],
+  }
+  persistColumnPreferences()
+}
+
+const moveColumn = (columnId, direction) => {
+  const order = [...columnPreferences.value.order]
+  const index = order.indexOf(columnId)
+  const targetIndex = index + direction
+  if (index < 0 || targetIndex < 0 || targetIndex >= order.length) return
+
+  const updated = [...order]
+  ;[updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]]
+  columnPreferences.value = {
+    ...columnPreferences.value,
+    order: updated,
+  }
+  persistColumnPreferences()
+}
+
+const resetColumnPreferences = () => {
+  columnPreferences.value = getDefaultColumnPreferences()
+  persistColumnPreferences()
+}
+
+const BOOLEAN_COLUMN_FIELDS = {
+  accommodation_paid: {
+    field: 'accommodation_paid',
+    trueLabel: 'Alojamiento pagado',
+    falseLabel: 'Alojamiento no pagado',
+  },
+  zipline_requested: {
+    field: 'zipline_requested',
+    trueLabel: 'Tirolina solicitada',
+    falseLabel: 'Tirolina no solicitada',
+  },
+  zipline_paid: {
+    field: 'zipline_paid',
+    trueLabel: 'Tirolina pagada',
+    falseLabel: 'Tirolina no pagada',
+  },
+  is_minor: {
+    field: 'is_minor',
+    trueLabel: 'Es menor de edad',
+    falseLabel: 'No es menor de edad',
+  },
+  terms_accepted: {
+    field: 'terms_accepted',
+    trueLabel: 'Términos aceptados',
+    falseLabel: 'Términos no aceptados',
+  },
+  image_consent_accepted: {
+    field: 'image_consent_accepted',
+    trueLabel: 'Consentimiento de imagen aceptado',
+    falseLabel: 'Consentimiento de imagen no aceptado',
+  },
+}
+
+const getColumnBooleanValue = (columnId, registration) => {
+  const meta = BOOLEAN_COLUMN_FIELDS[columnId]
+  if (!meta) return false
+  return Boolean(registration?.[meta.field])
+}
+
+const getColumnBooleanAriaLabel = (columnId, registration) => {
+  const meta = BOOLEAN_COLUMN_FIELDS[columnId]
+  if (!meta) return ''
+  return getColumnBooleanValue(columnId, registration) ? meta.trueLabel : meta.falseLabel
+}
 
 const loadRegistrations = async () => {
   loading.value = true
   error.value = ''
 
-  let orderBy = sortField.value
-  let ascending = sortDirection.value === 'asc'
-
-  if (orderBy === 'accommodation_paid,created_at') {
-    orderBy = 'accommodation_paid,created_at'
-    ascending = 'true,false'
-  }
+  const { orderBy, ascending } = getRegistrationFetchSort()
 
   const result = await getAllRegistrations({
     limit: 1000,
@@ -341,9 +520,10 @@ const loadRegistrations = async () => {
   })
 
   if (result.success) {
-    registrations.value = result.data || []
+    const rows = applySortToRows(result.data || [])
+    registrations.value = rows
     totalRegistrations.value = result.count || 0
-    allRegistrations.value = result.data || []
+    allRegistrations.value = rows
     selectedRegistrations.value.clear()
     emit('update-count', result.count || 0)
   } else {
@@ -363,10 +543,6 @@ const closeEditModal = () => {
 
 const handleRegistrationUpdated = () => {
   closeEditModal()
-  loadRegistrations()
-}
-
-const handleSortChange = () => {
   loadRegistrations()
 }
 
@@ -412,7 +588,9 @@ const handleSendPaymentReminders = async () => {
 }
 
 const handleResetAttendeeNumbers = async () => {
-  const password = window.prompt('Introduce la contraseña para reiniciar la numeración de asistentes:')
+  const password = window.prompt(
+    'Introduce la contraseña para reiniciar la numeración de asistentes:',
+  )
   if (password == null) return
 
   remindersFeedback.value = { type: '', message: '' }
@@ -483,74 +661,6 @@ const executeDelete = async () => {
   error.value = result.error || 'No se pudieron eliminar los registros seleccionados'
 }
 
-const getAccommodationLabel = (value) => {
-  const option = ACCOMMODATION_OPTIONS.find((opt) => opt.value === value)
-  if (!option) return value
-  return option.fullLabel ?? option.label
-}
-
-const getRegistrationFullName = (registration) => {
-  const fullName = String(registration?.full_name || '').trim()
-  return fullName || '-'
-}
-
-const formatAttendeeNumber = (value) => {
-  if (!Number.isInteger(value) || value <= 0) return '-'
-  return String(value).padStart(4, '0')
-}
-
-const formatFamilyGroup = (value) => {
-  const normalized = String(value || '').trim()
-  if (!normalized) return '-'
-  return normalized.slice(0, 8)
-}
-
-const formatFamilyRole = (value) => {
-  if (value === 'holder') return 'Titular'
-  if (value === 'partner') return 'Pareja'
-  if (value === 'child') return 'Hijo/a'
-  return '-'
-}
-
-const getRegistrationTotalAmount = (registration) => {
-  return getRegistrationTotalPriceForMember({
-    accommodation: registration?.accommodation,
-    birthDate: registration?.birth_date,
-    isChild: registration?.family_role === 'child' || Boolean(registration?.is_minor),
-    childSharesParentChozo: Boolean(registration?.child_shares_parent_chozo),
-    ziplineRequested: Boolean(registration?.zipline_requested),
-  }).totalPrice
-}
-
-const formatTotalAmount = (registration) => {
-  return `${getRegistrationTotalAmount(registration)}€`
-}
-
-const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-const formatLastContactDate = (dateString) => {
-  if (!dateString) return 'Nunca'
-  const date = new Date(dateString)
-  if (Number.isNaN(date.getTime())) return 'Nunca'
-  return date.toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 const handleSelectRegistration = (id, checked) => {
   const updatedSelection = new Set(selectedRegistrations.value)
   if (checked) {
@@ -568,11 +678,10 @@ const handleSelectAll = async (event) => {
       loading.value = true
       const result = await getAllRegistrations({
         limit: 10000,
-        orderBy: sortField.value,
-        ascending: sortDirection.value === 'asc',
+        ...getRegistrationFetchSort(),
       })
       if (result.success) {
-        allRegistrations.value = result.data || []
+        allRegistrations.value = applySortToRows(result.data || [])
       }
       loading.value = false
     }
@@ -610,60 +719,45 @@ const handleDownloadExcel = async () => {
         loading.value = true
         const result = await getAllRegistrations({
           limit: 10000,
-          orderBy: sortField.value,
-          ascending: sortDirection.value === 'asc',
+          ...getRegistrationFetchSort(),
         })
         if (result.success) {
-          allRegistrations.value = result.data || []
+          allRegistrations.value = applySortToRows(result.data || [])
         }
         loading.value = false
       }
-      dataToExport = allRegistrations.value.filter((reg) => selectedIds.includes(reg.id))
+      dataToExport = applySortToRows(
+        allRegistrations.value.filter((reg) => selectedIds.includes(reg.id)),
+      )
     } else {
       if (allRegistrations.value.length < totalRegistrations.value) {
         loading.value = true
         const result = await getAllRegistrations({
           limit: 10000,
-          orderBy: sortField.value,
-          ascending: sortDirection.value === 'asc',
+          ...getRegistrationFetchSort(),
         })
         if (result.success) {
-          allRegistrations.value = result.data || []
+          allRegistrations.value = applySortToRows(result.data || [])
         }
         loading.value = false
       }
-      dataToExport = allRegistrations.value
+      dataToExport = applySortToRows(allRegistrations.value)
+    }
+
+    const columns = exportColumns.value
+    if (columns.length === 0) {
+      error.value = 'Selecciona al menos una columna exportable para descargar el Excel.'
+      return
     }
 
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Registros')
 
-    worksheet.columns = [
-      { header: 'Nº asistente', key: 'numeroAsistente', width: 14 },
-      { header: 'Grupo familiar', key: 'grupoFamiliar', width: 16 },
-      { header: 'Rol familiar', key: 'rolFamiliar', width: 14 },
-      { header: 'Nombre y apellidos', key: 'nombreCompleto', width: 30 },
-      { header: 'Mote/Alias', key: 'nickname', width: 15 },
-      { header: 'Email', key: 'email', width: 25 },
-      { header: 'Teléfono', key: 'telefono', width: 15 },
-      { header: 'Fecha de nacimiento', key: 'fechaNacimiento', width: 18 },
-      { header: 'Es menor', key: 'esMenor', width: 10 },
-      { header: 'Contacto emergencia (nombre)', key: 'contactoEmergenciaNombre', width: 25 },
-      { header: 'Contacto emergencia (teléfono)', key: 'contactoEmergenciaTelefono', width: 20 },
-      { header: 'Fecha llegada', key: 'fechaLlegada', width: 20 },
-      { header: 'Fecha salida', key: 'fechaSalida', width: 20 },
-      { header: 'Alojamiento', key: 'alojamiento', width: 30 },
-      { header: 'Tirolina', key: 'tirolina', width: 12 },
-      { header: 'Tirolina pagada', key: 'tirolinaPagada', width: 16 },
-      { header: 'Restricciones alimentarias', key: 'restriccionesAlimentarias', width: 25 },
-      { header: 'Comentarios', key: 'comentarios', width: 30 },
-      { header: 'Comentarios dieta', key: 'comentariosDieta', width: 20 },
-      { header: 'Términos aceptados', key: 'terminosAceptados', width: 18 },
-      { header: 'Consentimiento imagen (difusión)', key: 'consentimientoImagen', width: 26 },
-      { header: 'Alojamiento pagado', key: 'alojamientoPagado', width: 18 },
-      { header: 'Fecha registro', key: 'fechaRegistro', width: 20 },
-      { header: 'Última actualización', key: 'ultimaActualizacion', width: 20 },
-    ]
+    worksheet.columns = columns.map((column) => ({
+      header: column.label,
+      key: column.id,
+      width: column.excelWidth ?? 16,
+    }))
 
     const headerRow = worksheet.getRow(1)
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
@@ -674,65 +768,12 @@ const handleDownloadExcel = async () => {
     }
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
 
-    dataToExport.forEach((reg) => {
-      worksheet.addRow({
-        numeroAsistente: formatAttendeeNumber(reg.attendee_number),
-        grupoFamiliar: formatFamilyGroup(reg.family_group_id),
-        rolFamiliar: formatFamilyRole(reg.family_role),
-        nombreCompleto: getRegistrationFullName(reg),
-        nickname: reg.nickname || '',
-        email: reg.email,
-        telefono: reg.phone,
-        fechaNacimiento: reg.birth_date ? new Date(reg.birth_date).toLocaleDateString('es-ES') : '',
-        esMenor: reg.is_minor ? 'Sí' : 'No',
-        contactoEmergenciaNombre: reg.emergency_contact_name || '',
-        contactoEmergenciaTelefono: reg.emergency_contact_phone || '',
-        fechaLlegada: reg.arrival_date
-          ? new Date(reg.arrival_date).toLocaleDateString('es-ES', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          : '',
-        fechaSalida: reg.departure_date
-          ? new Date(reg.departure_date).toLocaleDateString('es-ES', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          : '',
-        alojamiento: getAccommodationLabel(reg.accommodation),
-        tirolina: reg.zipline_requested ? 'Sí' : 'No',
-        tirolinaPagada: reg.zipline_paid ? 'Sí' : 'No',
-        restriccionesAlimentarias: Array.isArray(reg.diet) ? reg.diet.join(', ') : '',
-        comentarios: reg.comments || '',
-        comentariosDieta: reg.diet_comments || '',
-        terminosAceptados: reg.terms_accepted ? 'Sí' : 'No',
-        consentimientoImagen: reg.image_consent_accepted ? 'Sí' : 'No',
-        alojamientoPagado: reg.accommodation_paid ? 'Sí' : 'No',
-        fechaRegistro: reg.created_at
-          ? new Date(reg.created_at).toLocaleDateString('es-ES', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          : '',
-        ultimaActualizacion: reg.updated_at
-          ? new Date(reg.updated_at).toLocaleDateString('es-ES', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          : '',
+    dataToExport.forEach((registration) => {
+      const row = {}
+      columns.forEach((column) => {
+        row[column.id] = getRegistrationColumnValue(column.id, registration)
       })
+      worksheet.addRow(row)
     })
 
     const now = new Date()
@@ -765,56 +806,9 @@ defineExpose({
 </script>
 
 <style scoped>
-.admin-tab-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.loading-message,
-.error-message {
-  text-align: center;
-  padding: var(--spacing-lg);
-  font-size: 1.125rem;
-}
-
-.error-message {
-  color: var(--color-accent);
-  background-color: #fce8e6;
-  border-radius: var(--radius-lg);
-}
-
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
-}
-
-.list-header h2 {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  color: var(--color-primary);
-  margin: 0;
-}
-
-.controls-group {
-  display: flex;
-  gap: var(--spacing-md);
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.sort-controls {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-}
-
-.download-button {
-  background-color: var(--color-primary);
-  color: var(--color-white);
+.delete-selected-button,
+.reminder-button,
+.reset-attendees-button {
   border: none;
   border-radius: var(--radius-md);
   padding: 0.5rem 1rem;
@@ -822,32 +816,11 @@ defineExpose({
   cursor: pointer;
   transition: background-color 0.2s ease;
   font-size: 0.875rem;
-}
-
-.download-button:hover:not(:disabled) {
-  background-color: var(--color-primary-dark);
-}
-
-.download-button:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.download-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .reminder-button {
   background-color: #7a3e00;
   color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  font-size: 0.875rem;
 }
 
 .reminder-button:hover:not(:disabled) {
@@ -867,13 +840,6 @@ defineExpose({
 .reset-attendees-button {
   background-color: #6b1d1d;
   color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  font-size: 0.875rem;
 }
 
 .reset-attendees-button:hover:not(:disabled) {
@@ -910,13 +876,6 @@ defineExpose({
 .delete-selected-button {
   background-color: var(--color-accent);
   color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  font-size: 0.875rem;
 }
 
 .delete-selected-button:hover:not(:disabled) {
@@ -931,56 +890,6 @@ defineExpose({
 .delete-selected-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.sort-select {
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-cream-dark);
-  background-color: var(--color-white);
-  font-size: 0.875rem;
-  font-family: inherit;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-}
-
-.sort-select:hover {
-  border-color: var(--color-primary);
-}
-
-.sort-select:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-  border-color: var(--color-primary);
-}
-
-.empty-state {
-  text-align: center;
-  padding: var(--spacing-xl);
-  color: var(--color-text-light);
-}
-
-.registrations-table-wrapper {
-  overflow-x: auto;
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-}
-
-.registrations-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.registrations-table thead {
-  background-color: var(--color-primary);
-  color: var(--color-white);
-}
-
-.registrations-table th {
-  padding: var(--spacing-md);
-  text-align: left;
-  font-weight: 600;
 }
 
 .checkbox-column {
@@ -1041,92 +950,6 @@ defineExpose({
   border-radius: 3px;
 }
 
-.registrations-table td {
-  padding: var(--spacing-md);
-  border-bottom: 1px solid var(--color-cream-dark);
-}
-
-.registrations-table tbody tr:hover {
-  background-color: var(--color-cream);
-}
-
-.edit-button,
-.delete-button {
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.edit-button {
-  background-color: var(--color-primary);
-  color: var(--color-white);
-  margin-right: var(--spacing-xs);
-}
-
-.edit-button:hover {
-  background-color: var(--color-primary-dark);
-}
-
-.edit-button:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.delete-button {
-  background-color: var(--color-accent);
-  color: var(--color-white);
-}
-
-.delete-button:hover:not(:disabled) {
-  background-color: var(--color-accent-hover);
-}
-
-.delete-button:focus-visible {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-.delete-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.delete-icon-button {
-  border: none;
-  background: transparent;
-  color: #dc3545;
-  border-radius: var(--radius-sm);
-  width: 2rem;
-  height: 2rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-left: var(--spacing-xs);
-  transition:
-    color 0.2s ease,
-    transform 0.15s ease;
-  font-size: 1.1rem;
-}
-
-.delete-icon-button:hover:not(:disabled) {
-  color: #b8323f;
-  transform: translateY(-1px);
-}
-
-.delete-icon-button:focus-visible {
-  outline: 3px solid #dc3545;
-  outline-offset: 2px;
-}
-
-.delete-icon-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .payment-status {
   display: inline-block;
   padding: 0.25rem 0.75rem;
@@ -1145,220 +968,14 @@ defineExpose({
   color: var(--color-accent);
 }
 
-.spinner {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  border-top: 2px solid var(--color-white);
-  border-radius: 50%;
-  margin-right: 0.5rem;
-  animation: spinner 0.8s linear infinite;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: var(--spacing-md);
-}
-
-.modal-content {
-  background-color: var(--color-white);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  max-width: 500px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-cream-dark);
-}
-
-.modal-header h2 {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  color: var(--color-primary);
-  margin: 0;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: var(--color-text-light);
-  cursor: pointer;
-  padding: 0;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  transition: background-color 0.2s ease;
-}
-
-.close-button:hover:not(:disabled) {
-  background-color: var(--color-cream);
-}
-
-.close-button:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.close-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.modal-body {
-  padding: var(--spacing-lg);
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-md);
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--color-cream-dark);
-}
-
-.cancel-button {
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  border: none;
-  background-color: var(--color-cream-dark);
-  color: var(--color-text);
-}
-
-.cancel-button:hover:not(:disabled) {
-  background-color: var(--color-cream);
-}
-
-.cancel-button:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.cancel-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-@keyframes spinner {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @media (max-width: 768px) {
-  .list-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .controls-group {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .download-button {
-    width: 100%;
-  }
-
   .delete-selected-button {
     width: 100%;
-  }
-
-  .sort-controls {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .sort-select {
-    width: 100%;
-  }
-
-  .registrations-table-wrapper {
-    overflow-x: visible;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .registrations-table,
-  .registrations-table thead,
-  .registrations-table tbody,
-  .registrations-table tr,
-  .registrations-table th,
-  .registrations-table td {
-    display: block;
-  }
-
-  .registrations-table {
-    font-size: 0.875rem;
-  }
-
-  .registrations-table thead {
-    display: none;
-  }
-
-  .registrations-table tbody {
-    display: grid;
-    gap: var(--spacing-sm);
-  }
-
-  .registrations-table tbody tr {
-    background-color: var(--color-white);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    padding: var(--spacing-sm);
-  }
-
-  .registrations-table td {
-    border-bottom: none;
-    padding: var(--spacing-xs) 0;
-  }
-
-  .registrations-table td::before {
-    content: attr(data-label);
-    display: block;
-    font-weight: 700;
-    color: var(--color-primary);
-    margin-bottom: 0.2rem;
   }
 
   .checkbox-column {
     width: auto;
     text-align: left;
-  }
-
-  .edit-button,
-  .delete-icon-button {
-    display: block;
-    width: 100%;
-    margin-bottom: var(--spacing-xs);
-    height: auto;
   }
 }
 </style>
