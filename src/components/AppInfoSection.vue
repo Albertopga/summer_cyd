@@ -25,11 +25,31 @@
             <button
               type="button"
               class="text-link"
-              @click="openMapModal"
+              @click.stop="openMapModal"
               aria-label="Ver mapa de ubicación de Naturcampa"
             >
               Ver mapa de ubicación de Naturcampa
             </button>
+            <br />
+            <a
+              :href="TRAVEL_INFO.mapsDirectionsUrl"
+              class="text-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              @click.stop
+            >
+              Abrir indicaciones en Google Maps<span class="sr-only">
+                (se abre en nueva ventana)</span
+              >
+            </a>
+            <br />
+            <RouterLink
+              :to="{ path: '/faqs', hash: '#faq-como-llegar' }"
+              class="text-link"
+              @click.stop
+            >
+              Ver transporte y horarios
+            </RouterLink>
           </template>
           <template #modal>
             <NaturcampaView />
@@ -48,11 +68,12 @@
 
 <script setup>
 import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import AppSectionHeader from './AppSectionHeader.vue'
 import AppCard from './AppCard.vue'
 import NaturcampaView from '@/views/NaturcampaView.vue'
 import LogoAso from '@/assets/icons/logoAso.ico'
-import { EVENT_DATES_LABEL, EVENT_YEAR } from '@/constants'
+import { EVENT_DATES_LABEL, EVENT_YEAR, TRAVEL_INFO } from '@/constants'
 
 const mapCardRef = ref(null)
 
@@ -69,6 +90,7 @@ const openMapModal = () => {
 }
 
 .text-link {
+  display: inline;
   background: none;
   border: none;
   padding: 0;
@@ -79,6 +101,10 @@ const openMapModal = () => {
   font-size: inherit;
   line-height: inherit;
   transition: opacity 0.2s ease;
+}
+
+a.text-link {
+  margin-top: 0.25em;
 }
 
 .text-link:hover {

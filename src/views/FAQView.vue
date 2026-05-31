@@ -60,9 +60,10 @@
             <div class="faq-panel">
               <p>
                 Las normas son de obligado cumplimiento para todos los participantes. Incumplir las
-                normas puede conllevar incluso la expulsión inmediata del "Retiro Lúdico C&D". Aunque
-                también recomendamos leer las Condiciones Generales de las jornadas que acepta toda
-                persona que asista como alojado y participante. Puedes encontrarlas en el apartado:
+                normas puede conllevar incluso la expulsión inmediata del "Retiro Lúdico C&D".
+                Aunque también recomendamos leer las Condiciones Generales de las jornadas que
+                acepta toda persona que asista como alojado y participante. Puedes encontrarlas en
+                el apartado:
                 <RouterLink to="/normas" class="faq-link">Normas del evento</RouterLink>.
               </p>
             </div>
@@ -77,7 +78,9 @@
             <div class="faq-panel">
               <p>
                 Sí, la inscripción se realiza en el
-                <RouterLink to="/registration" class="faq-link">formulario de inscripción</RouterLink>.
+                <RouterLink to="/registration" class="faq-link"
+                  >formulario de inscripción</RouterLink
+                >.
               </p>
             </div>
           </details>
@@ -90,9 +93,163 @@
             </summary>
             <div class="faq-panel">
               <p>
-                En Naturcampa. Podréis encontrar más información
-                <RouterLink to="/" class="faq-link">pinchando aquí</RouterLink>.
+                En <strong>Naturcampa</strong>, en <strong>Matapozuelos (Valladolid)</strong>. Para
+                horarios de autobús y tren, indicaciones y rutas a pie, consulta
+                <RouterLink :to="{ path: '/faqs', hash: '#faq-como-llegar' }" class="faq-link"
+                  >cómo llegar</RouterLink
+                >. Para ver el mapa interactivo y fotos del emplazamiento, visita la
+                <RouterLink to="/" class="faq-link">página de inicio</RouterLink>.
               </p>
+            </div>
+          </details>
+        </article>
+
+        <article id="faq-como-llegar" class="faq-section">
+          <details ref="travelDetailsRef" class="faq-details">
+            <summary class="faq-summary">
+              <h2 class="faq-summary-title">¿Cómo llego a Naturcampa?</h2>
+            </summary>
+            <div class="faq-panel faq-travel-panel">
+              <h3 class="faq-travel-heading">Indicaciones hasta Naturcampa</h3>
+              <p>
+                Podéis abrir la ruta en Google Maps desde
+                <a
+                  :href="TRAVEL_INFO.mapsDirectionsUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="faq-link"
+                  >este enlace<span class="sr-only"> (se abre en nueva ventana)</span></a
+                >.
+              </p>
+              <p>
+                Naturcampa está en <strong>Matapozuelos (Valladolid)</strong>. Muchas personas
+                llegan en transporte público desde Valladolid; las paradas más útiles son
+                <strong>Mojados</strong> y <strong>Matapozuelos</strong>.
+                {{ TRAVEL_INFO.schedulesDisclaimer }}
+              </p>
+
+              <h3 class="faq-travel-heading">
+                Ida —
+                <time :datetime="TRAVEL_INFO.outboundDate"
+                  >viernes 21 de agosto de {{ EVENT_YEAR }}</time
+                >
+              </h3>
+
+              <section class="faq-travel-route" aria-labelledby="faq-travel-out-mojados">
+                <h4 id="faq-travel-out-mojados" class="faq-travel-route-title">
+                  {{ TRAVEL_INFO.routes.busValladolidMojados.label }}
+                </h4>
+                <p>Salidas:</p>
+                <ul class="faq-list faq-travel-times">
+                  <li v-for="t in TRAVEL_INFO.routes.busValladolidMojados.times" :key="t">
+                    <time :datetime="`${TRAVEL_INFO.outboundDate}T${t}`">{{ t }}</time>
+                  </li>
+                </ul>
+                <p>
+                  Duración aproximada:
+                  {{ TRAVEL_INFO.routes.busValladolidMojados.durationMinutes }} minutos. Coste
+                  orientativo: {{ TRAVEL_INFO.typicalCostLabel }}.
+                </p>
+              </section>
+
+              <section class="faq-travel-route" aria-labelledby="faq-travel-out-matapozuelos-bus">
+                <h4 id="faq-travel-out-matapozuelos-bus" class="faq-travel-route-title">
+                  {{ TRAVEL_INFO.routes.busValladolidMatapozuelos.label }}
+                </h4>
+                <p>Salida:</p>
+                <ul class="faq-list faq-travel-times">
+                  <li v-for="t in TRAVEL_INFO.routes.busValladolidMatapozuelos.times" :key="t">
+                    <time :datetime="`${TRAVEL_INFO.outboundDate}T${t}`">{{ t }}</time>
+                  </li>
+                </ul>
+                <p>
+                  Duración aproximada:
+                  {{ TRAVEL_INFO.routes.busValladolidMatapozuelos.durationMinutes }} minutos. Coste
+                  orientativo: {{ TRAVEL_INFO.typicalCostLabel }}.
+                </p>
+              </section>
+
+              <section class="faq-travel-route" aria-labelledby="faq-travel-out-train">
+                <h4 id="faq-travel-out-train" class="faq-travel-route-title">
+                  {{ TRAVEL_INFO.routes.trainValladolidMatapozuelos.label }}
+                </h4>
+                <p>Salida:</p>
+                <ul class="faq-list faq-travel-times">
+                  <li v-for="t in TRAVEL_INFO.routes.trainValladolidMatapozuelos.times" :key="t">
+                    <time :datetime="`${TRAVEL_INFO.outboundDate}T${t}`">{{ t }}</time>
+                  </li>
+                </ul>
+                <p>
+                  Duración aproximada:
+                  {{ TRAVEL_INFO.routes.trainValladolidMatapozuelos.durationMinutes }} minutos.
+                  Coste orientativo: {{ TRAVEL_INFO.typicalCostLabel }}.
+                </p>
+              </section>
+
+              <p class="faq-travel-note">{{ TRAVEL_INFO.checkInNote }}</p>
+
+              <h3 class="faq-travel-heading">
+                Vuelta —
+                <time :datetime="TRAVEL_INFO.returnDate"
+                  >domingo 23 de agosto de {{ EVENT_YEAR }}</time
+                >
+              </h3>
+
+              <section class="faq-travel-route" aria-labelledby="faq-travel-return-mojados">
+                <h4 id="faq-travel-return-mojados" class="faq-travel-route-title">
+                  {{ TRAVEL_INFO.routes.busMojadosValladolid.label }}
+                </h4>
+                <p>Salidas:</p>
+                <ul class="faq-list faq-travel-times">
+                  <li v-for="t in TRAVEL_INFO.routes.busMojadosValladolid.times" :key="t">
+                    <time :datetime="`${TRAVEL_INFO.returnDate}T${t}`">{{ t }}</time>
+                  </li>
+                </ul>
+                <p>
+                  Duración aproximada:
+                  {{ TRAVEL_INFO.routes.busMojadosValladolid.durationMinutes }} minutos. Coste
+                  orientativo: {{ TRAVEL_INFO.typicalCostLabel }}.
+                </p>
+              </section>
+
+              <p class="faq-travel-notice" role="note">
+                <strong>Importante — domingo desde Matapozuelos:</strong>
+                {{ TRAVEL_INFO.sundayMatapozuelosWarning }} El evento cierra a las
+                <time datetime="2026-08-23T20:00">{{ EVENT_DEPARTURE_MAX_TIME }}</time> ese día:
+                revisad si la salida de las 19:14 desde Mojados encaja con vuestra hora de salida.
+              </p>
+
+              <section
+                v-for="walk in TRAVEL_INFO.walkingRoutes"
+                :key="walk.id"
+                class="faq-travel-walk"
+                :aria-labelledby="`faq-travel-walk-${walk.id}`"
+              >
+                <h3 :id="`faq-travel-walk-${walk.id}`" class="faq-travel-heading">
+                  {{ walk.title }}
+                </h3>
+                <p>{{ walk.intro }}</p>
+                <img
+                  v-if="walk.imageSrc"
+                  :src="walk.imageSrc"
+                  :alt="walk.imageAlt"
+                  class="faq-travel-route-img"
+                  loading="lazy"
+                  width="800"
+                  height="600"
+                />
+                <p v-if="walkingRouteMapUrl(walk)" class="faq-travel-walk-link">
+                  <a
+                    :href="walkingRouteMapUrl(walk)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="faq-link"
+                  >
+                    {{ walkingRouteLinkLabel(walk)
+                    }}<span class="sr-only"> (se abre en nueva ventana)</span>
+                  </a>
+                </p>
+              </section>
             </div>
           </details>
         </article>
@@ -100,7 +257,9 @@
         <article class="faq-section">
           <details class="faq-details">
             <summary class="faq-summary">
-              <h2 class="faq-summary-title">¿Es importante llevar la identificación en el cuello?</h2>
+              <h2 class="faq-summary-title">
+                ¿Es importante llevar la identificación en el cuello?
+              </h2>
             </summary>
             <div class="faq-panel">
               <p>
@@ -115,13 +274,18 @@
         <article class="faq-section">
           <details class="faq-details">
             <summary class="faq-summary">
-              <h2 class="faq-summary-title">¿Hasta cuándo puedo inscribirme o proponer actividades?</h2>
+              <h2 class="faq-summary-title">
+                ¿Hasta cuándo puedo inscribirme o proponer actividades?
+              </h2>
             </summary>
             <div class="faq-panel">
               <p>
                 La inscripción de participantes permanece abierta hasta el
-                {{ registrationDeadlineLabel }} (inclusive). Para proponer actividades puedes usar el
-                <RouterLink to="/actividades" class="faq-link">formulario de actividades</RouterLink>
+                {{ registrationDeadlineLabel }} (inclusive). Para proponer actividades puedes usar
+                el
+                <RouterLink to="/actividades" class="faq-link"
+                  >formulario de actividades</RouterLink
+                >
                 hasta el {{ activityDeadlineLabel }} (inclusive).
               </p>
             </div>
@@ -181,7 +345,9 @@
                   target="_blank"
                   rel="noopener noreferrer"
                   class="faq-link"
-                  >nuestro enlace de Telegram<span class="sr-only"> (se abre en nueva ventana)</span></a
+                  >nuestro enlace de Telegram<span class="sr-only">
+                    (se abre en nueva ventana)</span
+                  ></a
                 >.
               </p>
             </div>
@@ -206,7 +372,8 @@
           <details class="faq-details">
             <summary class="faq-summary">
               <h2 class="faq-summary-title">
-                ¿Al realizar el pago por PayPal, me va a suponer un coste adicional a mi inscripción?
+                ¿Al realizar el pago por PayPal, me va a suponer un coste adicional a mi
+                inscripción?
               </h2>
             </summary>
             <div class="faq-panel">
@@ -249,7 +416,8 @@
               <p>
                 Para realizar la tirolina hay que apuntarse al inscribirse en las jornadas (extra
                 opcional de {{ ZIPLINE_PRICE_EUR }}€ en el
-                <RouterLink to="/registration" class="faq-link">formulario de inscripción</RouterLink
+                <RouterLink to="/registration" class="faq-link"
+                  >formulario de inscripción</RouterLink
                 >). Además, el proveedor de la actividad exige una altura mínima de 1,50 m y un peso
                 inferior a 100 kg.
               </p>
@@ -261,14 +429,16 @@
           <details class="faq-details">
             <summary class="faq-summary">
               <h2 class="faq-summary-title">
-                ¿Si al final quiero apuntarme a la tirolina pero no lo he hecho durante la inscripción,
-                puedo hacerlo en las jornadas?
+                ¿Si al final quiero apuntarme a la tirolina pero no lo he hecho durante la
+                inscripción, puedo hacerlo en las jornadas?
               </h2>
             </summary>
             <div class="faq-panel">
               <p>
                 No. La inscripción a la tirolina debe hacerse durante el
-                <RouterLink to="/registration" class="faq-link">formulario de inscripción</RouterLink>
+                <RouterLink to="/registration" class="faq-link"
+                  >formulario de inscripción</RouterLink
+                >
                 a las jornadas. Contratamos personal externo y necesitamos avisar con antelación.
               </p>
             </div>
@@ -285,9 +455,11 @@
             <div class="faq-panel">
               <p>
                 La asociación no puede asegurar la disponibilidad una vez realizado el pago de la
-                inscripción a las jornadas. No obstante estudiaremos cada caso particular para buscar
-                la mejor solución. Escríbenos a
-                <a :href="`mailto:${CONTACT_INFO.email}`" class="faq-link">{{ CONTACT_INFO.email }}</a>
+                inscripción a las jornadas. No obstante estudiaremos cada caso particular para
+                buscar la mejor solución. Escríbenos a
+                <a :href="`mailto:${CONTACT_INFO.email}`" class="faq-link">{{
+                  CONTACT_INFO.email
+                }}</a>
                 y te responderemos lo antes posible.
               </p>
             </div>
@@ -297,14 +469,16 @@
         <article class="faq-section">
           <details class="faq-details">
             <summary class="faq-summary">
-              <h2 class="faq-summary-title">¿Puedo colaborar de alguna manera con la Organización?</h2>
+              <h2 class="faq-summary-title">
+                ¿Puedo colaborar de alguna manera con la Organización?
+              </h2>
             </summary>
             <div class="faq-panel">
               <p>
                 Por supuesto que sí. En función de las posibilidades, se puede optar por ser
-                colaborador (personas individuales, clubes y asociaciones) organizando actividades, o
-                patrocinador (en el caso de empresas). Toda la información necesaria al respecto se
-                encuentra en el apartado
+                colaborador (personas individuales, clubes y asociaciones) organizando actividades,
+                o patrocinador (en el caso de empresas). Toda la información necesaria al respecto
+                se encuentra en el apartado
                 <RouterLink to="/actividades" class="faq-link">Cómo colaborar</RouterLink>.
               </p>
             </div>
@@ -352,7 +526,9 @@
             <div class="faq-panel">
               <p>
                 Se puede escribir un email desde el apartado Contacta de la Web:
-                <a :href="`mailto:${CONTACT_INFO.email}`" class="faq-link">{{ CONTACT_INFO.email }}</a
+                <a :href="`mailto:${CONTACT_INFO.email}`" class="faq-link">{{
+                  CONTACT_INFO.email
+                }}</a
                 >.
               </p>
               <p>
@@ -446,9 +622,9 @@
             </summary>
             <div class="faq-panel">
               <p>
-                Sí, os facilitaremos un teléfono que estará 24 horas de guardia durante las jornadas,
-                y en el que podréis localizarnos si es necesario. La Organización ayudará en lo
-                posible, pero no se hace responsable de lo que pueda suceder. Rogamos a los
+                Sí, os facilitaremos un teléfono que estará 24 horas de guardia durante las
+                jornadas, y en el que podréis localizarnos si es necesario. La Organización ayudará
+                en lo posible, pero no se hace responsable de lo que pueda suceder. Rogamos a los
                 asistentes que sean coherentes y llamen al teléfono de organización única y
                 exclusivamente si hay una emergencia, como el despertar de un primigenio.
               </p>
@@ -473,22 +649,64 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import AppSectionHeader from '@/components/AppSectionHeader.vue'
 import {
   CONTACT_INFO,
   EVENT_DATES_LABEL_SHORT,
+  EVENT_DEPARTURE_MAX_TIME,
   EVENT_YEAR,
   formatDeadlineLabelEs,
   getActivityRegistrationLastValidDate,
   getRegistrationLastValidDate,
+  TRAVEL_INFO,
   ZIPLINE_PRICE_EUR,
 } from '@/constants'
 
 defineOptions({
   name: 'FAQView',
 })
+
+const route = useRoute()
+const travelDetailsRef = ref(null)
+
+/** Abre el acordeón y hace scroll cuando la URL trae un hash de FAQ (p. ej. desde la home). */
+async function revealFaqFromHash() {
+  const hashId = route.hash?.replace(/^#/, '')
+  if (!hashId) return
+
+  await nextTick()
+
+  const article = document.getElementById(hashId)
+  const details =
+    hashId === 'faq-como-llegar' && travelDetailsRef.value
+      ? travelDetailsRef.value
+      : article?.querySelector('details.faq-details')
+
+  if (details) {
+    details.open = true
+  }
+
+  await nextTick()
+  article?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+onMounted(revealFaqFromHash)
+watch(() => route.hash, revealFaqFromHash)
+
+function walkingRouteMapUrl(walk) {
+  const url = String(walk.routeMapUrl ?? '').trim()
+  return url || null
+}
+
+function walkingRouteLinkLabel(walk) {
+  return (
+    walk.routeMapLinkLabel?.trim() ||
+    TRAVEL_INFO.walkingRouteLinkLabelDefault ||
+    'Abrir esta ruta en Google Maps'
+  )
+}
 
 const registrationDeadlineLabel = computed(() =>
   formatDeadlineLabelEs(getRegistrationLastValidDate()),
@@ -620,6 +838,72 @@ const activityDeadlineLabel = computed(() =>
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+.faq-travel-panel .faq-travel-heading {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  color: var(--color-primary);
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+  line-height: 1.35;
+}
+
+.faq-travel-panel .faq-travel-heading:first-child {
+  margin-top: 0;
+}
+
+.faq-travel-route-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: var(--spacing-sm) 0 var(--spacing-xs);
+}
+
+.faq-travel-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.faq-travel-times li {
+  margin-bottom: 0;
+}
+
+.faq-travel-note {
+  font-size: 0.95rem;
+  color: var(--color-text-light);
+}
+
+.faq-travel-notice {
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  background-color: var(--color-cream);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  line-height: 1.7;
+}
+
+.faq-travel-route-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-top: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.faq-travel-walk {
+  margin-top: var(--spacing-md);
+}
+
+.faq-travel-walk-link {
+  margin-top: var(--spacing-sm);
+  margin-bottom: 0;
+  text-align: center;
 }
 
 .faq-nav {

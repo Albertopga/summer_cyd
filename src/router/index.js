@@ -87,12 +87,17 @@ const router = createRouter({
     if (savedPosition) {
       return savedPosition
     }
-    // Si hay un hash en la URL, hacer scroll a ese elemento
+    // Si hay un hash en la URL, esperar al render (acordeones FAQ) antes de desplazar
     if (to.hash) {
-      return {
-        el: to.hash,
-        behavior: 'smooth',
-      }
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            el: to.hash,
+            behavior: 'smooth',
+            top: 16,
+          })
+        }, 350)
+      })
     }
     // Por defecto, hacer scroll al inicio de la página
     return {

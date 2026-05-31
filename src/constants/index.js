@@ -55,6 +55,74 @@ export const EVENT_DATES_LABEL_SHORT = '21 al 23 de Agosto'
 /** Hora máxima del último día para salida estimada (alineada con el cierre del evento a las 20:00). */
 export const EVENT_DEPARTURE_MAX_TIME = '20:00'
 
+/** Indicaciones, transporte público y rutas a pie hasta Naturcampa. */
+export const TRAVEL_INFO = {
+  mapsDirectionsUrl:
+    'https://www.google.com/maps/dir//Naturcampa,+VA-403,+19,+47230+Matapozuelos,+Valladolid/@41.6350208,-4.6661632,13z/data=!4m8!4m7!1m0!1m5!1m1!1s0xd47472f81c1ef23:0x988bac5d28260b22!2m2!1d-4.7614437!2d41.4135232?entry=ttu&g_ep=EgoyMDI2MDUyNy4wIKXMDSoASAFQAw%3D%3D',
+  checkInNote:
+    'El check-in del evento comienza el viernes 21 de agosto a las 17:00. Si llegas con el tren de las 20:50, planifica una llegada tardía.',
+  schedulesDisclaimer:
+    'Los horarios son orientativos: conviene confirmarlos antes del viaje en la web de la operadora correspondiente.',
+  typicalDurationMinutes: 30,
+  typicalCostLabel: 'menos de 5 €',
+  outboundDate: '2026-08-21',
+  returnDate: '2026-08-23',
+  routes: {
+    busValladolidMojados: {
+      label: 'Autobús Valladolid → Mojados',
+      times: ['15:00', '17:15', '18:00', '19:00', '20:00', '21:00'],
+      durationMinutes: 30,
+    },
+    busValladolidMatapozuelos: {
+      label: 'Autobús Valladolid → Matapozuelos',
+      times: ['15:00'],
+      durationMinutes: 30,
+    },
+    trainValladolidMatapozuelos: {
+      label: 'Tren Valladolid → Matapozuelos',
+      times: ['20:50'],
+      durationMinutes: 20,
+    },
+    busMojadosValladolid: {
+      label: 'Autobús Mojados → Valladolid',
+      times: ['10:14', '19:14'],
+      durationMinutes: 30,
+    },
+  },
+  sundayMatapozuelosWarning:
+    'El domingo no hay autobuses ni trenes desde Matapozuelos hacia Valladolid. Si sales el domingo, planifica la vuelta desde Mojados, en coche o a pie hasta una parada con servicio.',
+  /** Texto del enlace bajo cada captura de ruta a pie (si routeMapUrl está rellena). */
+  walkingRouteLinkLabelDefault: 'Abrir esta ruta en Google Maps',
+  walkingRoutes: [
+    {
+      id: 'mojados',
+      title: 'Ruta a pie desde Mojados',
+      intro:
+        'Si llegas a Mojados en transporte público, puedes completar el trayecto a pie hasta Naturcampa. Consulta el mapa siguiente.',
+      imageFilename: 'mojados-natur-andando.png',
+      imageAlt: 'Mapa de la ruta a pie desde Mojados hasta Naturcampa',
+      /** Pega aquí el enlace (Google Maps, etc.). Dejar '' para no mostrar enlace. */
+      routeMapUrl: 'https://www.google.com/maps/dir/Mojados,+47250,+Valladolid/Naturcampa,+VA-403,+19,+47230+Matapozuelos,+Valladolid/@41.4297864,-4.7304402,6519m/data=!3m1!1e3!4m14!4m13!1m5!1m1!1s0xd473eca6e5506a3:0x586ce14792cb7311!2m2!1d-4.6644107!2d41.4307031!1m5!1m1!1s0xd47472f81c1ef23:0x988bac5d28260b22!2m2!1d-4.7614437!2d41.4135232!3e2?entry=ttu&g_ep=EgoyMDI2MDUyNy4wIKXMDSoASAFQAw%3D%3D',
+      routeMapLinkLabel: 'Abrir esta ruta en Google Maps',
+    },
+    {
+      id: 'matapozuelos',
+      title: 'Ruta a pie desde Matapozuelos',
+      intro:
+        'Si llegas a la estación o parada de Matapozuelos, también puedes llegar a Naturcampa a pie. Consulta el mapa siguiente.',
+      imageFilename: 'matapozuelos-natur-andando.png',
+      imageAlt: 'Mapa de la ruta a pie desde Matapozuelos hasta Naturcampa',
+      /** Pega aquí el enlace (Google Maps, etc.). Dejar '' para no mostrar enlace. */
+      routeMapUrl: 'https://www.google.com/maps/dir/Matapozuelos,+47230,+Valladolid/Naturcampa,+VA-403,+19,+47230+Matapozuelos,+Valladolid/@41.4128481,-4.7866013,3260m/data=!3m2!1e3!4b1!4m14!4m13!1m5!1m1!1s0xd4746b62b1e5ca3:0x8dbea916fac26d14!2m2!1d-4.7911681!2d41.4130125!1m5!1m1!1s0xd47472f81c1ef23:0x988bac5d28260b22!2m2!1d-4.7614437!2d41.4135232!3e2?entry=ttu&g_ep=EgoyMDI2MDUyNy4wIKXMDSoASAFQAw%3D%3D',
+      routeMapLinkLabel: 'Abrir esta ruta en Google Maps',
+    },
+  ],
+}
+
+TRAVEL_INFO.walkingRoutes.forEach((route) => {
+  route.imageSrc = getImageUrl(route.imageFilename)
+})
+
 /**
  * Parsea 'YYYY-MM-DD' como fecha local (evita desfases UTC en getDay() / getDate()).
  * @param {string} dateString
@@ -152,7 +220,12 @@ export function getAccommodationPriceForMember({
   isChild,
   childSharesParentChozo = false,
 }) {
-  if (isChild && childSharesParentChozo && accommodation === 'chozos' && isUnderTwelveAtEventStart(birthDate)) {
+  if (
+    isChild &&
+    childSharesParentChozo &&
+    accommodation === 'chozos' &&
+    isUnderTwelveAtEventStart(birthDate)
+  ) {
     return CHILD_SHARED_CHOZO_PRICE_EUR
   }
   return Number(ACCOMMODATION_PRICES_EUR[accommodation] || 0)
