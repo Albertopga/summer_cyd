@@ -37,7 +37,7 @@
               </p>
               <p style="margin-top: 0.75rem">
                 <a
-                  :href="CONTACT_INFO.telegram"
+                  :href="CONTACT_INFO.telegramEvent"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="telegram-link-small"
@@ -97,10 +97,23 @@
               <a :href="`mailto:${CONTACT_INFO.email}`" class="summary-link">{{
                 CONTACT_INFO.email
               }}</a>
-              o contacta en nuestro Telegram al
-              <a :href="`tel:${CONTACT_INFO.phone}`" class="summary-link">{{
-                CONTACT_INFO.phone
-              }}</a
+              o contacta con nosotras por
+              <a
+                :href="CONTACT_INFO.telegramContact"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="summary-link"
+                >Telegram<span class="sr-only"> (se abre en nueva ventana)</span></a
+              >
+              o por
+              <a
+                :href="CONTACT_INFO.whatsappUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="summary-link"
+                >WhatsApp al {{ CONTACT_INFO.whatsapp }}<span class="sr-only">
+                  (se abre en nueva ventana)</span
+                ></a
               >. Estaremos encantadas de ayudarte.
             </p>
           </article>

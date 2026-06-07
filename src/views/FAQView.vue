@@ -341,7 +341,7 @@
                 Te recomendamos unirte al canal antes del evento para no perderte ninguna
                 información importante durante el Retiro Lúdico 2026. Puedes acceder al canal desde
                 <a
-                  :href="CONTACT_INFO.telegram"
+                  :href="CONTACT_INFO.telegramEvent"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="faq-link"
@@ -529,6 +529,25 @@
                 <a :href="`mailto:${CONTACT_INFO.email}`" class="faq-link">{{
                   CONTACT_INFO.email
                 }}</a
+                >.
+              </p>
+              <p>
+                También puedes escribirnos por
+                <a
+                  :href="CONTACT_INFO.telegramContact"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="faq-link"
+                  >Telegram<span class="sr-only"> (se abre en nueva ventana)</span></a
+                >
+                o por
+                <a
+                  :href="CONTACT_INFO.whatsappUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="faq-link"
+                  >WhatsApp al {{ CONTACT_INFO.whatsapp
+                  }}<span class="sr-only"> (se abre en nueva ventana)</span></a
                 >.
               </p>
               <p>

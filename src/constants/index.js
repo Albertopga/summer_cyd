@@ -504,8 +504,15 @@ export const ACTIVITIES = [
 
 export const CONTACT_INFO = {
   email: 'castillaydragon@gmail.com',
-  phone: '+34600123456',
-  telegram: 'https://t.me/castillaydragon',
+  phone: '+34611646380',
+  whatsapp: '611646380',
+  whatsappUrl: 'https://wa.me/34611646380',
+  /** Canal de difusión del evento (únete al canal). */
+  telegramEvent: 'https://t.me/+MpM0xfvN7580ZmVk',
+  /** Perfil de la asociación (icono en pie de página). */
+  telegram: 'https://t.me/asociacioncastillaydragon',
+  /** Contacto directo para dudas (Yen). */
+  telegramContact: 'https://t.me/castillaydragon',
   instagram: 'https://www.instagram.com/castillaydragon/',
   facebook: 'https://www.facebook.com/castillaydragon/',
   bluesky: 'https://bsky.app/profile/asociacioncyd.bsky.social',

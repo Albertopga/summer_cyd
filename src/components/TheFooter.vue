@@ -43,7 +43,7 @@ import { Icon } from '@iconify/vue'
             <a
               :href="CONTACT_INFO.telegram"
               class="social-icon"
-              aria-label="Visitar nuestro canal de Telegram"
+              aria-label="Visitar el Telegram de la asociación"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -66,6 +66,15 @@ import { Icon } from '@iconify/vue'
               rel="noopener noreferrer"
             >
               <Icon icon="mdi:facebook" />
+            </a>
+            <a
+              :href="CONTACT_INFO.whatsappUrl"
+              class="social-icon"
+              aria-label="Contactar por WhatsApp"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon icon="mdi:whatsapp" />
             </a>
           </div>
         </div>
